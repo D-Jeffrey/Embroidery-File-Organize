@@ -1,6 +1,9 @@
 # MySewingNet-Cleanup
 A powershell script to deal with the many different types of embroidery files, put the right format types in [mySewingnet](https://mysewnet.com/) Cloud
 
+## Getting started
+This is a self contained powershell script.  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to unblock the downloaded file (Right-click promperties and at the bottom check the `unblock`.
+
 ## parameters
 `-includeEmbFilesWithInstruction = $false` Put a copy of the Embrodery in with the instructions in addition to putting them into the mysewnet cloud folders
 `-CleansewingNet = $false`  Clean out non embroidery files from the mysewingnet cloud directory since it is limited on the amount of space you have to work with (unless you are using the Silver or Platinum plans.  The files are deleted to the **recycle bin** so they can be restored.
@@ -14,8 +17,9 @@ Any zip files found are scanned to see if they have Embrodery file types that we
 mysewingnet cloud, then extract that zip to a temporary location, pull out all the relevant files (formats we want) with the directory hierachy (adjusted).  Also pull out any related documentation and put it into the *instructions* folder location within the user documents on the computer with the directory hierachy (adjusted).
 **TODO** add a get other types function
 
-## directory hierachy (adjusted)
+### Directory Hierachy (Adjusted)
 When vendors build zip files and put in all the different formats, it means digging for files.  the adjusted version of this will get rid of sub folders if they exist above 
+
 ## requirements
 
 It was designed to work with [mySewnet Cloud](https://cloud.mysewnet.com/) which is a type of file share service for sewing machines.
