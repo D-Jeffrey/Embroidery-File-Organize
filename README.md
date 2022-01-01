@@ -2,15 +2,9 @@
 A powershell script to deal with the many different types of embroidery files, put the right format types in [mySewingnet](https://mysewnet.com/) Cloud
 
 ## parameters
-  >-includeEmbFilesWithInstruction = $false
-  >-CleansewingNet = $false     
-  >-DownloadDaysOld = 7   
-
-  - -includeEmbFilesWithInstruction = $false
-     Put a copy of the Embrodery in with the instructions in addition to putting them into the mysewnet cloud folders
-  - -CleansewingNet = $false     
-     Cleanup the MySewingNet Folder to only Embrodery files
-  - -DownloadDaysOld = 7   
+`-includeEmbFilesWithInstruction = $false` Put a copy of the Embrodery in with the instructions in addition to putting them into the mysewnet cloud folders
+`-CleansewingNet = $false`  Clean out non embroidery files from the mysewingnet cloud directory since it is limited on the amount of space you have to work with (unless you are using the Silver or Platinum plans.  The files are deleted to the **recycle bin** so they can be restored.
+`-DownloadDaysOld = 7`  determine how old of zip files to look for (in days) 
 
 ## functions
 
@@ -26,17 +20,19 @@ When vendors build zip files and put in all the different formats, it means digg
 
 It was designed to work with [mySewnet Cloud](https://cloud.mysewnet.com/) which is a type of file share service for sewing machines.
 
-$treetop = "Embroidery"
-$instructions = "Embroidery Instructions"
+`$treetop = "Embroidery"` is the directory name within your mysewingnet cloud that this program will put all the files and clean our file types that do not match the type you set.  It must exist in in the root directory of the **mySewingnet cloud folders**, order for the program to run.
+`$instructions = "Embroidery Instructions"`  this is where all the instructions are saved (outside of mysewingnet).  It must exist within the users **Documents** folder in order for the program to run
 
-depending on the types Embrodery files your machine uses then you may what to change the sewing file types of 
-$mysewtypes = ('vp3', 'vp4')
+Depending on the types Embrodery file extensions your machine uses then you may what to change the sewing file types of for you machine.
+`$mysewtypes = ('vp3', 'vp4')`
 
 
 ### nice to know
 
-$TCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*')
-$rollup = @('images','sewing helps')
-sewtypes rollup
+Ignore files which are terms and conditions (it does not mean you can ignore the laws, just don't save so many copies of the files.
+`$TCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*')`
+This are the directories (plus the if the directory name equals the format type)
+`$rollup = @('images','sewing helps')`
 
-![powershell running](docs/2022-01-01_13-15-43.gif)
+
+![powershell running](docs/2022-01-01_13-53-31.gif)
