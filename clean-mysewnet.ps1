@@ -85,7 +85,7 @@ $doit = !$Testing
 
 Get-ChildItem -Path  ($tmpdir ) -Recurse | Remove-Item -force -Recurse
 
-if ($testing) {
+if ($testing -and $env:COMPUTERNAME -eq "DESKTOP-R3PSDBU") {
     $savetree = "d:\Users\kjeff\OneDrive\Documents\Embroidery Instruction\"
     $tree = "d:\Users\kjeff\mySewnet Cloud\Embroidery\"
     $doit = $true
