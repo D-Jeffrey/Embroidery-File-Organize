@@ -1,10 +1,11 @@
-﻿#
+#
 # MySewingNet-Cleanup
 #
 # Deal with the many different types of embroidery files, put the right format types in mySewingnet Cloud
 # We are looking to keep the ??? files types only from the zip files.
 #
 # Orginal Author: Darren Jeffrey Dec 2021
+#                           Last Dec 2022
 #
 
 param
@@ -12,28 +13,38 @@ param
   [Parameter(Mandatory = $false)]
   [bool]$includeEmbFilesWithInstruction = $false,
   [bool]$CleansewingNet = $false,             # Cleanup the MySewingNet Folder to only Embrodery files
-  [int32]$DownloadDaysOld = 7              # How many days old show it scan for Zip files in Download  
+  [int32]$DownloadDaysOld = 7,                       # How many days old show it scan for Zip files in Download
+  [bool]$keepAllTypes = $false,                     # Keep all the different types of a file (duplicate name but different extensions)
+  [string]$EmbrodRootDirtop = "Embroidery",
+  [string]$instructions = "Embroidery Instructions"  
 )
 
-$treetop = "Embroidery"
-$instructions = "Embroidery Instructions"
+# This will be the directory created in MySewnet and managed by this program.  If you want to put other files in MySewnet, just put them in a different directory hierarchy
+#   $EmbrodRootDirtop
+# We will save the Instructions for any of the files into this instructions directory name under your user Documents folders
+#   $instructions 
 
-$mysewtypes = ('vp3', 'vp4')
+$mysewtypes = ('vp4', 'vp3',  'pcs', 'dst')
 
 # ----------------------------------------------------------------------
-
+# this is a list of all the different types of embrodiary files that are considered.  
+# The 'mysewtypes' should be from the list below based on what is best for your machine
 $alltypes =('hus','dst','exp','jef','pes','vip','vp3','xxx','sew',
     'vp4','pcs','VF3','CSD','ZSK','EMD','ESE','PHC','ART','OFM')
 
-
+# Term and Conditions added by various store that add up space with the same document type over and over, using up your MySewing Cloud space
+# This is a file name pattern so TC.* will match TC.doc or TC.pdf
 $TCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*')
+# What directories should be flattened to bring the Embroidery files higher up so they are not nested instead of sub-folders.  
+# The names are for Directories you want to remove the sub-folder and moved the contents up
 $rollup = @('images','sewing helps')
+
 
 
 # ----------------------------------------------------------------------
 #
 #
-$Testing = $false
+$Testing = $true
 
 $dircnt = 0
 $filecnt = 0
@@ -73,8 +84,8 @@ foreach ($a in $alltypes) {
     }
 
 # $rollups = "(" + $rollups + ")"
-$tree = $homedir + "\mySewnet Cloud\" + $treetop + "\" 
-$savetree = $docsdir + "\" + $instructions + "\"
+$EmbrodRootDir = $homedir + "\mySewnet Cloud\" + $EmbrodRootDirtop + "\" 
+$instructionRoot = $docsdir + "\" + $instructions + "\"
 
 $tmpdir = ${env:temp} + "\cleansew.tmp"
 $doit = !$Testing
@@ -86,149 +97,171 @@ $doit = !$Testing
 Get-ChildItem -Path  ($tmpdir ) -Recurse | Remove-Item -force -Recurse
 
 if ($testing -and $env:COMPUTERNAME -eq "DESKTOP-R3PSDBU") {
-    $savetree = "d:\Users\kjeff\OneDrive\Documents\Embroidery Instruction\"
-    $tree = "d:\Users\kjeff\mySewnet Cloud\Embroidery\"
+    $EmbrodRootDir = "d:\Users\kjeff\mySewnet Cloud\Embroidery\"
+    $instructionRoot = "d:\Users\kjeff\OneDrive\Documents\Embroidery Instruction\"
     $doit = $true
     }
 
-function deleteToRecycle ($file) {        
-	$shell.NameSpace(0).ParseName($file.FullName).InvokeVerb('delete')
-}
-
-Function pause ($message, [bool]$choice=$false, $boxmsg)
-{
-    # Check if running Powershell ISE
-    if ($psISE)
-    {
-        Add-Type -AssemblyName System.Windows.Forms
-        if ($choice) {
-            $x = [System.Windows.Forms.MessageBox]::Show("$boxmsg",'Cleanup MySewingNet', 'YesNo', 'Question')
-        } else {
-            [System.Windows.Forms.MessageBox]::Show("$message")
-            }
-        return ($x -eq 'Yes')
+    Function deleteToRecycle ($file) {        
+    	$shell.NameSpace(0).ParseName($file.FullName).InvokeVerb('delete')
     }
-    else
+
+    Function MyPause ($message, [bool]$choice=$false, $boxmsg)
     {
-        Write-Host "$message" -ForegroundColor Yellow
-        $x = $host.ui.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-        # Return true is Space press
-        return ($x.VirtualKeyCode -eq 32)
-    }
-}
-
-Function tailRecursion ([string]$path, [int]$depth=0) {
-    
-
-    $found=$false
-    foreach ($childDirectory in Get-ChildItem -Force -LiteralPath $Path -Directory) {
-        tailRecursion $childDirectory.FullName ($depth+1)
+        # Check if running Powershell ISE
+        if ($psISE)
+        {
+            Add-Type -AssemblyName System.Windows.Forms
+            if ($choice) {
+                $x = [System.Windows.Forms.MessageBox]::Show("$boxmsg",'Cleanup MySewingNet', 'YesNo', 'Question')
+            } else {
+                [System.Windows.Forms.MessageBox]::Show("$message")
+                }
+            return ($x -eq 'Yes')
         }
-    $currentChildren = Get-ChildItem -Force -LiteralPath $Path
-    $isEmpty = $currentChildren -eq $null
-    # Don't remove the very top directory, but do remove sub-directories if empty
-    if ($isEmpty -and $depth -gt 0) {
-        Write-Verbose "Removing empty folder: '${Path}'." 
-        if ($doit) { 
-            deleteToRecycle $Path 
-            $found = $true
+        else
+        {
+            Write-Host "$message" -ForegroundColor Yellow
+            $x = $host.ui.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+            # Return true is Space press
+            return ($x.VirtualKeyCode -eq 32)
+        }
+    }
+
+    Function tailRecursion ([string]$path, [int]$depth=0) {
+        
+
+        $found=$false
+        foreach ($childDirectory in Get-ChildItem -Force -LiteralPath $Path -Directory) {
+            tailRecursion $childDirectory.FullName ($depth+1)
             }
-        $dircnt + $dircnt + 1
+        $currentChildren = Get-ChildItem -Force -LiteralPath $Path
+        $isEmpty = $currentChildren -eq $null
+        # Don't remove the very top directory, but do remove sub-directories if empty
+        if ($isEmpty -and $depth -gt 0) {
+            Write-Verbose "Removing empty folder: '${Path}'." 
+            if ($doit) { 
+                deleteToRecycle $Path 
+                $found = $true
+                }
+            $dircnt + $dircnt + 1
+            $p += 1
+            write-progress -PercentComplete ($p % 100 ) "Removing Directory"
+        }
+        return ($found)
+    }
+
+#-----------------------------------------------------------------------
+# Move From Directory to either Embrodery or Instrctions directory
+    function MoveFromDir (
+            [string] $fromPath, 
+            [boolean]$isEmbrodery = $false,        # is this to the Embrodery directory (true) Or to the Instruction Directory (false)
+            [boolean]$Moveit = $true
+        ) 
+    {
+        
+        
+        write-progress -PercentComplete  ($p % 100 ) "Copying"
+        if ($isEmbrodery) { 
+            $dtype = 'Embroidery' 
+            $objs = Get-ChildItem -Path $fromPath -include $mysewtype -File -Recurse 
+            $targetdir = $EmbrodRootDir
+        } else { 
+            # Move anything that is not a Embrodery type file (alltypes)
+            $dtype = 'Instructions'
+            $objs = Get-ChildItem -Path $fromPath -exclude ($excludetypes +$TCs)  -File -Recurse 
+            $targetdir = $instructionRoot
+            }
+
+        $objs | ForEach-Object {
+                        
+            $newdir =  (Split-Path(($_.FullName).substring(($fromPath.Length), 
+                                ($_.FullName).Length - ($fromPath.Length) )))
+            
+            $newfile = $_.Name
+        
+            # take off the directory name if it is one of the rollup names
+        
+            foreach ($r in $rollups) {
+                if ($newdir.ToLower().EndsWith("\"+$r.ToLower())) {
+                    #strip off the directory name and perserve the case of the directory and files
+                    $newdir = $newdir.substring(0,($newdir.tolower().Replace("\"+$r,'')).length)
+                    }
+                }
+            
+            if ($doit) {
+                if (!(Test-Path -Path ($targetdir + $newdir) -PathType Container)) {
+                    $null = New-Item -Path ($targetdir + $newdir) -ItemType Directory  }
+                    $npath = (Join-Path -Path ($targetdir + $newdir) -ChildPath $newfile )
+                if (test-path $npath) {
+                Write-Verbose "Skipping ${dtype}:'$_' to ${newdir}." 
+                } else {
+                if ($Moveit) {
+                    $_ | Move-Item -Destination $npath -ErrorAction SilentlyContinue
+                } else {
+                    $_ | Copy-Item -Destination $npath -ErrorAction SilentlyContinue
+                    }
+                Write-Verbose "Saving ${dtype}:'$_' to ${newdir}."
+                $addsizecnt = $addsizecnt + $_.Length 
+                }
+            }
+            else { 
+                Write-Verbose "Would save ${dtype}:'$_' to ${newdir}." 
+                }
+
+        $savecnt = $savecnt + 1
         $p += 1
-        write-progress -PercentComplete ($p % 100 ) "Removing Directory"
+        write-progress -PercentComplete  ($p % 100 ) "Copying"
+        }
     }
-    return ($found)
-}
 
-
-
-function movefromdir (
-        [string] $fromPath, 
-        [boolean]$Moveit = $true,
-        [boolean]$isEmb = $false
-    ) 
-{
-    
-    
-    write-progress -PercentComplete  ($p % 100 ) "Copying"
-    if ($isEmb) { 
-        $dtype = 'Embroidery' 
-        $objs = Get-ChildItem -Path $fromPath -include $mysewtype -File -Recurse 
-        $targetdir = $tree
-    } else { 
-        $dtype = 'Instructions'
-        $objs = Get-ChildItem -Path $fromPath -exclude ($excludetypes +$TCs)  -File -Recurse 
-        $targetdir = $savetree
+    #-----------------------------------------------------------------------
+    # Format a Size string in KB/MB/GB 
+    #
+    function niceSize ($sz)   {
+        $ext = " KB"
+        $sz = $sz/1024
+        if ($sz -gt 1024) {
+            $ext = " MB"
+            $sz = [Math]::Round($sz/1024)
+            if ($sz -gt 1024) {
+                $ext = " GB"
+                $sz = $sz/1024
+                }
+                if ($sz -gt 1024) {
+                    $ext = " TB"
+                    $sz = $sz/1024
+                    }
+            }
+        return ([Math]::Round($sz)).toString() + $ext
         }
 
-     $objs | ForEach-Object {
-                    
-        $newdir =  (Split-Path(($_.FullName).substring(($fromPath.Length), 
-                            ($_.FullName).Length - ($fromPath.Length) )))
-        
-        $newfile = $_.Name
-    
-        # take off the directory name if it is one of the rollup names
-     
-        foreach ($r in $rollups) {
-            if ($newdir.ToLower().EndsWith("\"+$r.ToLower())) {
-                #strip off the directory name and perserve the case of the directory and files
-                $newdir = $newdir.substring(0,($newdir.tolower().Replace("\"+$r,'')).length)
-                }
-            }
-        
-        if ($doit) {
-            if (!(Test-Path -Path ($targetdir + $newdir) -PathType Container)) {
-                $null = New-Item -Path ($targetdir + $newdir) -ItemType Directory  }
-                $npath = (Join-Path -Path ($targetdir + $newdir) -ChildPath $newfile )
-            if (test-path $npath) {
-              Write-Verbose "Skiping ${dtype}:'$_' to ${newdir}." 
-              } else {
-              if ($Moveit) {
-                $_ | Move-Item -Destination $npath -ErrorAction SilentlyContinue
-              } else {
-                $_ | Copy-Item -Destination $npath -ErrorAction SilentlyContinue
-                }
-            Write-Verbose "Saving ${dtype}:'$_' to ${newdir}."
-            $addsizecnt = $addsizecnt + $_.Length 
-            }
-        }
-        else { 
-            Write-Verbose "Would save ${dtype}:'$_' to ${newdir}." 
-            }
 
-    $savecnt = $savecnt + 1
-    $p += 1
-    write-progress -PercentComplete  ($p % 100 ) "Copying"
-    }
-}
+#-----------------------------------------------------------------------
 
 
-Write-Host "Begin Sewnet Process" -ForegroundColor white -BackgroundColor blue
+Write-Host $(" " * 15) "Begin Sewnet Process"  $(" " * 30) -ForegroundColor white -BackgroundColor blue
+Write-Host $(" " * 15) "Checking for Zips in the last $DownloadDaysOld " $(" " * (18-[Math]::floor([Math]::log10($DownloadDaysOld)))) -ForegroundColor white -BackgroundColor blue
 
-Write-Host "Checking for Zips in the last $DownloadDaysOld " -ForegroundColor white -BackgroundColor blue
-
-
-
-if (!( test-path -Path $tree)) {
-    Write-Host "Can not find the MySewnet Directory ($tree).  Stopping" -BackgroundColor DarkRed -ForegroundColor White
+if (!( test-path -Path $EmbrodRootDir)) {
+    Write-Host "Can not find the MySewnet Directory ($EmbrodRootDir).  Stopping" -BackgroundColor DarkRed -ForegroundColor White
     write-host "See instructions at   https://github.com/D-Jeffrey/MySewingNet-Cleanup"
-    pause 'Press any key to Close'
+    MyPause 'Press any key to Close'
 
     break
     }
-if (!( test-path -Path $savetree)) {
-    Write-Host "Can not find the Instruction Directory ($savetree).  Stopping" -BackgroundColor DarkRed -ForegroundColor White
+if (!( test-path -Path $instructionRoot)) {
+    Write-Host "Can not find the Instruction Directory ($instructionRoot).  Stopping" -BackgroundColor DarkRed -ForegroundColor White
     write-host "See instructions at   https://github.com/D-Jeffrey/MySewingNet-Cleanup"
-    pause 'Press any key to Close'
+    MyPause 'Press any key to Close'
 
     break
     }
 
 
 Write-Host    ("Download source directory          : " + $downloaddir)
-Write-host    ("mySewnet Cloud sub folder directory: " + $tree)
-Write-host    ("Instrctions directory              : " + $savetree)
+Write-host    ("mySewnet Cloud sub folder directory: " + $EmbrodRootDir)
+Write-host    ("Instructions directory             : " + $instructionRoot)
 Write-host    ("File types                         : " + $mysewtype)
 Write-host    ("Age of files in Download directory : " + $DownloadDaysOld)
 Write-host    ("Clean the mysewingNet cloud folder : " + $CleansewingNet)
@@ -237,20 +270,24 @@ Write-Verbose ("Ignore Terms Conditions files      : " + $TCs)
 Write-Verbose ("Testing                            : " + $Testing)
 Write-Verbose ("Excludetypes                       : " + $excludetypes)
 
-$cont = (pause 'Press Start to continue, any other key to stop'  $true 'Click Yes to start') 
+$cont = (MyPause 'Press Start to continue, any other key to stop'  $true 'Click Yes to start') 
 
 if (!$cont) { 
     Break
     }
 Add-Type -assembly "system.io.compression.filesystem"
 
-$treesizebefore = 0
-Get-ChildItem -Path ($tree + "..")  -Recurse -file  | ForEach-Object { $treesizebefore = $treesizebefore + $_.Length}
+$librarySizeBefore = 0
+Get-ChildItem -Path ($EmbrodRootDir + "..")  -Recurse -file  | ForEach-Object { $librarySizeBefore = $librarySizeBefore + $_.Length}
 
 
 
 # Get a list of all the existing files in mySewnet
-$mysewingfiles = (Get-ChildItem -Path $tree  -Recurse -file -include $mysewtype).Name
+if ($keepAllTypes) {
+    $mysewingfiles = (Get-ChildItem -Path $EmbrodRootDir  -Recurse -file -include $mysewtype).Name 
+} else {
+    $mysewingfiles = (Get-ChildItem -Path $EmbrodRootDir  -Recurse -file -include $mysewtype).BaseName |foreach {$_ + ".*"}
+}
 
 
 Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.CreationTime -gt (Get-Date).AddDays(- $DownloadDaysOld ) } |
@@ -265,8 +302,10 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
                 Write-host "Found ZIP: '$zips'." 
                 $isnew = $true
                 foreach ($m in $mysewingfiles) {
+                
                     foreach ($f in $filelist) {
-                        if ($f -match $m) {
+                        
+                        if ($f -like $m) {
                             $isnew  = $false
                             Write-verbose "Duplicate file '${f}'."
 
@@ -276,8 +315,8 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
             if ($isnew) {  
                 Write-host "** New files in ZIP: '$zips'." 
                 Expand-Archive -Path $zips -DestinationPath $tmpdir
-                movefromdir $tmpdir $true $false
-                movefromdir $tmpdir $true $true
+                MoveFromDir $tmpdir $false
+                MoveFromDir $tmpdir $true
                 
 
                 
@@ -296,8 +335,8 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
 $DownloadDaysOld = 365*100  # 100 years of downloads
 Get-ChildItem -Path $downloaddir  -file -include $mysewtype -Depth 1 -Recurse| Where-Object { $_.CreationTime -gt (Get-Date).AddDays(- $DownloadDaysOld ) } |
     ForEach-Object {
-        if (!(test-path -path (join-path -Path $tree -ChildPath $_.Name))) { 
-            $_ | Copy-Item -Destination $tree -ErrorAction SilentlyContinue
+        if (!(test-path -path (join-path -Path $EmbrodRootDir -ChildPath $_.Name))) { 
+            $_ | Copy-Item -Destination $EmbrodRootDir -ErrorAction SilentlyContinue
             Write-Verbose "Copied from Download :'$_.Name}' to ${tree}."
             $addsizecnt = $addsizecnt + $_.Length
             $savecnt = $savecnt + 1 
@@ -306,7 +345,7 @@ Get-ChildItem -Path $downloaddir  -file -include $mysewtype -Depth 1 -Recurse| W
             
 
 if ($cleansewingNet) {
-    Get-ChildItem -Path $tree  -Recurse -file -Exclude $mysewtype  | ForEach-Object {
+    Get-ChildItem -Path $EmbrodRootDir  -Recurse -file -Exclude $mysewtype  | ForEach-Object {
      
             $sizecnt = $sizecnt + $_.Length
             Write-Verbose "Removing '$_'." 
@@ -316,50 +355,31 @@ if ($cleansewingNet) {
             write-progress -PercentComplete  ($p % 100 ) "Updating MySewnet"
         }
     
-    movefromdir $tree, $true, $false
+    MoveFromDir $EmbrodRootDir, $false
     }
 
 
 #  Clear out empty Directories
 $tailr = 0
-while ($tailr -le 8 -and (tailRecursion $tree) ) {
+while ($tailr -le 8 -and (tailRecursion $EmbrodRootDir) ) {
      $tailr = $tailr + 1
      write-progress -PercentComplete  ($p % 100 ) "Clean directories"
 }
 
-$treesizeafter = 0
-Get-ChildItem -Path ($tree  + "..") -Recurse -file  | ForEach-Object { $treesizeafter = $treesizeafter + $_.Length}
-function nicesize ($sz) 
-{
-    $ext = " KB"
-    $sz = $sz/1024
-    if ($sz -gt 1024) {
-        $ext = " MB"
-        $sz = [Math]::Round($sz/1024)
-        if ($sz -gt 1024) {
-            $ext = " GB"
-            $sz = $sz/1024
-            }
-            if ($sz -gt 1024) {
-                $ext = " TB"
-                $sz = $sz/1024
-                }
-        
-        }
-    return ([Math]::Round($sz)).toString() + $ext
-}
+$librarySizeAfter = 0
+Get-ChildItem -Path ($EmbrodRootDir  + "..") -Recurse -file  | ForEach-Object { $librarySizeAfter = $librarySizeAfter + $_.Length}
+
   
-$treesizebefore = nicesize $treesizebefore
-$treesizeafter = nicesize $treesizeafter
-$kb = nicesize  $sizecnt
-$akb = nicesize $addsizecnt
+$librarySizeBefore = niceSize $librarySizeBefore
+$librarySizeAfter = niceSize $librarySizeAfter
+$kb = niceSize  $sizecnt
+$akb = niceSize $addsizecnt
 write-progress -PercentComplete  100  "Done"
-Write-host "MySewnet Cloud size is now : $treesizeafter was $treesizebefore."
+Write-host "*** MySewnet Cloud size is now : $librarySizeAfter was $librarySizeBefore ****"  -ForegroundColor Blue
 Write-Host ("Cleaned up - Dirs removed: '$dircnt' Save: '$savecnt' ($akb) Removed: '$filecnt' ($kb).") -ForegroundColor Green
 
 
 $addsizecnt = $addsizecnt + $_.Length
-pause 'Press any key to Close'
-Write-Host ("Done ") -ForegroundColor Green
 
-
+MyPause 'Press any key to Close'
+Write-Host ( "End") -ForegroundColor Green
