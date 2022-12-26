@@ -46,7 +46,7 @@ Cleaned up - Dirs removed: '0' Saved from zip files: '0' (0 KB) Removed: '15540'
 End 
 ```
 
-What happens if we just let it run as it normally should be checking all the downloaded files in the download directory and move them into the proper place.  it only take 64 MB of space instead of the orginal 1.6 GB we started with.
+What happens if we just let it run as it normally should be checking all the downloaded files in the download directory and move them into the proper place.  It only takes 64 MB of space instead of the orginal 1.6 GB we started with.
 
 ```
 PS D:\Users\kjeff\Downloads> C:\Users\darre\OneDrive\Documents\scripts\clean-mysewnet.ps1   -Testing 
@@ -71,7 +71,6 @@ Found ZIP: 'D:\Users\kjeff\downloads\17445225.zip'
 Found ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
 ** New files in ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
 Found ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17489954 (2).zip'
 Found ZIP: 'D:\Users\kjeff\downloads\17489954 (2).zip'
 Found ZIP: 'D:\Users\kjeff\downloads\17489954.zip'
 Found ZIP: 'D:\Users\kjeff\downloads\17489954.zip'
