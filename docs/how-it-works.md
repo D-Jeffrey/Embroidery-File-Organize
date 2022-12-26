@@ -1,0 +1,356 @@
+## Organize your embroidery pattern files, you have too many copies of the same pattern and you can’t find the right one…. 
+I created this for my wife in order to avoid having to buy a MySewnet subscription. Additionally, when you end up with too many variations of patterns on your sewing machine it's really hard to find anything. In the case of my wife, she has over 2600 different patterns on their machine and still only uses 67 megabytes of space and she can find the pattern that she is looking for.  The other problem I found is a lot of the patterns come with a PDF or images which you don't need to put into your sewing machine or into my sewing net.  My annoyance with the service started when we could not get a free trial in Canada which was supposed to be include with the Pfaff Icon that my wife bought.  There are benefits to the subscription service and nice looking patterns, but over $300 per year is a little steep.  Regardless even with a subscription you still end up with a message of folders and files and hard to fine the right pattern type connection.  This is here to HELP manage and organize those files.
+
+The program is designed to make sure that you don't duplicate patterns either by putting more than one copy of the same pattern or by putting more than one copy of pattern variation such as a different file type.  It also allows you to move files, around put them into folders and will respect where they've landed and not resort them again.
+
+So let's take a look at the problem if you look at it as a purchased which you purchased from one of the many excellent pattern providers out there.  Some of them come with all the files dumped into the zip file with no directory structure.  Some of the zip files come with a directory structure which may be two or three directories deep sorted by the various file types. Other ones may have large PDFs handsome bitmap pictures of what the pattern is that you're making.  To do is only pluck out the right patterns that you need to be loaded onto your sewing machine and the instructions that go along with them and put them into different places on your computer away from the Mysewnet cloud sync client. Then when you download some new zip files the program should I might could check those new ones find out what's missing and push them into the right directories as well.
+
+Let’s take a look at an example of how much of a mess this will create.   This is the mess you get from extracting all the files into one directory with whatever folder structure it comes with.  (SpaceSniifer)
+
+There was a 'Nursery Rhymes 'pattern folder itself is 184Mb by itself.  And I really only need the VP3 files.
+
+So I have almost 1300 folders with 20,000 files using 1.5 GB of space.  Keep in mind that some of these might be pattern for the Cricut because those and can mixed up the folds.
+Rather than extracting all those zips into a mess, which by the way the top level directory there are 1057 files taking up 140 Mb.
+
+Let’s assume you just move that mess over into “Embroidery” directory within MySewnet and run 
+```
+C:\Users\kjeff\Documents\scripts\EmbroderyCollection-Cleanup.ps1 -CleanCollection 
+```
+
+First pass, it came back with a huge list of files that it want to delete 
+
+```
+Found 11080 files that should be removed to clean up extras 
+
+*** MySewnet Cloud size is now : 166.8 MB was 257.5 MB ****  
+```
+
+```
+PS c:\Users\kjeff\Downloads> C:\Users\kjeff\Documents\scripts\EmbroderyCollection-Cleanup.ps1.ps1 -CleanCollectionIgnoreDir 
+                Begin MySewnet Process                             
+                Checking for Zips in the last 7 days               
+Download source directory          : d:\Users\kjeff\downloads
+mySewnet Cloud sub folder directory: d:\Users\kjeff\mySewnet Cloud\Embroidery\
+Instructions directory             : d:\Users\kjeff\OneDrive\Documents\Embroidery Instructions\
+File types                         : *.vp4 *.vp3 *.vip *.pcs *.dst
+Age of files in Download directory : 7
+Clean the mysewingNet cloud folder : False
+Keep all variations of files types : False
+Scanning for files to clean up in mySewnet
+Found 15540 files that should be removed to clean up extras
+Switching to Fast quick delete without recycle
+Moving Instructions to proper Instructions directory
+Calculating size
+   *** MySewnet Cloud size is now : 281.4 MB was 1.6 GB ****   
+Cleaned up - Dirs removed: '0' Saved from zip files: '0' (0 KB) Removed: '15540' (578.7 MB).
+End 
+```
+
+What happens if we just let it run as it normally should be checking all the downloaded files in the download directory and move them into the proper place.  it only take 64 MB of space instead of the orginal 1.6 GB we started with.
+
+```
+PS D:\Users\kjeff\Downloads> C:\Users\darre\OneDrive\Documents\scripts\clean-mysewnet.ps1   -Testing 
+                Begin MySewnet Process                             
+                Checking for Zips in the last 7 days               
+Download source directory          : d:\Users\kjeff\downloads
+mySewnet Cloud sub folder directory: d:\Users\kjeff\mySewnet Cloud\Embroidery\
+Instructions directory             : d:\Users\kjeff\OneDrive\Documents\Embroidery Instructions\
+File types                         : *.vp4 *.vp3 *.vip *.pcs *.dst
+Age of files in Download directory : 7
+Clean the mysewingNet cloud folder : False
+Keep all variations of files types : False
+Testing                            : True
+Found ZIP: 'D:\Users\kjeff\downloads\12644-907.pcs.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\12644-907.pcs.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\12644-907.vp3 (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\12644-907.vp3 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\12644-907.vp3 (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\12644-907.vp3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17445225.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17445225.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17489954 (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17489954 (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17489954.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17489954.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17529881.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17529881.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17532767.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17532767.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17561335.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17561335.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17589307.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17589307.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17660766.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17660766.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17661990 (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17661990 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17661990.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17700580 (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17700580 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17700580 (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17700580.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17710087.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17710087.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17838253.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17838253.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17841716.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17841716.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17872666.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17872666.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17912524.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17912524.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17942480.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17942480.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17942481.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17942481.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17960951.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17960951.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17973434.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17973434.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17981105.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17981105.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17986490.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17986490.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\17992030.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\17992030.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\18096530.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\18096530.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\18130241.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\18130241.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\18147942.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\18147942.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\18147942.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\18187327 (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\18187327 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\18187327.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\18198823.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\18198823.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\61062.dst (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\61062.dst (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\61062.dst.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\61062.pcs (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\61062.pcs (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\61062.pcs.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Christmas Gift Tags.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\AE 3D Christmas Gift Tags.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Christmas Gift Tags.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Christmas Gift Tags.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Ornaments.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\AE 3D Ornaments.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Ornaments.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Ornaments.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE Hand Stitched Christmas Pillows.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\AE Hand Stitched Christmas Pillows.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE Hand Stitched Christmas Pillows.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AE Hand Stitched Christmas Pillows.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Angels.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Angels.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Angels.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Angels.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AP2932A_VP3.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\AP2932A_VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\AP3029A_VP3.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\AP3029A_VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Away in a Manger.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Away in a Manger.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Away in a Manger.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Away in a Manger.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\CC06222.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\CC06222.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Christmas Bible Bookmarks.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Christmas Bible Bookmarks.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Christmas Bible Bookmarks.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Christmas Bible Bookmarks.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\dst-ithbellapuppyset.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\dst-ithbellapuppyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\dst-ithkittyset.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\dst-ithkittyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\edp13891-2.DST.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\EDP13891-2.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\esp80149-1.VP3.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\esp80149-1.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Fundamentals-Designs.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Fundamentals-Designs.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Fundamentals-Designs.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Fundamentals-Designs.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Hand Stitched Autumn Quilt.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Hand Stitched Autumn Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Hand Stitched Autumn Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Hand Stitched Autumn Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Journaling Quilt.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Journaling Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Journaling Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Journaling Quilt.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\k2442.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\l9449.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m18051.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m18612.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m18615.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m18618.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m20713.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m28367.DST.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\M28367.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m28370.DST.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\M28370.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\M28373.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m28715.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m33042.DST.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\M33042.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m33948.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\m5772.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes Bonus.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes Bonus.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes Bonus.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes Bonus.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman-dolljointarms.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman-dolljointarms.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman-dolljointarms.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman-dolljointarms.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-dst.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-dst.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-vip.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-vp3 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-vp3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopbabyblitzen.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopbabyblitzen.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopbabyblitzen.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopbabyblitzen.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopdarlingbunny-dst.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopdarlingbunny-dst.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopdarlingbunny-vip.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopdarlingbunny-vp3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopreindeerstable.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopreindeerstable.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopreindeerstable.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopreindeerstable.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsantaslittlereindeer.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsantaslittlereindeer.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsantaslittlereindeer.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsantaslittlereindeer.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsillysnowballfight.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsillysnowballfight.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsillysnowballfight.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsillysnowballfight.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (2).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-sallyfaceaddon-darlingdolls.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-sallyfaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-sallyfaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-sallyfaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-taylorfaceaddon-darlingdolls.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-taylorfaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-taylorfaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-taylorfaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony (1).zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-willafaceaddon-darlingdolls.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa-willafaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-willafaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa-willafaceaddon-darlingdolls.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-ithkittyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-ithkittyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\patch-ithkittyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa_christmasfingerpuppets.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\pa_christmasfingerpuppets.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\pa_christmasfingerpuppets.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Sewing Machine Patchwork Cover.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Sewing Machine Patchwork Cover.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Sewing Machine Patchwork Cover.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Sewing Machine Patchwork Cover.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\SHE5467A_VP3.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\SHE5467A_VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Spring Flower Doodles.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Spring Flower Doodles.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Spring Flower Doodles.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Spring Flower Doodles.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Stippled Quilt Block.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Stippled Quilt Block.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Stippled Quilt Block.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Stippled Quilt Block.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\SUNFLOWER CRAZY QUILT.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\SUNFLOWER CRAZY QUILT.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\SUNFLOWER CRAZY QUILT.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Sunny Sunflower.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\Sunny Sunflower.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Sunny Sunflower.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\Sunny Sunflower.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\utz2377.VP3.zip'
+** New files in ZIP: 'D:\Users\kjeff\downloads\utz2377.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\vip-ithbellapuppyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\vip-ithkittyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\vp3-ithbellapuppyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\vp3-ithkittyset.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x13113.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x13237.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x13734.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x13774.DST.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\X13774.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x14789.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x14808.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x14959.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x14990.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x15445.DST.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\X15445.VP3 (1).zip'
+Found ZIP: 'D:\Users\kjeff\downloads\X15445.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x15561.VP3.zip'
+Found ZIP: 'D:\Users\kjeff\downloads\x3686.VP3.zip'
+Calculating size
+   *** MySewnet Cloud size is now : 64.6 MB was 0 KB ****   
+Cleaned up - Dirs removed: '0' Saved from zip files: '6' (171.1 KB) Removed: '0' (0 KB).
+End 
+
+
+
+
