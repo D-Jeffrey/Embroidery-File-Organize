@@ -59,8 +59,8 @@ $foldupDir = @('images','sewing helps')
 $dircnt = 0
 $filecnt = 0
 $sizecnt = 0
-$savecnt = 0
-$addsizecnt = 0
+$Global:savecnt = 0
+$Global:addsizecnt = 0
 $p = 0
 
 $shell = New-Object -ComObject 'Shell.Application'
@@ -216,7 +216,7 @@ function MoveFromDir (
     ) 
 {
     
-    ShowSomeProgress "Copying" "Added $savecnt files"
+    ShowSomeProgress "Copying" "Added ${Global:savecnt} files"
     if ($isEmbrodery) { 
         $dtype = 'Embroidery' 
         $objs = Get-ChildItem -Path $fromPath -include $SewTypeStar -File -Recurse -filter $whichfiles
@@ -253,15 +253,17 @@ function MoveFromDir (
                 } else {
                     $_ | Move-Item -Destination $npath  # -ErrorAction SilentlyContinue
                     Write-Verbose "Saving ${dtype}:'$_' to ${newdir}"
-                    $addsizecnt = $addsizecnt + $_.Length 
-                    $savecnt = $savecnt + 1
+                    if ($isEmbrodery) { 
+                        $Global:addsizecnt = $Global:addsizecnt + (Get-Item -Path $npath).Length 
+                        $Global:savecnt = $Global:savecnt + 1
+                        }
                 }
             } 
             else {
                 Write-Verbose "Skipping ${_.Name}" 
             }
     
-    ShowSomeProgress "Copying" -Status "Added $savecnt files"
+    ShowSomeProgress "Copying" -Status "Added ${Global:savecnt} files"
     }
 }
 
@@ -269,19 +271,22 @@ function MoveFromDir (
 # Format a Size string in KB/MB/GB 
 #
 function niceSize ($sz)   {
-    $ext = " KB"
-    $sz = $sz/1024
+    $ext = " "
     if ($sz -gt 1024) {
-        $ext = " MB"
+        $ext = " KB"
         $sz = $sz/1024
         if ($sz -gt 1024) {
-            $ext = " GB"
+            $ext = " MB"
             $sz = $sz/1024
-            }
             if ($sz -gt 1024) {
-                $ext = " TB"
+                $ext = " GB"
                 $sz = $sz/1024
                 }
+                if ($sz -gt 1024) {
+                    $ext = " TB"
+                    $sz = $sz/1024
+                    }
+            }
         }
     return ([Math]::Round($sz,1)).toString() + $ext
     }
@@ -336,10 +341,16 @@ if (!$cont) {
     }
 Add-Type -assembly "system.io.compression.filesystem"
 
+ShowSomeProgress  "Calculating size"
 $librarySizeBefore = 0
-Get-ChildItem -Path ($EmbrodRootDir + "..")  -Recurse -file  | ForEach-Object { $librarySizeBefore = $librarySizeBefore + $_.Length}
+if ($CollectionTypeofStr -eq "MySewnet Cloud") {
+    Get-ChildItem -Path ($EmbrodRootDir + "..")  -Recurse -file  | ForEach-Object { $librarySizeBefore = $librarySizeBefore + $_.Length}
+    }
+else {
+    Get-ChildItem -Path ($EmbrodRootDir)  -Recurse -file  | ForEach-Object { $librarySizeBefore = $librarySizeBefore + $_.Length}
+    }
 
-
+ShowSomeProgress  "Loading file list"
 $mysewingfiles = $null
 # Get a list of all the existing files in mySewnet
         
@@ -385,11 +396,11 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
         
         $isNewInstruct = $false
         $isnew = $false
+        $numnew = 0
         foreach ($t in $preferredSewType) {
             $filesOfThisType = @()
             $ts = "*."+ $t
             if ($filelist.Name -like $ts) {
-                Write-host "Found ZIP: '$zips'" 
                 $isnew = $false
                 $myfl = $filelist | where-object {$_.Name -like $ts} 
                 foreach ($f in $($myfl.Name )) {
@@ -402,15 +413,15 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
                         Write-verbose "Duplicate file '${f}'"
                     } else {
                         Write-verbose "New file '${f}'"
+                        $numnew += 1
                         $isnew  = $true
                         if ($keepAllTypes) {
                             $filesOfThisType += $f
                         } else {
                             $filesOfThisType += ($f + "." + $t)
-                            }
                         if ($keepAllTypes) {
-                           $n = $_.Name} 
-                        else {
+                           $n = $_.Name 
+                        } else {
                             $n = $fs
                             }
                         $mysewingfiles +=  
@@ -427,26 +438,28 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
                     
                 # we found a new file in the Zip.  If we have not expanded this Zip, then do it now
                 if ($isnew) { 
-                
                     if (-not $isNewInstruct) { 
-                        Write-host "** New files in ZIP: '$zips'" 
                         $isNewInstruct = $true
                         Expand-Archive -Path $zips -DestinationPath $tmpdir
-                    }
-                
-                
+                        }
                     MoveFromDir $tmpdir $true $ts $filesOfThisType
-                }
-                
+                    }
+                }               
+            }
+        $zf = $zips.tolower().replace($downloaddir.tolower(),'...')
+        if ($numnew -gt 0) {
+            Write-host $("* New  : '$zf'").padright(65) " $numnew new patterns" 
+        } else {
+            Write-host $("- Found: '$zf'").padright(65) " nothing new" 
             }
         # we extracted the Zip already and now let's check for instructions
         if ($isNewInstruct) { 
             MoveFromDir $tmpdir $false
             Get-ChildItem -Path $tmpdir -Recurse | Remove-Item -force -Recurse
-            
-        }
+            }
+   
         $filelist = $null      # Close Zipfile
-        ShowSomeProgress  "Checking Zips"  "Added $savecnt files"
+        ShowSomeProgress  "Checking Zips"  "Added $Global:savecnt files"
 
     }
 
@@ -472,7 +485,6 @@ foreach ($t in $preferredSewType) {
                 if (!(test-path -path (join-path -Path $EmbrodRootDir -ChildPath $_.Name))) { 
                     $_ | Copy-Item -Destination $EmbrodRootDir -ErrorAction SilentlyContinue 
                     Write-Verbose "Copied from Download :'$($_.Name)' to $EmbrodRootDir"
-        ####################################
                     $fd = join-Path -Path $d -ChildPath ($fs +".pdf")
                 
 
@@ -480,8 +492,8 @@ foreach ($t in $preferredSewType) {
                         Copy-Item -Path $fd -Destination $instructionRoot -ErrorAction SilentlyContinue 
                         Write-Verbose "Copied instructions from Download :'$($_.Name)' to $instructionRoot"
                         }
-                    $addsizecnt = $addsizecnt + $_.Length
-                    $savecnt = $savecnt + 1 
+                    $Global:addsizecnt = $Global:addsizecnt + $_.Length 
+                    $Global:savecnt = $Global:savecnt + 1 
                 
                     $mysewingfiles +=  [PSCustomObject]@{ 
                                 Name = $f
@@ -636,16 +648,26 @@ if (-not $KeepEmptyDirectory) {
 write-host "Calculating size"
 ShowSomeProgress  "Calculating size"
 $librarySizeAfter = 0
-Get-ChildItem -Path ($EmbrodRootDir  + "..") -Recurse -file  | ForEach-Object { $librarySizeAfter = $librarySizeAfter + $_.Length}
+if ($CollectionTypeofStr -eq "MySewnet Cloud") {
+    Get-ChildItem -Path ($EmbrodRootDir  + "..") -Recurse -file  | ForEach-Object { $librarySizeAfter = $librarySizeAfter + $_.Length}
+    }
+else {
+    Get-ChildItem -Path ($EmbrodRootDir  ) -Recurse -file  | ForEach-Object { $librarySizeAfter = $librarySizeAfter + $_.Length}
+    }
+
 
   
 $librarySizeBefore = niceSize $librarySizeBefore
 $librarySizeAfter = niceSize $librarySizeAfter
-$kb = niceSize  $sizecnt
-$akb = niceSize $addsizecnt
+$sizecntB = niceSize  $sizecnt
+$addsizecntB = niceSize $Global:addsizecnt
 write-progress -PercentComplete  100  "Done"
-Write-host "   *** MySewnet Cloud size is now : $librarySizeAfter was $librarySizeBefore ****   "  -ForegroundColor Blue -BackgroundColor White
-Write-Host ("Cleaned up - Dirs removed: '$dircnt' Saved from zip files: '$savecnt' ($akb) Removed: '$filecnt' ($kb).") -ForegroundColor Green
-
-MyPause 'Press any key to Close'
+if ($dircnt -gt 0 -or $filecnt -gt 0) {
+    Write-Host "Cleaned up - Directories removed: '$dircnt    Files removed : '$filecnt' ($sizecntB)." -ForegroundColor Green
+    }
+if ($Global:savecnt -gt 0) {
+    write-host "Added files to $CollectionTypeofStr: '$Global:savecnt' ($addsizecntB) " -ForegroundColor Green
+    }
+Write-host "   *** $CollectionTypeofStr size is now : $librarySizeAfter was $librarySizeBefore ****   "  -ForegroundColor Green 
+$none = MyPause 'Press any key to Close'
 Write-Host ( "End") -ForegroundColor Green
