@@ -666,7 +666,7 @@ if ($dircnt -gt 0 -or $filecnt -gt 0) {
     Write-Host "Cleaned up - Directories removed: '$dircnt    Files removed : '$filecnt' ($sizecntB)." -ForegroundColor Green
     }
 if ($Global:savecnt -gt 0) {
-    write-host "Added files to $CollectionTypeofStr: '$Global:savecnt' ($addsizecntB) " -ForegroundColor Green
+    write-host "Added files to ${CollectionTypeofStr}: '${Global:savecnt}' ($addsizecntB) " -ForegroundColor Green
     }
 Write-host "   *** $CollectionTypeofStr size is now : $librarySizeAfter was $librarySizeBefore ****   "  -ForegroundColor Green 
 $none = MyPause 'Press any key to Close'
