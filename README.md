@@ -5,7 +5,7 @@ A powershell script to deal with the many different types of embroidery files, p
 ## Getting started
 This is a self contained single powershell script.  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to unblock the downloaded file (Right-click properties of the file and at the bottom check the `unblock`.
 
-![powershell running](docs/explorer_2022-12-26_17-32-05.gif)
+![powershell running](docs/images/explorer_2022-12-26_17-32-05.gif)
 
 ## parameters
 `-includeEmbFilesWithInstruction` Put a copy of the Embrodery in with the instructions in addition to putting them into the mySewnet™ cloud folders.  Not recommended
