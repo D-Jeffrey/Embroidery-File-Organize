@@ -2,10 +2,11 @@
 
 A powershell script to deal with the many different types of embroidery files, put the right format types in [mySewnet™](https://mysewnet.com/).  If you take all the zip files when you get purchase Embroidery patterns, it will come with many different types, along with PDF and Word docs exampling how to use the pattern.  That's all well and nice but only give you 100 megabytes to put all your files into, so why would you want to waste it with instructions. This script strips it down to the that are appropriate to sync onto my sewing net and get spread of a lot of the folder structure that comes along with it.  It is great that the creates of the file images produce so many variations, but you only need one type of make your mahine work.
 
+Once it is setup with a shortcut you can simply download your patterns from online stores and then double-click the shortcut to copy the **right patterns** into yuor collection location.
+
 ## Getting started
 This is a self contained single powershell script.  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to unblock the downloaded file (Right-click properties of the file and at the bottom check the `unblock`.
 
-![powershell running](docs/images/explorer_2022-12-26_17-32-05.gif)
 
 ## parameters
 `-includeEmbFilesWithInstruction` Put a copy of the Embrodery in with the instructions in addition to putting them into the mySewnet™ cloud folders.  Not recommended
@@ -36,6 +37,8 @@ It was designed to work with [mySewnet™ Cloud](https://cloud.mysewnet.com/) wh
 Depending on the types Embrodery file extensions your machine uses then you may what to change the sewing file types of for you machine.  Order matter, if will find the first one in your list of types and try and keep files of that type over the other types.
 `$preferredSewType = ('vp3', 'vp4')`
 
+## Action
+![powershell running](docs/images/explorer_2022-12-26_17-32-05.gif)
 
 ### Nice to know
 
