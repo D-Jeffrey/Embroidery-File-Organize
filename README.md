@@ -48,5 +48,5 @@ Ignore files which are terms and conditions (it does not mean you can ignore the
 This are the directories (plus the if the directory name equals the format type)
 `$foldupDir = @('images','sewing helps','Designs', 'Design Files')`
 
-## - [How to install](docs/How-to-Install.md)
-## - [Other docs](docs/)
+ - **[How to install](docs/How-to-Install.md)**
+ - **[Other docs](docs/)**
