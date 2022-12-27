@@ -49,307 +49,244 @@ End
 What happens if we just let it run as it normally should be checking all the downloaded files in the download directory and move them into the proper place.  It only takes 64 MB of space instead of the orginal 1.6 GB we started with.
 
 ```
-PS D:\Users\kjeff\Downloads> C:\Users\darre\OneDrive\Documents\scripts\clean-mysewnet.ps1   -Testing 
-                Begin MySewnet Process                             
-                Checking for Zips in the last 7 days               
-Download source directory          : d:\Users\kjeff\downloads
-mySewnet Cloud sub folder directory: d:\Users\kjeff\mySewnet Cloud\Embroidery\
-Instructions directory             : d:\Users\kjeff\OneDrive\Documents\Embroidery Instructions\
-File types                         : *.vp4 *.vp3 *.vip *.pcs *.dst
-Age of files in Download directory : 7
-Clean the mysewingNet cloud folder : False
-Keep all variations of files types : False
-Testing                            : True
-Found ZIP: 'D:\Users\kjeff\downloads\12644-907.pcs.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\12644-907.pcs.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\12644-907.vp3 (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\12644-907.vp3 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\12644-907.vp3 (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\12644-907.vp3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17445225.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17445225.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17489954 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17489954 (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17489954.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17489954.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17529881.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17529881.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17532767.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17532767.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17561335.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17561335.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17589307.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17589307.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17660766.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17660766.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17661990 (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17661990 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17661990.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17700580 (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17700580 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17700580 (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17700580.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17710087.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17710087.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17838253.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17838253.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17841716.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17841716.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17872666.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17872666.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17912524.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17912524.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17942480.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17942480.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17942481.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17942481.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17960951.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17960951.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17973434.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17973434.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17981105.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17981105.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17986490.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17986490.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\17992030.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\17992030.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\18096530.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\18096530.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\18130241.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\18130241.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\18147942.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\18147942.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\18147942.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\18187327 (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\18187327 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\18187327.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\18198823.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\18198823.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\61062.dst (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\61062.dst (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\61062.dst.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\61062.pcs (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\61062.pcs (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\61062.pcs.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Christmas Gift Tags.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\AE 3D Christmas Gift Tags.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Christmas Gift Tags.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Christmas Gift Tags.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Ornaments.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\AE 3D Ornaments.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Ornaments.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE 3D Ornaments.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE Hand Stitched Christmas Pillows.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\AE Hand Stitched Christmas Pillows.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE Hand Stitched Christmas Pillows.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AE Hand Stitched Christmas Pillows.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Angels.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Angels.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Angels.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Angels.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AP2932A_VP3.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\AP2932A_VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\AP3029A_VP3.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\AP3029A_VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Away in a Manger.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Away in a Manger.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Away in a Manger.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Away in a Manger.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\CC06222.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\CC06222.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Christmas Bible Bookmarks.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Christmas Bible Bookmarks.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Christmas Bible Bookmarks.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Christmas Bible Bookmarks.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\dst-ithbellapuppyset.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\dst-ithbellapuppyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\dst-ithkittyset.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\dst-ithkittyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\edp13891-2.DST.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\EDP13891-2.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\esp80149-1.VP3.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\esp80149-1.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Fundamentals-Designs.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Fundamentals-Designs.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Fundamentals-Designs.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Fundamentals-Designs.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Hand Stitched Autumn Quilt.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Hand Stitched Autumn Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Hand Stitched Autumn Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Hand Stitched Autumn Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Inspirograph Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Journaling Quilt.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Journaling Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Journaling Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Journaling Quilt.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\k2442.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\l9449.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m18051.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m18612.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m18615.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m18618.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m20713.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m28367.DST.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\M28367.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m28370.DST.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\M28370.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\M28373.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m28715.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m33042.DST.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\M33042.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m33948.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\m5772.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes Bonus.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes Bonus.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes Bonus.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes Bonus.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Nursery Rhymes.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-2021christmasornament-rudolph.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman-dolljointarms.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman-dolljointarms.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman-dolljointarms.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman-dolljointarms.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-doyouwanttobuildasnowman.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-dst.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-dst.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-vip.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-vp3 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoop-darlingdolls-vp3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopbabyblitzen.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopbabyblitzen.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopbabyblitzen.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopbabyblitzen.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopdarlingbunny-dst.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopdarlingbunny-dst.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopdarlingbunny-vip.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopdarlingbunny-vp3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopreindeerstable.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopreindeerstable.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopreindeerstable.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopreindeerstable.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsantaslittlereindeer.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsantaslittlereindeer.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsantaslittlereindeer.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsantaslittlereindeer.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsillysnowballfight.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsillysnowballfight.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsillysnowballfight.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-inthehoopsillysnowballfight.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony (2).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-ithabbydollandpony.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-sallyfaceaddon-darlingdolls.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-sallyfaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-sallyfaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-sallyfaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-taylorfaceaddon-darlingdolls.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-taylorfaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-taylorfaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-taylorfaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony (1).zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-unicornhornforpony.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-willafaceaddon-darlingdolls.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa-willafaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-willafaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa-willafaceaddon-darlingdolls.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-8x12ponybody-october2021.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-ithkittyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-ithkittyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\patch-ithkittyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa_christmasfingerpuppets.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\pa_christmasfingerpuppets.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\pa_christmasfingerpuppets.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Sewing Machine Patchwork Cover.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Sewing Machine Patchwork Cover.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Sewing Machine Patchwork Cover.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Sewing Machine Patchwork Cover.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\SHE5467A_VP3.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\SHE5467A_VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\snowflakes.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Spring Flower Doodles.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Spring Flower Doodles.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Spring Flower Doodles.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Spring Flower Doodles.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Stippled Quilt Block.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Stippled Quilt Block.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Stippled Quilt Block.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Stippled Quilt Block.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\SUNFLOWER CRAZY QUILT.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\SUNFLOWER CRAZY QUILT.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\SUNFLOWER CRAZY QUILT.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Sunny Sunflower.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\Sunny Sunflower.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Sunny Sunflower.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\Sunny Sunflower.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\utz2377.VP3.zip'
-** New files in ZIP: 'D:\Users\kjeff\downloads\utz2377.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\vip-ithbellapuppyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\vip-ithkittyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\vp3-ithbellapuppyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\vp3-ithkittyset.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x13113.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x13237.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x13734.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x13774.DST.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\X13774.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x14789.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x14808.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x14959.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x14990.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x15445.DST.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\X15445.VP3 (1).zip'
-Found ZIP: 'D:\Users\kjeff\downloads\X15445.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x15561.VP3.zip'
-Found ZIP: 'D:\Users\kjeff\downloads\x3686.VP3.zip'
+PS D:\Users\kjeff\Downloads> C:\Users\darre\OneDrive\Documents\scripts\EmbroderyCollection-Cleanup.ps1 -Testing 
+                Begin Embroidery Filing                                     
+                Checking for Zips in the last 7 days                        
+Download source directory           : d:\Users\kjeff\downloads
+MySewnet Cloud sub folder directory : D:\Users\kjeff\mySewnet Cloud\Embroidery\
+Instructions directory              : d:\Users\kjeff\OneDrive\Documents\Embroidery Instructions\
+File types                          : *.vp4 *.vp3 *.vip *.pcs *.dst
+Age of files in Download directory  : 7
+Clean the Collection folder         : False
+Keep all variations of files types  : False
+Testing Mode                        : True
+* New  : '...\12644-907.pcs.zip'                                   2 new patterns
+* New  : '...\12644-907.vp3 (1).zip'                               3 new patterns
+- Found: '...\12644-907.vp3 (2).zip'                               nothing new
+- Found: '...\12644-907.vp3.zip'                                   nothing new
+* New  : '...\17445225.zip'                                        40 new patterns
+* New  : '...\17489954 (1).zip'                                    29 new patterns
+- Found: '...\17489954 (2).zip'                                    nothing new
+- Found: '...\17489954.zip'                                        nothing new
+* New  : '...\17529881.zip'                                        36 new patterns
+* New  : '...\17532767.zip'                                        8 new patterns
+* New  : '...\17561335.zip'                                        15 new patterns
+* New  : '...\17589307.zip'                                        25 new patterns
+* New  : '...\17660766.zip'                                        26 new patterns
+* New  : '...\17661990 (1).zip'                                    18 new patterns
+- Found: '...\17661990.zip'                                        nothing new
+* New  : '...\17700580 (1).zip'                                    7 new patterns
+- Found: '...\17700580 (2).zip'                                    nothing new
+- Found: '...\17700580.zip'                                        nothing new
+* New  : '...\17710087.zip'                                        15 new patterns
+* New  : '...\17838253.zip'                                        13 new patterns
+* New  : '...\17841716.zip'                                        7 new patterns
+* New  : '...\17872666.zip'                                        74 new patterns
+* New  : '...\17912524.zip'                                        66 new patterns
+* New  : '...\17942480.zip'                                        27 new patterns
+* New  : '...\17942481.zip'                                        4 new patterns
+* New  : '...\17960951.zip'                                        38 new patterns
+* New  : '...\17973434.zip'                                        24 new patterns
+* New  : '...\17981105.zip'                                        33 new patterns
+* New  : '...\17986490.zip'                                        13 new patterns
+* New  : '...\17992030.zip'                                        5 new patterns
+* New  : '...\18096530.zip'                                        22 new patterns
+* New  : '...\18130241.zip'                                        28 new patterns
+* New  : '...\18147942.zip'                                        21 new patterns
+* New  : '...\18187327 (1).zip'                                    36 new patterns
+- Found: '...\18187327.zip'                                        nothing new
+* New  : '...\18198823.zip'                                        3 new patterns
+- Found: '...\3d-layered-hummingbird-svg-mandala-jennifermaker.zip'  nothing new
+- Found: '...\3d-paper-birds-jennifermaker.zip'                    nothing new
+* New  : '...\61062.dst (1).zip'                                   28 new patterns
+- Found: '...\61062.dst.zip'                                       nothing new
+- Found: '...\61062.hus (1).zip'                                   nothing new
+- Found: '...\61062.hus.zip'                                       nothing new
+* New  : '...\61062.pcs (1).zip'                                   16 new patterns
+- Found: '...\61062.pcs.zip'                                       nothing new
+- Found: '...\61062.pes.zip'                                       nothing new
+- Found: '...\61062.sew.zip'                                       nothing new
+- Found: '...\61062.xxx.zip'                                       nothing new
+* New  : '...\ae 3d christmas gift tags.zip'                       16 new patterns
+* New  : '...\ae 3d ornaments.zip'                                 24 new patterns
+* New  : '...\ae hand stitched christmas pillows.zip'              30 new patterns
+* New  : '...\angels.zip'                                          95 new patterns
+* New  : '...\ap2932a_vp3.zip'                                     10 new patterns
+* New  : '...\ap3029a_vp3.zip'                                     10 new patterns
+- Found: '...\art-ithbellapuppyset.zip'                            nothing new
+- Found: '...\art-ithkittyset.zip'                                 nothing new
+* New  : '...\away in a manger.zip'                                102 new patterns
+- Found: '...\beautifulthings (1).zip'                             nothing new
+- Found: '...\beautifulthings.zip'                                 nothing new
+- Found: '...\beyond-diet-tools.zip'                               nothing new
+- Found: '...\cc06222.zip'                                         nothing new
+* New  : '...\christmas bible bookmarks.zip'                       10 new patterns
+- Found: '...\color lesson practice doc (1).zip'                   nothing new
+- Found: '...\color lesson practice doc (2).zip'                   nothing new
+- Found: '...\color lesson practice doc (3).zip'                   nothing new
+- Found: '...\color lesson practice doc (4).zip'                   nothing new
+- Found: '...\color lesson practice doc (5).zip'                   nothing new
+- Found: '...\color lesson practice doc (6).zip'                   nothing new
+- Found: '...\color lesson practice doc.zip'                       nothing new
+- Found: '...\disney love songs.zip'                               nothing new
+- Found: '...\diy-white-board-calendar-jennifermaker.zip'          nothing new
+- Found: '...\drawer-dividers-noglue-jennifermaker (1).zip'        nothing new
+- Found: '...\drawer-dividers-noglue-jennifermaker.zip'            nothing new
+* New  : '...\dst-ithbellapuppyset.zip'                            49 new patterns
+* New  : '...\dst-ithkittyset.zip'                                 59 new patterns
+- Found: '...\easter-cross-card.zip'                               nothing new
+- Found: '...\easy summer dress.zip'                               nothing new
+- Found: '...\easy-heart-box-jennifermaker.zip'                    nothing new
+- Found: '...\edp13891-2.dst.zip'                                  nothing new
+- Found: '...\edp13891-2.vp3.zip'                                  nothing new
+- Found: '...\engraved-ornaments-jennifermaker.zip'                nothing new
+- Found: '...\envelope2bybird.zip'                                 nothing new
+* New  : '...\esp80149-1.vp3.zip'                                  1 new patterns
+- Found: '...\exp-ithbellapuppyset.zip'                            nothing new
+- Found: '...\exp-ithkittyset.zip'                                 nothing new
+- Found: '...\faux-leather-earrings-jennifermaker.zip'             nothing new
+- Found: '...\filigree-ornament.zip'                               nothing new
+* New  : '...\fundamentals-designs.zip'                            94 new patterns
+- Found: '...\giant-paper-poinsettia-jennifermaker (1).zip'        nothing new
+- Found: '...\giant-paper-poinsettia-jennifermaker (2).zip'        nothing new
+- Found: '...\giant-paper-poinsettia-jennifermaker.zip'            nothing new
+- Found: '...\grab-and-go-wristlet-8211-svg-8211-for-die-cutting-machines-00504913900.zip'  nothing new
+* New  : '...\hand stitched autumn quilt.zip'                      160 new patterns
+- Found: '...\hand-drawn-spring-flower-set.zip'                    nothing new
+- Found: '...\handsanitzer-pdf-svg-patterns-00500080500.zip'       nothing new
+- Found: '...\heart-box-jennifermaker.zip'                         nothing new
+- Found: '...\heart-explosion-box-jennifermaker (1).zip'           nothing new
+- Found: '...\heart-explosion-box-jennifermaker.zip'               nothing new
+- Found: '...\heart-lantern-lg-jennifermaker.zip'                  nothing new
+- Found: '...\heart-rainbow-svg-v2_6c773b90-0aeb-46f3-ab46-87af3a2fbc95 (1).zip'  nothing new
+- Found: '...\heart-rainbow-svg-v2_6c773b90-0aeb-46f3-ab46-87af3a2fbc95.zip'  nothing new
+- Found: '...\holiday-ornaments-stl-files-3d-prints.zip'           nothing new
+- Found: '...\hus-ithbellapuppyset.zip'                            nothing new
+- Found: '...\hus-ithkittyset.zip'                                 nothing new
+- Found: '...\images-ithbellapuppyset.zip'                         nothing new
+- Found: '...\images-ithkittyset.zip'                              nothing new
+* New  : '...\inspirograph quilt (1).zip'                          100 new patterns
+- Found: '...\inspirograph quilt.zip'                              nothing new
+- Found: '...\jef-ithbellapuppyset.zip'                            nothing new
+- Found: '...\jef-ithkittyset.zip'                                 nothing new
+* New  : '...\journaling quilt.zip'                                72 new patterns
+- Found: '...\k2442.vp3.zip'                                       nothing new
+- Found: '...\l9449.vp3.zip'                                       nothing new
+- Found: '...\m18051.vp3.zip'                                      nothing new
+- Found: '...\m18612.vp3.zip'                                      nothing new
+- Found: '...\m18615.vp3.zip'                                      nothing new
+- Found: '...\m18618.vp3.zip'                                      nothing new
+- Found: '...\m20713.vp3.zip'                                      nothing new
+- Found: '...\m28367.dst.zip'                                      nothing new
+- Found: '...\m28367.vp3.zip'                                      nothing new
+- Found: '...\m28370.dst.zip'                                      nothing new
+- Found: '...\m28370.vp3.zip'                                      nothing new
+- Found: '...\m28373.vp3.zip'                                      nothing new
+- Found: '...\m28715.vp3.zip'                                      nothing new
+- Found: '...\m33042.dst.zip'                                      nothing new
+- Found: '...\m33042.vp3.zip'                                      nothing new
+- Found: '...\m33948.vp3.zip'                                      nothing new
+- Found: '...\m5772.vp3.zip'                                       nothing new
+- Found: '...\mf_i_love_glitter.zip'                               nothing new
+- Found: '...\msg2pst.zip'                                         nothing new
+- Found: '...\mysewnetcloudsyncsetup.zip'                          nothing new
+* New  : '...\nursery rhymes bonus.zip'                            60 new patterns
+* New  : '...\nursery rhymes.zip'                                  190 new patterns
+- Found: '...\nymphette.zip'                                       nothing new
+- Found: '...\onedrive-2018-01-28 (1).zip'                         nothing new
+- Found: '...\onedrive-2018-01-28 (2).zip'                         nothing new
+- Found: '...\onedrive-2018-01-28.zip'                             nothing new
+- Found: '...\onedrive-2019-11-02.zip'                             nothing new
+* New  : '...\pa-2021christmasornament-rudolph (1).zip'            2 new patterns
+- Found: '...\pa-2021christmasornament-rudolph (2).zip'            nothing new
+- Found: '...\pa-2021christmasornament-rudolph.zip'                nothing new
+* New  : '...\pa-doyouwanttobuildasnowman-dolljointarms.zip'       5 new patterns
+* New  : '...\pa-doyouwanttobuildasnowman.zip'                     40 new patterns
+* New  : '...\pa-inthehoop-darlingdolls-dst.zip'                   176 new patterns
+- Found: '...\pa-inthehoop-darlingdolls-exp.zip'                   nothing new
+- Found: '...\pa-inthehoop-darlingdolls-hus.zip'                   nothing new
+- Found: '...\pa-inthehoop-darlingdolls-jef.zip'                   nothing new
+- Found: '...\pa-inthehoop-darlingdolls-sew.zip'                   nothing new
+- Found: '...\pa-inthehoop-darlingdolls-vip.zip'                   nothing new
+- Found: '...\pa-inthehoop-darlingdolls-vp3 (1).zip'               nothing new
+- Found: '...\pa-inthehoop-darlingdolls-vp3.zip'                   nothing new
+- Found: '...\pa-inthehoop-darlingdolls-xxx.zip'                   nothing new
+* New  : '...\pa-inthehoopbabyblitzen.zip'                         77 new patterns
+* New  : '...\pa-inthehoopdarlingbunny-dst.zip'                    83 new patterns
+- Found: '...\pa-inthehoopdarlingbunny-exp.zip'                    nothing new
+- Found: '...\pa-inthehoopdarlingbunny-hus.zip'                    nothing new
+- Found: '...\pa-inthehoopdarlingbunny-jef.zip'                    nothing new
+- Found: '...\pa-inthehoopdarlingbunny-pes.zip'                    nothing new
+- Found: '...\pa-inthehoopdarlingbunny-sew.zip'                    nothing new
+- Found: '...\pa-inthehoopdarlingbunny-vip.zip'                    nothing new
+- Found: '...\pa-inthehoopdarlingbunny-vp3.zip'                    nothing new
+- Found: '...\pa-inthehoopdarlingbunny-xxx.zip'                    nothing new
+* New  : '...\pa-inthehoopreindeerstable.zip'                      76 new patterns
+* New  : '...\pa-inthehoopsantaslittlereindeer.zip'                135 new patterns
+* New  : '...\pa-inthehoopsillysnowballfight.zip'                  18 new patterns
+* New  : '...\pa-ithabbydollandpony (1).zip'                       82 new patterns
+- Found: '...\pa-ithabbydollandpony (2).zip'                       nothing new
+- Found: '...\pa-ithabbydollandpony.zip'                           nothing new
+* New  : '...\pa-sallyfaceaddon-darlingdolls.zip'                  5 new patterns
+* New  : '...\pa-taylorfaceaddon-darlingdolls.zip'                 5 new patterns
+* New  : '...\pa-unicornhornforpony (1).zip'                       4 new patterns
+- Found: '...\pa-unicornhornforpony.zip'                           nothing new
+* New  : '...\pa-willafaceaddon-darlingdolls.zip'                  5 new patterns
+- Found: '...\paper-poppies.zip'                                   nothing new
+- Found: '...\paper-star-lanterns-jennifermaker.zip'               nothing new
+- Found: '...\patch-8x12ponybody-october2021 (1).zip'              nothing new
+- Found: '...\patch-8x12ponybody-october2021.zip'                  nothing new
+- Found: '...\patch-ithkittyset.zip'                               nothing new
+* New  : '...\pa_christmasfingerpuppets.zip'                       4 new patterns
+- Found: '...\pes-ithbellapuppyset.zip'                            nothing new
+- Found: '...\pes-ithkittyset.zip'                                 nothing new
+- Found: '...\quiltlabelsfromsewcanshe_aiid1428726.zip'            nothing new
+- Found: '...\sew-ithbellapuppyset.zip'                            nothing new
+- Found: '...\sew-ithkittyset.zip'                                 nothing new
+* New  : '...\sewing machine patchwork cover.zip'                  30 new patterns
+- Found: '...\sewitpretty-2.zip'                                   nothing new
+- Found: '...\sewmuchfabric.zip'                                   nothing new
+* New  : '...\she5467a_vp3.zip'                                    10 new patterns
+- Found: '...\snowflake-tree-basic-jennifermaker.zip'              nothing new
+* New  : '...\snowflakes.zip'                                      2 new patterns
+- Found: '...\snowman-face-hat-jennifermaker.zip'                  nothing new
+* New  : '...\spring flower doodles.zip'                           30 new patterns
+- Found: '...\spring_romance (1).zip'                              nothing new
+- Found: '...\spring_romance.zip'                                  nothing new
+* New  : '...\stippled quilt block.zip'                            7 new patterns
+- Found: '...\summer-flower-edge-card-by-bird.zip'                 nothing new
+* New  : '...\sunflower crazy quilt.zip'                           50 new patterns
+* New  : '...\sunny sunflower.zip'                                 11 new patterns
+- Found: '...\text on path practice doc.zip'                       nothing new
+- Found: '...\thread-catcher-svg-pattern-00539650700.zip'          nothing new
+- Found: '...\tool-holder-jennifermaker-stl.zip'                   nothing new
+- Found: '...\towel-hanger-pdf-pattern-00510022900.zip'            nothing new
+* New  : '...\utz2377.vp3.zip'                                     2 new patterns
+- Found: '...\vip-ithbellapuppyset.zip'                            nothing new
+- Found: '...\vip-ithkittyset.zip'                                 nothing new
+- Found: '...\vp3-ithbellapuppyset.zip'                            nothing new
+- Found: '...\vp3-ithkittyset.zip'                                 nothing new
+- Found: '...\winter-wreath-jennifermaker.zip'                     nothing new
+- Found: '...\x13113.vp3.zip'                                      nothing new
+- Found: '...\x13237.vp3.zip'                                      nothing new
+- Found: '...\x13734.vp3.zip'                                      nothing new
+- Found: '...\x13774.dst.zip'                                      nothing new
+- Found: '...\x13774.vp3.zip'                                      nothing new
+- Found: '...\x14789.vp3.zip'                                      nothing new
+- Found: '...\x14808.vp3.zip'                                      nothing new
+- Found: '...\x14959.vp3.zip'                                      nothing new
+- Found: '...\x14990.vp3.zip'                                      nothing new
+- Found: '...\x15445.dst.zip'                                      nothing new
+- Found: '...\x15445.vp3 (1).zip'                                  nothing new
+- Found: '...\x15445.vp3.zip'                                      nothing new
+- Found: '...\x15561.vp3.zip'                                      nothing new
+- Found: '...\x3686.vp3.zip'                                       nothing new
+- Found: '...\xxx-ithbellapuppyset.zip'                            nothing new
+- Found: '...\xxx-ithkittyset.zip'                                 nothing new
 Calculating size
-   *** MySewnet Cloud size is now : 64.6 MB was 0 KB ****   
-Cleaned up - Dirs removed: '0' Saved from zip files: '6' (171.1 KB) Removed: '0' (0 KB).
-End 
-
+Added files to MySewnet Cloud: '2639' (64.6 MB) 
+   *** MySewnet Cloud size is now : 64.6 MB was 0 B ****   
+End
 
 
 
