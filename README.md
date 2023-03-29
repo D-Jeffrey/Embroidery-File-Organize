@@ -1,7 +1,7 @@
-[![License][license-shield]]([LICENSE])
+[![License][license-shield]][LICENSE]
 ![Project Maintenance][maintenance-shield]
 [![GitHub Activity][commits-shield]][commits]
-[![GitHub Activity][releases-shield]][releases]
+![GitHub Activity][releases-shield]
 
 # EmbroderyCollection-Cleanup.ps1
 
