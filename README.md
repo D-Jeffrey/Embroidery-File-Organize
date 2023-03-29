@@ -3,7 +3,7 @@
 [![GitHub Activity][commits-shield]][commits]
 ![GitHub Activity][releases-shield]
 
-# EmbroderyCollection-Cleanup.ps1
+# EmbroideryCollection-Cleanup.ps1
 
 A powershell script to deal with the many different types of embroidery files, put the right format types in [mySewnet™](https://mysewnet.com/).  If you take all the zip files when you get purchase Embroidery patterns, it will come with many different types, along with PDF and Word docs exampling how to use the pattern.  That's all well and nice but only give you 100 megabytes to put all your files into, so why would you want to waste it with instructions. This script strips it down to the that are appropriate to sync onto my sewing net and get spread of a lot of the folder structure that comes along with it.  It is great that the creates of the file images produce so many variations, but you only need one type of make your mahine work.
 
@@ -55,6 +55,16 @@ This are the directories (plus the if the directory name equals the format type)
 
  - **[How to install](docs/How-to-Install.md)**
  - **[Other docs](docs/)**
+
+## Issues/Future
+- Needs a GUI interface for the general user to configure and use.
+- Needs to support USB for people who are not Mysewnet based.
+
+## Releases
+### 0.0.2
+- Fixed the script name, fixed error messages
+### 0.0.1
+It has been in use for over a year, good based, but only every been used by one person
 
 
 [license-shield]: https://img.shields.io/github/license/D-Jeffrey/Embroidery-File-Organize.svg?style=for-the-badge
