@@ -5,6 +5,22 @@
 
 # EmbroideryCollection-Cleanup.ps1
 
+## PROBLEM - HALT USE
+It seems that the MySewnet Cloud Sync tool has been discontinued as of September 2023 and is no longer supported by mySewnet.  This is a major problem has this code depends on that to sync in the updating of the cloud. I'm going to see if I can discovery the interface for pushing files to the cloud and keep the functionality alive.
+
+It has been superceded by the Explorer Plug-in which appears as a right click in File Explorer.  (Great, so obviously they have not tried this out in Windows 11, because W11 hides that in the classic functionaity.)
+This is [MySewnet Embroidery Software](https://softwarehelp.mysewnet.com/MSW/140/Configure/#t=Topics%2FUsing_the_Explorer_Plugin.htm)  
+
+![explorer with preview](docs/images/2022-12-27_10-56-25.gif)
+
+It appears that v1.5 is the current version:
+https://download.mysewnet.com/en/
+
+`VsmPluginServer.exe` seems to be assocated with the right click actions.  Let's see if I can trigger the `IStream::RemoteCopyTo`
+
+## Come back later...
+
+### back to the regularly scheduled instructions which are no longer applicable....
 A powershell script to deal with the many different types of embroidery files, put the right format types in [mySewnet™](https://mysewnet.com/).  If you take all the zip files when you get purchase Embroidery patterns, it will come with many different types, along with PDF and Word docs exampling how to use the pattern.  That's all well and nice but only give you 100 megabytes to put all your files into, so why would you want to waste it with instructions. This script strips it down to the that are appropriate to sync onto my sewing net and get spread of a lot of the folder structure that comes along with it.  It is great that the creates of the file images produce so many variations, but you only need one type of make your mahine work.
 
 Once it is setup with a shortcut you can simply download your patterns from online stores and then double-click the shortcut to copy the **right patterns** into yuor collection location.
@@ -64,7 +80,7 @@ This are the directories (plus the if the directory name equals the format type)
 ### 0.0.2
 - Fixed the script name, fixed error messages
 ### 0.0.1
-It has been in use for over a year, good based, but only every been used by one person
+- It has been in use for over a year, good based, but only every been used by one person
 
 
 [license-shield]: https://img.shields.io/github/license/D-Jeffrey/Embroidery-File-Organize.svg?style=for-the-badge
