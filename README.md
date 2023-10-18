@@ -5,18 +5,33 @@
 
 # EmbroideryCollection-Cleanup.ps1
 
+<<<<<<< Updated upstream
 ## PROBLEM - HALT USE
+=======
+## PROBLEM - Patched
+>>>>>>> Stashed changes
 It seems that the MySewnet Cloud Sync tool has been discontinued as of September 2023 and is no longer supported by mySewnet.  This is a major problem has this code depends on that to sync in the updating of the cloud. I'm going to see if I can discovery the interface for pushing files to the cloud and keep the functionality alive.
 
 It has been superceded by the Explorer Plug-in which appears as a right click in File Explorer.  (Great, so obviously they have not tried this out in Windows 11, because W11 hides that in the classic functionaity.)
 This is [MySewnet Embroidery Software](https://softwarehelp.mysewnet.com/MSW/140/Configure/#t=Topics%2FUsing_the_Explorer_Plugin.htm)  
 
+<<<<<<< Updated upstream
 ![explorer with preview](docs/images/2022-12-27_10-56-25.gif)
+=======
+>>>>>>> Stashed changes
 
 It appears that v1.5 is the current version:
 https://download.mysewnet.com/en/
 
+<<<<<<< Updated upstream
 `VsmPluginServer.exe` seems to be assocated with the right click actions.  Let's see if I can trigger the `IStream::RemoteCopyTo`
+=======
+
+So the new approach is to sustatin the cached copy of embroidary files and then pop a new Explorer directory with the new files found in the lastest download since it was last run.
+
+One other thing, it now supported nested embroidary file in a zip nested in a zip in the download directory.
+![powershell running](docs/images/Run_2023-10-17.gif)
+>>>>>>> Stashed changes
 
 ## Come back later...
 
