@@ -5,7 +5,7 @@
 
 # EmbroideryCollection-Cleanup.ps1
 
-## PROBLEM - Patched
+### patched for EOL Cloud Sync
 It seems that the MySewnet Cloud Sync tool has been discontinued as of September 2023 and is no longer supported by mySewnet.  This is a major problem has this code depends on that to sync in the updating of the cloud. I'm going to see if I can discovery the interface for pushing files to the cloud and keep the functionality alive.
 
 It has been superceded by the Explorer Plug-in which appears as a right click in File Explorer.  (Great, so obviously they have not tried this out in Windows 11, because W11 hides that in the classic functionaity.)
@@ -18,8 +18,12 @@ https://download.mysewnet.com/en/
 
 So the new approach is to sustatin the cached copy of Embroidary files and then pop a new Explorer directory with the new files found in the lastest download since it was last run.
 
+![Running example 01.2 version](docs/images/run-example-2023-1017.gif)
 
-## Come back later...
+This new approach is a little more work but opens up options for people who use USB connections to push files onto their machine.
+.. instructions coming soon
+
+#### more changes to come...
 
 ### back to the regularly scheduled instructions which are no longer applicable....
 A powershell script to deal with the many different types of embroidery files, put the right format types in [mySewnet™](https://mysewnet.com/).  If you take all the zip files when you get purchase Embroidery patterns, it will come with many different types, along with PDF and Word docs exampling how to use the pattern.  That's all well and nice but only give you 100 megabytes to put all your files into, so why would you want to waste it with instructions. This script strips it down to the that are appropriate to sync onto my sewing net and get spread of a lot of the folder structure that comes along with it.  It is great that the creates of the file images produce so many variations, but you only need one type of make your mahine work.
@@ -78,6 +82,14 @@ This are the directories (plus the if the directory name equals the format type)
 - Needs to support USB for people who are not Mysewnet based.
 
 ## Releases
+### 0.1.2
+- Added Support for Zip inside of Zip
+- Adjust the code to start to deal with the end-of-life for the mySewnet Cloud Sync tool.
+- Improved some logging
+- It does require more manual effort to send the file results to the cloud.
+- It still managed the local repository of files but it create a temporary new location for any recent downloads.
+- This may actually work better for people who did not use Cloud Sync or have Cloud Sync support but did use Direct USB
+
 ### 0.0.2
 - Fixed the script name, fixed error messages
 ### 0.0.1
