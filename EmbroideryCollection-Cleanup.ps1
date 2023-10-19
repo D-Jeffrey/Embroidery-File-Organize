@@ -11,18 +11,22 @@
 param
 (
   [Parameter(Mandatory = $false)]
-  [int32]$DownloadDaysOld = 7,                        # How many days old show it scan for Zip files in Download
+  [int32]$DownloadDaysOld = 7,                      # How many days old show it scan for Zip files in Download
   [int32]$aSetSizeis = 10,
-  [Switch]$KeepAllTypes,                              # Keep all the different types of a file (duplicate name but different extensions)
-  [Switch]$CleanCollection,                           # Cleanup the Collection Folder to only EmbrodRootDirtop files
-  [Switch]$CleanCollectionIgnoreDir,                  # Cleanup the Collection Folder to only EmbrodRootDirtop files and look for duplicates ignoring directories meanings
-  [string]$EmbrodRootDirtop = "Embroidery",           # You may want to change this directory name inside of the 'Collection ' Directory
-  [string]$instructions = "Embroidery Instructions",  # This is a Directory name inside of "Documents" where instructions are saved
-  [Switch]$includeEmbFilesWithInstruction,            # Put the Instruction along with the Embrodery files (NOT recommended as the PDFs tend to take up a lot of space)
-  [Switch]$HardDelete,                                # Delete the files rather than sending to recycle bin
-  [switch]$KeepEmptyDirectory,                        # If you don't want this to remove extra empty directories from Collection folders'
-  [Switch]$Testing                                   # Run it and see what happens
+  [Switch]$KeepAllTypes,                            # Keep all the different types of a file (duplicate name but different extensions)
+  [Switch]$CleanCollection,                         # Cleanup the Collection Folder to only EmbrodRootDirtop files
+  [Switch]$CleanCollectionIgnoreDir,                # Cleanup the Collection Folder to only EmbrodRootDirtop files and look for duplicates ignoring directories meanings
+  [string]$EmbrodRootDirtop = "Embroidery",         # You may want to change this directory name inside of the 'Collection ' Directory wihtin your 'Documents' directory
+                                                    
+  [string]$instructions = "Embroidery Instructions",# This is a Directory name inside of "Documents" where instructions are saved
+  [Switch]$includeEmbFilesWithInstruction,          # Put the Instruction along with the Embrodery files (NOT recommended as the PDFs tend to take up a lot of space)
+  [Switch]$HardDelete,                              # Delete the files rather than sending to recycle bin
+  [switch]$KeepEmptyDirectory,                      # If you don't want this to remove extra empty directories from Collection folders'
+  [Switch]$Testing                                  # Run it and see what happens
   )
+
+ # $VerbosePreference =  "Continue"
+ $InformationPreference =  "Continue"
 
 # ******** CONFIGURATION 
 $preferredSewType = ('vp4', 'vp3',  'vip', 'pcs', 'dst')
@@ -57,7 +61,7 @@ $foldupDir = @('images','sewing helps','Designs', 'Design Files')
 #
 #
 
-$ECCVERSION = "0.0.2"
+$ECCVERSION = "0.1.2"
 write-host "Embroidery Collection Cleanup version: $ECCVERSION" -ForegroundColor Cyan
 
 $filecnt = 0
@@ -72,14 +76,19 @@ $downloaddir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downlo
 $docsdir =[environment]::getfolderpath("mydocuments")
 $homedir = "${env:HOMEDRIVE}${env:HOMEPATH}"
 $tmpdir = ${env:temp} + "\cleansew.tmp"
+# We will put all the new files in here for now
+$newfiledir = ${env:temp} + "\cleansew.new"
 
 $doit = !$Testing
 
 $SewTypeStar = @()
+$SewTypeMatch = ""
 $foldupDirs = $foldupDir.tolower()
 foreach ($t in $preferredSewType) {
     $SewTypeStar += "*." + $t
     $foldupDirs += $t
+    if ($SewTypeMatch.Length -gt 0) { $SewTypeMatch += "|" }
+    $SewTypeMatch +=  $t
     }
 $excludetypes =@()
 
@@ -102,7 +111,7 @@ foreach ($a in $alltypes) {
 
 # This is for development testing and debugging
 
-if ($env:COMPUTERNAME -eq "DESKTOP-R3PSDBU" -and $Testing) {
+if ($env:COMPUTERNAME -eq "DESKTOP-R3PSDBU") { # -and $Testing) {
     $homedir  = "d:\Users\kjeff"
     $docsdir = "d:\Users\kjeff\OneDrive\Documents"
     $downloaddir = "d:\Users\kjeff\downloads"
@@ -112,20 +121,22 @@ if ($env:COMPUTERNAME -eq "DESKTOP-R3PSDBU" -and $Testing) {
 $FilesCollection = $docsdir
 $CollectionTypeofStr = "Default Documents"
 
+# CLOUD SYNC IS NO LONGER SUPPORTED by mySewnet
 $cfgfile = "${env:LOCALAPPDATA}\Mysewnet\mySewnetCache\cclibrary.config"
 if (test-path -path $cfgfile) {
-    $CollectionTypeofStr = "MySewnet Cloud"
-    get-content -path $cfgfile | where-object {$_ -like "files-path=*" } | 
-        foreach { ($mp, $FilesCollection) = $_ -split "=" }
-        if ($FilesCollection.substring($FilesCollection.length-1,1) -in @('\','/')) {
-            $FilesCollection = $FilesCollection.substring(0,$FilesCollection.length-1)
-        }
+    write-host "*** Warning - If you used this program before, it worked from the mySewnet Cloud Sync Directory, it now works from the Documents/$EmbrodRootDirtop directory" -ForegroundColor DarkMagenta
+#    $CollectionTypeofStr = "MySewnet Cloud"
+#    get-content -path $cfgfile | where-object {$_ -like "files-path=*" } | 
+#        foreach-object { ($mp, $FilesCollection) = $_ -split "=" }
+#        if ($FilesCollection.substring($FilesCollection.length-1,1) -in @('\','/')) {
+#            $FilesCollection = $FilesCollection.substring(0,$FilesCollection.length-1)
+#        }
     write-verbose "Found MySewnet configuration file $FilesCollection" 
-    if ((get-itemproperty -path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.vp3\ShellEx\{e357fccd-a995-4576-b01f-234630154e96}").'(default)' -ne "{370F9E36-A651-4BB3-89A9-A6DB957C63CC}") {
-        write-host "** Install the Explorer Plug-in https://download.mysewnet.com/MSW/ so the pattern images appear in Windows Explorer" -ForegroundColor Yellow
-        }
-      
     }
+if ((get-itemproperty -path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.vp3\ShellEx\{e357fccd-a995-4576-b01f-234630154e96}").'(default)' -ne "{370F9E36-A651-4BB3-89A9-A6DB957C63CC}") {
+    write-host "** Install the Explorer Plug-in https://download.mysewnet.com/MSW/ so the pattern images appear in Windows Explorer" -ForegroundColor Yellow
+    }
+    
 #
 # Building out all the directory structures and File lists
 #
@@ -139,11 +150,12 @@ if (-not $doit){
 }
 }
 
-$EmbrodRootDir = $FilesCollection  + "\" + $EmbrodRootDirtop + "\" 
+if ($null -eq $EmbrodRootDirtop) {
+    $EmbrodRootDir = $FilesCollection  + "\"
+} else {
+    $EmbrodRootDir = $FilesCollection + "\" + $EmbrodRootDirtop + "\" 
+}
 $instructionRoot = $docsdir + "\" + $instructions + "\"
-
-
-Get-ChildItem -Path  ($tmpdir ) -Recurse | Remove-Item -force -Recurse
 
 
 Function ShowSomeProgress ([string]$Area, [string]$stat = $null)
@@ -209,7 +221,7 @@ Function tailRecursion ([string]$path, [int]$depth=0) {
         tailRecursion $childDirectory.FullName ($depth+1)
         }
     $currentChildren = Get-ChildItem -Force -LiteralPath $Path
-    $isEmpty = $currentChildren -eq $null
+    $isEmpty = $null -eq $currentChildren
     # Don't remove the very top directory, but do remove sub-directories if empty
     if ($isEmpty -and $depth -gt 0) {
         Write-Verbose "Removing empty folder: '${Path}'" 
@@ -228,12 +240,12 @@ Function tailRecursion ([string]$path, [int]$depth=0) {
 function MoveFromDir ( 
         [string] $fromPath, 
         [boolean]$isEmbrodery = $false,        # is this to the Embrodery directory (true) Or to the Instruction Directory (false)
-        [string]$whichfiles = "*.*", 
-        [string[]]$files = $null
+        [string]$whichfiles = "*.*",            # File Names
+        [string[]]$files = $null                # File extension types as an array
         
     ) 
 {
-    
+    $newFileCount = 0
     ShowSomeProgress "Copying" "Added ${Global:savecnt} files"
     if ($isEmbrodery) { 
         $dtype = 'Embroidery' 
@@ -247,14 +259,13 @@ function MoveFromDir (
         }
 
     $objs | ForEach-Object {
-        if (($files -eq $null) -or ($_.Name -in $files)) {                
+        if (($null -eq $files) -or ($_.Name -in $files)) {                
             $newdir = (Split-Path(($_.FullName).substring(($fromPath.Length), 
                                 ($_.FullName).Length - ($fromPath.Length) )))
             
             $newfile = $_.Name
         
             # take off the directory name if it is one of the rollup names
-            
             do { 
                 $folding = $false
                 foreach ($r in $foldupDirs) {
@@ -268,31 +279,39 @@ function MoveFromDir (
             
             
             if (!(Test-Path -Path ($targetdir + $newdir) -PathType Container)) {
-                $null = New-Item -Path ($targetdir + $newdir) -ItemType Directory  }
-                $npath = (Join-Path -Path ($targetdir + $newdir) -ChildPath $newfile )
+                $null = New-Item -Path ($targetdir + $newdir) -ItemType Directory  
+                }
+            $npath = (Join-Path -Path ($targetdir + $newdir) -ChildPath $newfile )
             if (test-path $npath) {  # See if the file already exists
-                if (!$isEmbrodery) {
-                    if (Get-FileHash($npath) -eq Get-Filehash($_)) {
-                        Remove-Item -Path $_
-                        Write-Verbose "Removed Duplicate ${dtype} file :'$_'" 
+                
+                $newHash = Get-FileHash($_.FullName)
+                $orgHash = Get-FileHash($npath)
+                if ($orgHash.Hash -eq $newHash.Hash) {
+                    Remove-Item -Path $_
+                    Write-Verbose "Removed Duplicate ${dtype} file :'$_'" 
+                    }
+                
+                Write-Verbose "Skipping ${dtype}:'$_' to ${newdir}" 
+                }
+            if (test-path $_) {
+                if (test-path $npath) { Remove-item -path $npath -force -ErrorAction  SilentlyContinue }
+                    Copy-Item -Path $_ -Destination $newfiledir
+                    Move-Item $_ -Destination $npath  # -ErrorAction SilentlyContinue
+                    $newFileCount += 1
+                    Write-Information "+++ Saving ${dtype}:'$_' to ${newdir}"
+                    if ($isEmbrodery) { 
+                        $Global:addsizecnt = $Global:addsizecnt + (Get-Item -Path $npath).Length 
+                        $Global:savecnt = $Global:savecnt + 1
                         }
                     }
-                Write-Verbose "Skipping ${dtype}:'$_' to ${newdir}" 
-            } else {
-                $_ | Move-Item -Destination $npath  # -ErrorAction SilentlyContinue
-                Write-Verbose "Saving ${dtype}:'$_' to ${newdir}"
-                if ($isEmbrodery) { 
-                    $Global:addsizecnt = $Global:addsizecnt + (Get-Item -Path $npath).Length 
-                    $Global:savecnt = $Global:savecnt + 1
-                    }
-                }
-            } 
-            else {
+        } else {
                 Write-Verbose "Skipping ${_.Name}" 
             }
     
     ShowSomeProgress "Copying" -Status "Added ${Global:savecnt} files"
+    
     }
+    return $newFileCount
 }
 
 #-----------------------------------------------------------------------
@@ -323,22 +342,30 @@ function niceSize ($sz)   {
 #-----------------------------------------------------------------------
 
 
-Write-Host " ".padright(15) "Begin Embroidery Filing".padright(60) -ForegroundColor white -BackgroundColor blue
-Write-Host " ".padright(15) $("Checking for Zips in the last $DownloadDaysOld days".padright(60)) -ForegroundColor white -BackgroundColor blue
+
+Write-Host " ".padright(15) "Begin Embroidery Filing".padright(70) -ForegroundColor white -BackgroundColor blue
+Write-Host " ".padright(15) $("Checking for Zips in the last $DownloadDaysOld days".padright(70)) -ForegroundColor white -BackgroundColor blue
+
+# Clean out the old tmp working space
+Get-ChildItem -Path  ($tmpdir ) -Recurse | Remove-Item -force -Recurse
+Get-ChildItem -Path  ($newfiledir ) -Recurse | Remove-Item -force -Recurse
+if (-not (Test-Path -Path $tmpdir )) { New-Item -ItemType Directory -Path ($tmpdir )}
+if (-not (Test-Path -Path $newfiledir )) { New-Item -ItemType Directory -Path ($newfiledir )}
+
 
 $failed = $false
 if (!( test-path -Path $FilesCollection )) {
-    Write-Host "Can not find the Main directory for $$CollectionTypeofStr ($FilesCollection).  Stopping" 
+    Write-Host "Can not find the Main directory for $$CollectionTypeofStr ($FilesCollection).  ---- Stopping" 
     $failed = $true
     }
     
 if (!( test-path -Path $EmbrodRootDir)) {
-    Write-Host "Can not find the main directory ($EmbrodRootDir) within $FilesCollection.  Stopping" 
+    Write-Host "Can not find the main directory ($EmbrodRootDir) within $FilesCollection.  ---- Stopping" 
     Write-Host "Usually create '$EmbrodRootDirtop' in the with $FilesCollection directory.  Create the directory if this is your first time."
     $failed = $true
     }
 if (!( test-path -Path $instructionRoot)) {
-    Write-Host "Can not find the Instruction Directory ($instructionRoot).  Stopping"
+    Write-Host "Can not find the 'Instruction' Directory ($instructionRoot).  ---- Stopping"
     Write-Host "Usually created in the Documents directory ($docsdir).  Create the directory if this is your first time"
     $failed = $true
     } 
@@ -373,12 +400,7 @@ Add-Type -assembly "system.io.compression.filesystem"
 
 ShowSomeProgress  "Calculating size"
 $librarySizeBefore = 0
-if ($CollectionTypeofStr -eq "MySewnet Cloud") {
-    Get-ChildItem -Path ($EmbrodRootDir + "..")  -Recurse -file  | ForEach-Object { $librarySizeBefore = $librarySizeBefore + $_.Length}
-    }
-else {
-    Get-ChildItem -Path ($EmbrodRootDir)  -Recurse -file  | ForEach-Object { $librarySizeBefore = $librarySizeBefore + $_.Length}
-    }
+Get-ChildItem -Path ($EmbrodRootDir)  -Recurse -file  | ForEach-Object { $librarySizeBefore = $librarySizeBefore + $_.Length}
 
 ShowSomeProgress  "Loading file list"
 $mysewingfiles = $null
@@ -396,20 +418,22 @@ $mysewingfiles = (Get-ChildItem -Path $EmbrodRootDir  -Recurse -file -include $S
         Base = $_.BaseName
         Ext = $_.Extension
         DirectoryName = $_.DirectoryName
-        DirBase = $_.DirectoryName + $_.BaseName
+        Hash = $null            # We will calculate it when we need it
+        DirWBase = $_.DirectoryName + "\" + $_.BaseName
         Priority = $preferredSewType.Indexof($_.Extension.substring(1,$_.Extension.Length-1))
         } 
     }
 
-if ($mysewingfiles -eq $null) {
+if ($null -eq $mysewingfiles) {
     $mysewingfiles =    @([PSCustomObject]@{ 
             Name ="mysewingfiles.placeholder"
             N = "mysewingfiles.placeholder"
             Base  = "mysewingfiles"
             Ext  = "placeholder"
             DirectoryName = "DirectoryName"
-            DirBase = "DirBase"
+            DirWBase = "DirWBase"
             Priority = 100
+            Hash = $null # We will calculate it when we need it
             })
     }
 
@@ -420,8 +444,8 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
     ForEach-Object {
         $thisFile = $_
         $thisfileBase = $_.BaseName
-        Write-Verbose "Checking ZIP '$zips'" 
         $zips = $_.FullName
+        Write-Verbose "Checking ZIP '$zips'" 
         $filelist = [io.compression.zipfile]::OpenRead($zips).Entries
 
         $madeDir = ""
@@ -443,17 +467,17 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
                     if ($f -in $mysewingfiles.Name) {
                         # Check for duplicate FileHash
                         # Find the instances then get the full name then get hash to compare
-                        $fileInstance = $mysewingfiles | where-object {$.Name -eq $f}
-                        $fiName = $fileInstance.DirBase + "." + $fileInstance.Ext
+                        $fileInstance = $mysewingfiles | where-object {$_.Name -eq $f}
+                        $fiName = $fileInstance.DirWBase +  $fileInstance.Ext
                         Write-verbose "Comparing FileHash '${f}' to ${fiName}"
                         
-                        get-FileHas($fiName)
-                        somehow we need to queue this comparison
+                        #TODO something with Hash - nneds to be done after extraction
+                        # get-FileHash -Path $fiName
+                        # somehow we need to queue this comparison
 
                         Write-verbose "Duplicate file '${f}'"
                     } else {
                         Write-verbose "New file '${f}'"
-                        $numnew++
                         $isnew  = $true
                         if ($keepAllTypes) {
                             $filesOfThisType += $f
@@ -470,7 +494,8 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
                                 N = $f
                                 Base = $fs
                                 DirectoryName = "????????????"
-                                DirBase = ""
+                                Hash = $null
+                                DirWBase = ""
                                 Priority = $preferredSewType.Indexof($t)
                                 } 
                             }
@@ -486,13 +511,39 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
                             }
                         $resultTmpDir = $tmpdir + $madeDir
                         $isNewInstruct = $true
-                        Expand-Archive -Path $zips -DestinationPath $resultTmpDir
+                        Expand-Archive -Path $zips -DestinationPath $resultTmpDir -Force
                         }
                   
-                    MoveFromDir $tmpdir $true $ts $filesOfThisType
+                    $numnew += $(MoveFromDir $tmpdir $true $ts $filesOfThisType)
                     }
                 }               
             }
+            # now lets check to see if there was a ZIP file in a Zip file there
+            $filelist | ForEach-Object {
+                if ($_.FullName -match ".zip") {
+                    $NeedToExpandedZip = $true
+                    Write-Host "- - Found: nested zip file $($_.FullName) checking"
+                    $tempFile = [System.IO.Path]::GetTempFileName() + ".zip"
+                    # TODO we might be duplicating the extraction of the zip files if we expanded above
+                    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $tempFile, $true)
+                    [io.compression.zipfile]::OpenRead($tempFile).Entries | foreach-object {
+                        if ($_.FullName -match $SewTypeMatch) {
+                            $thisname = split-path $_.FullName  -leaf
+                            
+                            #TODO this needs to be a new path (put it into the same directory where of the orginal extract of other files
+                            if ($NeedToExpandedZip) {
+                                $NeedToExpandedZip = $false
+                                Expand-Archive -Path $tempFile -DestinationPath $tmpdir -Force
+                                }
+                                $numnew += $(MoveFromDir $tmpdir $true $thisname) 
+                            
+                        }
+                    
+                    }
+                }
+            }
+                    
+
         $zf = $zips.tolower().replace($downloaddir.tolower(),'...')
         if ($numnew -gt 0) {
             Write-host $("* New  : '$zf'").padright(65) " $numnew new patterns" 
@@ -501,7 +552,7 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
             }
         # we extracted the Zip already and now let's check for instructions
         if ($isNewInstruct) { 
-            MoveFromDir $tmpdir $false
+            $numnew += $(MoveFromDir $tmpdir $false)
             Get-ChildItem -Path $tmpdir -Recurse | Remove-Item -force -Recurse
             }
    
@@ -530,14 +581,17 @@ foreach ($t in $preferredSewType) {
                 Write-verbose "Duplicate file '${f}'"
             } else {
                 if (!(test-path -path (join-path -Path $EmbrodRootDir -ChildPath $_.Name))) { 
-                    $_ | Copy-Item -Destination $EmbrodRootDir -ErrorAction SilentlyContinue 
-                    Write-Verbose "Copied from Download :'$($_.Name)' to $EmbrodRootDir"
+                    $_ | Copy-Item -Destination $EmbrodRootDir -ErrorAction SilentlyContinue
+                    Copy-Item -Path $_ -Destination $newfiledir -ErrorAction SilentlyContinue
+
+
+                    Write-Information "+++ Copied from Download :'$($_.Name)' to $EmbrodRootDir"
                     $fd = join-Path -Path $d -ChildPath ($fs +".pdf")
                 
 
                     if (test-path -path $fd) {
                         Copy-Item -Path $fd -Destination $instructionRoot -ErrorAction SilentlyContinue 
-                        Write-Verbose "Copied instructions from Download :'$($_.Name)' to $instructionRoot"
+                        Write-Information "+++ Copied instructions from Download :'$($_.Name)' to $instructionRoot"
                         }
                     $Global:addsizecnt = $Global:addsizecnt + $_.Length 
                     $Global:savecnt = $Global:savecnt + 1 
@@ -548,6 +602,7 @@ foreach ($t in $preferredSewType) {
                                 Base = $fs
                                 DirectoryName = $d
                                 Priority = $preferredSewType.Indexof($t)
+                                Hash = $null
                        
                     }
                 }    
@@ -565,7 +620,7 @@ if ($CleanCollection -or $CleanCollectionIgnoreDir) {
     write-host "Scanning for files to clean up in mySewnet"
     $filteredfiles = @([PSCustomObject]@{
         Base = "filteredfiles" 
-        DirBase = ""
+        DirWBase = ""
         Ext = "PSCustomObject"
             })
     # Reload MySewingfiles
@@ -582,6 +637,7 @@ if ($CleanCollection -or $CleanCollectionIgnoreDir) {
             Ext = $_.Extension
             DirectoryName = $_.DirectoryName
             Priority = $preferredSewType.Indexof($_.Extension.substring(1,$_.Extension.Length-1))
+            Hash = $null
             } 
         }
 
@@ -592,8 +648,9 @@ if ($CleanCollection -or $CleanCollectionIgnoreDir) {
             if ($m.Base -notin $filteredfiles.Base) {
                 $filteredfiles += [PSCustomObject]@{ 
                                 Base = $m.Base.ToLower()
-                                DirBase = ($m.DirectoryName + $m.Base).ToLower()
+                                DirWBase = ($m.DirectoryName + $m.Base).ToLower()
                                 Ext = $m.Ext.ToLower()
+                                Hash = $null
                 }
             }
             $ppp++
@@ -630,8 +687,8 @@ if ($CleanCollection -or $CleanCollectionIgnoreDir) {
                     }
                 }
              else {
-                if (($_.DirectoryName + $_.BaseName) -in $filteredfiles.DirBase) {   # Check is this is the based version of the file
-                    $best = $filteredfiles.DirBase.Indexof(($_.DirectoryName + $_.BaseName).ToLower())
+                if (($_.DirectoryName + $_.BaseName) -in $filteredfiles.DirWBase) {   # Check is this is the based version of the file
+                    $best = $filteredfiles.DirWBase.Indexof(($_.DirectoryName + $_.BaseName).ToLower())
                     }
                 }
             if ($best -eq -1) {
@@ -680,7 +737,7 @@ if ($CleanCollection -or $CleanCollectionIgnoreDir) {
 
     write-host "Moving Instructions to proper Instructions directory"
     foreach ($g in $goodInstructionTypes) {
-        MoveFromDir $EmbrodRootDir $false ("*."+ $g)        
+        $numnew += $(MoveFromDir $EmbrodRootDir $false ("*."+ $g))        
         }
     }
 
@@ -695,12 +752,13 @@ if (-not $KeepEmptyDirectory) {
 write-host "Calculating size"
 ShowSomeProgress  "Calculating size"
 $librarySizeAfter = 0
-if ($CollectionTypeofStr -eq "MySewnet Cloud") {
-    Get-ChildItem -Path ($EmbrodRootDir  + "..") -Recurse -file  | ForEach-Object { $librarySizeAfter = $librarySizeAfter + $_.Length}
-    }
-else {
+if ($Global:savecnt -gt 0) {
+    Write-Host "Opening File Explorer - Select all files and MySewNet -> SEND" -ForegroundColor Green
+
+    $firstfile = $(get-childitem -path $newfiledir -File -depth 1)[0].FullName
+    Invoke-expression  "explorer  '/select,$firstfile'"   
     Get-ChildItem -Path ($EmbrodRootDir  ) -Recurse -file  | ForEach-Object { $librarySizeAfter = $librarySizeAfter + $_.Length}
-    }
+}
 
 
   
@@ -713,8 +771,11 @@ if ($Global:dircnt -gt 0 -or $filecnt -gt 0) {
     Write-Host "Cleaned up - Directories removed: '$Global:dircnt    Files removed : '$filecnt' ($sizecntB)." -ForegroundColor Green
     }
 if ($Global:savecnt -gt 0) {
-    write-host "Added files to ${CollectionTypeofStr}: '${Global:savecnt}' ($addsizecntB) " -ForegroundColor Green
+    write-host "+++ Added files to ${CollectionTypeofStr}: '${Global:savecnt}' ($addsizecntB) " -ForegroundColor Green
+    Write-host "   *** $CollectionTypeofStr size is now : $librarySizeAfter was $librarySizeBefore ****   "  -ForegroundColor Green 
     }
-Write-host "   *** $CollectionTypeofStr size is now : $librarySizeAfter was $librarySizeBefore ****   "  -ForegroundColor Green 
-$none = MyPause 'Press any key to Close'
+else {
+    Write-host "   *** $CollectionTypeofStr size is : $librarySizeBefore ****   "  -ForegroundColor Green 
+}
+MyPause 'Press any key to Close'
 Write-Host ( "End") -ForegroundColor Green
