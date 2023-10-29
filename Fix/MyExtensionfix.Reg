@@ -1,0 +1,4 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\mySewnet.Embroidery1.vp4\shellex\IconHandler]
+@="{3702BBF7-CBCD-4729-890C-8259EF62AD03}"
