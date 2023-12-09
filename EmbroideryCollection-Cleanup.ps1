@@ -5,14 +5,14 @@
 # We are looking to keep the ??? files types only from the zip files.
 #
 # Orginal Author: Darren Jeffrey Dec 2021
-#                           Last Feb 2023
+#                           Last Dec 2023
 #
 
 param
 (
   [Parameter(Mandatory = $false)]
   [int32]$DownloadDaysOld = 7,                      # How many days old show it scan for Zip files in Download
-  [int32]$aSetSizeis = 10,
+  [int32]$SetSize = 10,
   [Switch]$KeepAllTypes,                            # Keep all the different types of a file (duplicate name but different extensions)
   [Switch]$CleanCollection,                         # Cleanup the Collection Folder to only EmbrodRootDirtop files
   [Switch]$CleanCollectionIgnoreDir,                # Cleanup the Collection Folder to only EmbrodRootDirtop files and look for duplicates ignoring directories meanings
@@ -22,7 +22,9 @@ param
   [Switch]$includeEmbFilesWithInstruction,          # Put the Instruction along with the Embrodery files (NOT recommended as the PDFs tend to take up a lot of space)
   [Switch]$HardDelete,                              # Delete the files rather than sending to recycle bin
   [switch]$KeepEmptyDirectory,                      # If you don't want this to remove extra empty directories from Collection folders'
-  [Switch]$Testing                                  # Run it and see what happens
+  [Switch]$Testing,                                 # Run it and see what happens
+  [Switch]$Setup,                                    # Setup the Shortcut on the desktop to this application
+  [Switch]$DragUpload                               # Use the web page instead of the plug in to drag and drop
   )
 
  # $VerbosePreference =  "Continue"
@@ -35,6 +37,7 @@ $alltypes =('hus','dst','exp','jef','pes','vip','vp3','xxx','sew',
 $goodInstructionTypes = ('pdf','doc', 'docx', 'txt','rtf'. 'mp4', 'ppt', 'pptx', 'gif', 'jpg', 'png', 'bmp','mov', 'wmv', 'avi','mpg', 'm4v' )
 $TandCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*')
 $foldupDir = @('images','sewing helps','Designs', 'Design Files')
+$opencloudpage = "https://www.mysewnet.com/en-us/my-account/#/cloud/"
 
 
 # This will be the directory created in MySewnet and managed by this program.  If you want to put other files in MySewnet, just put them in a different directory hierarchy
@@ -61,7 +64,7 @@ $foldupDir = @('images','sewing helps','Designs', 'Design Files')
 #
 #
 
-$ECCVERSION = "0.1.2"
+$ECCVERSION = "0.1.3"
 write-host "Embroidery Collection Cleanup version: $ECCVERSION" -ForegroundColor Cyan
 
 $filecnt = 0
@@ -74,7 +77,7 @@ $p = 0
 $shell = New-Object -ComObject 'Shell.Application'
 $downloaddir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
 $docsdir =[environment]::getfolderpath("mydocuments")
-$homedir = "${env:HOMEDRIVE}${env:HOMEPATH}"
+# $homedir = "${env:HOMEDRIVE}${env:HOMEPATH}"
 $tmpdir = ${env:temp} + "\cleansew.tmp"
 # We will put all the new files in here for now
 $newfiledir = ${env:temp} + "\cleansew.new"
@@ -112,7 +115,7 @@ foreach ($a in $alltypes) {
 # This is for development testing and debugging
 
 if ($env:COMPUTERNAME -eq "DESKTOP-R3PSDBU") { # -and $Testing) {
-    $homedir  = "d:\Users\kjeff"
+    # $homedir  = "d:\Users\kjeff"
     $docsdir = "d:\Users\kjeff\OneDrive\Documents"
     $downloaddir = "d:\Users\kjeff\downloads"
     $doit = $true
@@ -135,6 +138,8 @@ if (test-path -path $cfgfile) {
     }
 if ((get-itemproperty -path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.vp3\ShellEx\{e357fccd-a995-4576-b01f-234630154e96}").'(default)' -ne "{370F9E36-A651-4BB3-89A9-A6DB957C63CC}") {
     write-host "** Install the Explorer Plug-in https://download.mysewnet.com/MSW/ so the pattern images appear in Windows Explorer" -ForegroundColor Yellow
+    $DragUpload = $true
+    write-host "** Switching to Web drag and drop option" -ForegroundColor Green
     }
     
 #
@@ -157,6 +162,17 @@ if ($null -eq $EmbrodRootDirtop) {
 }
 $instructionRoot = $docsdir + "\" + $instructions + "\"
 
+$LogFile = $EmbrodRootDir + "EmbroideryCollection-Cleanup.Log"
+if (-Not (test-path $LogFile)) {
+    "EmbroideryCollection-Cleanup\n" | Set-Content -Path $LogFile 
+}
+if (-not (Test-Path -Path $newfiledir )) { New-Item -ItemType Directory -Path ($newfiledir )}
+
+function LogAddFile($newfile, [Boolean]$isInstructions = $false) {
+    $now = get-date -Format "yyyy/MMM/dd HH:mm "
+    if ($isInstructions) { $extra = " Instructions" } else {$extra = "" }
+    Add-Content -Path $LogFile -Value ($now + $newfile + $extra)
+}
 
 Function ShowSomeProgress ([string]$Area, [string]$stat = $null)
 {
@@ -182,35 +198,48 @@ Function deleteToRecycle ($file) {
 
 Function MyPause ($message, [bool]$choice=$false, $boxmsg, [int]$timeout=0)
 {
+    $yes = $true
     # Check if running Powershell ISE
     if ($psISE)
     {
         Add-Type -AssemblyName System.Windows.Forms
+        if ($boxmsg -eq "" -or ($null -eq $boxmsg)) {
+            $boxmsg = $message
+        }
         if ($choice) {
             $x = [System.Windows.Forms.MessageBox]::Show("$boxmsg",'Cleanup Collection Folders', 'YesNo', 'Question')
         } else {
             [System.Windows.Forms.MessageBox]::Show("$message")
             }
-        return ($x -eq 'Yes')
+        $yes = ($x -eq 'Yes')
     }
     else
     {
         $secondsRunning = 0;
-        if ($timeout -gt 0) { $host.ui.RawUI.FlushInputBuffer()}  # get around bug in commandline
-        Write-Host "$message" -ForegroundColor Yellow
-        $isSpace = $true
-        while( (-not $Host.UI.RawUI.KeyAvailable) -and ($secondsRunning -lt $timeout) ){
-
-            Start-Sleep -Seconds 1
-            $secondsRunning++
+        
+        if ($timeout -gt 0) { start-sleep -milliseconds 100; 
+            $host.ui.RawUI.FlushInputBuffer();  }  # get around bug in commandline
+        if ($choice) {
+            Write-Host $message " (Y/N)" -ForegroundColor Yellow
+        } else {
+            Write-Host $message -ForegroundColor Yellow
+        }
+        while( (-not $Host.UI.RawUI.KeyAvailable) -and ($secondsRunning++ -lt $timeout) ){
+            # Write-Host "tock " $secondsRunning " & " (-not $Host.UI.RawUI.KeyAvailable) " + " ($secondsRunning -lt $timeout) 
+            [Threading.Thread]::Sleep(1000)
+            # Write-Host "tick " $secondsRunning " & " (-not $Host.UI.RawUI.KeyAvailable) " + " ($secondsRunning -lt $timeout) 
             }
+        
         if ($Host.UI.RawUI.KeyAvailable -or $timeout -eq 0) {
+            # This will wait if timeout = 0
             $x = $host.ui.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-            # Return true is Space press
-            $isSpace = $x.VirtualKeyCode -eq 32
+            # Return true is Space press or if choice then 
+            $yes = $x.Character -eq ' ' -or ($choice -and ($x.Character -eq 'y' -or $x.Character -eq 'Y'))
             }
-        return ($isSpace)
+        
+        
     }
+    return ($yes)
 }
 
 Function tailRecursion ([string]$path, [int]$depth=0) {
@@ -234,6 +263,15 @@ Function tailRecursion ([string]$path, [int]$depth=0) {
     }
     return ($found)
 }
+#-----------------------------------------------------------------------
+# Only clear/reset the New files Directory once and only if there are new files with this run
+#
+function CheckNewfilesDirectory {
+    if ($clearNewFiles) {
+        Get-ChildItem -Path  ($newfiledir ) -Recurse | Remove-Item -force -Recurse
+        $clearNewFiles = $false
+    }
+    }
 
 #-----------------------------------------------------------------------
 # Move From Directory to either Embrodery or Instrctions directory
@@ -295,7 +333,9 @@ function MoveFromDir (
                 }
             if (test-path $_) {
                 if (test-path $npath) { Remove-item -path $npath -force -ErrorAction  SilentlyContinue }
+                    CheckNewfilesDirectory
                     Copy-Item -Path $_ -Destination $newfiledir
+                    LogAddFile $newfile
                     Move-Item $_ -Destination $npath  # -ErrorAction SilentlyContinue
                     $newFileCount += 1
                     Write-Information "+++ Saving ${dtype}:'$_' to ${newdir}"
@@ -339,19 +379,37 @@ function niceSize ($sz)   {
     }
 
 
+
 #-----------------------------------------------------------------------
+if ($setup) {
+    write-host "Creating shortcut on the Desktop" -BackgroundColor Yellow -ForegroundColor Black
+    $WshShell = New-Object -comObject WScript.Shell
+    $Desktop = [Environment]::GetFolderPath("Desktop")
+    $Desktop = $Desktop + "\Embroidery Downloaded.lnk"
+    write-Debug "Link: $Desktop"
+    $Shortcut = $WshShell.CreateShortcut($Desktop)
 
-
-
+    $Shortcut.TargetPath = "$pshome\Powershell.exe"
+    $Shortcut.IconLocation = "%ProgramFiles(x86)%\mySewnet\Embroidery1\CrossStitcher.exe"
+    $Shortcut.Arguments = "-NoLogo -ExecutionPolicy Bypass -File ""$PSCommandPath"""
+    $Shortcut.Description = "Run EmbroideryCollection-Cleanup.ps1 to extract the patterns from the download directory"
+    $Shortcut.Save()
+    if (!(Test-Path($FilesCollection)) -and (Test-Path($instructionRoot))) {
+        write-host "Creating Directory in Documents for Embrodery and Embrodery Instructions" -BackgroundColor Yellow -ForegroundColor Black
+        New-Item -ItemType Directory -Path $FilesCollection 
+        New-Item -ItemType Directory -Path $instructionRoot
+    }
+    write-host "All Done " -BackgroundColor Yellow -ForegroundColor Black
+    MyPause 'Press any key to Close'
+    Return
+}
 Write-Host " ".padright(15) "Begin Embroidery Filing".padright(70) -ForegroundColor white -BackgroundColor blue
 Write-Host " ".padright(15) $("Checking for Zips in the last $DownloadDaysOld days".padright(70)) -ForegroundColor white -BackgroundColor blue
 
 # Clean out the old tmp working space
 Get-ChildItem -Path  ($tmpdir ) -Recurse | Remove-Item -force -Recurse
-Get-ChildItem -Path  ($newfiledir ) -Recurse | Remove-Item -force -Recurse
 if (-not (Test-Path -Path $tmpdir )) { New-Item -ItemType Directory -Path ($tmpdir )}
-if (-not (Test-Path -Path $newfiledir )) { New-Item -ItemType Directory -Path ($newfiledir )}
-
+$clearNewFiles = $true
 
 $failed = $false
 if (!( test-path -Path $FilesCollection )) {
@@ -442,7 +500,7 @@ $isNewInstruct = $false
 Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.CreationTime -gt (Get-Date).AddDays(- $DownloadDaysOld ) } |
   
     ForEach-Object {
-        $thisFile = $_
+        
         $thisfileBase = $_.BaseName
         $zips = $_.FullName
         Write-Verbose "Checking ZIP '$zips'" 
@@ -505,7 +563,7 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { $_.Crea
                 # we found a new file in the Zip.  If we have not expanded this Zip, then do it now
                 if ($isnew) { 
                     if (-not $isNewInstruct) { 
-                        if ($filesOfThisType.count -gt $aSetSizeis) {     # This is a set we should keep together
+                        if ($filesOfThisType.count -gt $SetSize) {     # This is a set we should keep together
                             $madeDir = "\" + $thisfileBase -replace ' \(([0-9]+)\)'
                             
                             }
@@ -581,9 +639,10 @@ foreach ($t in $preferredSewType) {
                 Write-verbose "Duplicate file '${f}'"
             } else {
                 if (!(test-path -path (join-path -Path $EmbrodRootDir -ChildPath $_.Name))) { 
+                    CheckNewfilesDirectory
                     $_ | Copy-Item -Destination $EmbrodRootDir -ErrorAction SilentlyContinue
                     Copy-Item -Path $_ -Destination $newfiledir -ErrorAction SilentlyContinue
-
+                    LogAddFile $f
 
                     Write-Information "+++ Copied from Download :'$($_.Name)' to $EmbrodRootDir"
                     $fd = join-Path -Path $d -ChildPath ($fs +".pdf")
@@ -592,6 +651,7 @@ foreach ($t in $preferredSewType) {
                     if (test-path -path $fd) {
                         Copy-Item -Path $fd -Destination $instructionRoot -ErrorAction SilentlyContinue 
                         Write-Information "+++ Copied instructions from Download :'$($_.Name)' to $instructionRoot"
+                        LogAddFile $($_.Name), $true
                         }
                     $Global:addsizecnt = $Global:addsizecnt + $_.Length 
                     $Global:savecnt = $Global:savecnt + 1 
@@ -749,15 +809,81 @@ if (-not $KeepEmptyDirectory) {
          $tailr++
     }
 }
+
+Function OpenForUpload {
+    
+    Write-Host "-----------------------------------------------------------------------------------------" -ForegroundColor Green
+        
+    if ($DragUpload) {
+        Write-Host "Opening File Explorer & MySewnet Web page" -ForegroundColor Green
+        Write-Host " ** on MySewNet web page choose 'Upload' and Select all files in Explorer and drag/drop the files in the upload box" -ForegroundColor Green
+        
+    } else {
+        if ((Get-WmiObject -class Win32_OperatingSystem).Caption -match "Windows 11") {
+                Write-Host "Opening File Explorer (using mysewnet add-in)" -ForegroundColor Green
+                Write-Host " ***  Select all files *right-click* and choose 'Show more Options' -> choose 'MySewNet' -> 'Send'" -ForegroundColor Green
+        } else {
+            Write-Host "Opening File Explorer (using mysewnet add-in)" -ForegroundColor Green
+            Write-Host " ***  Select all files *right-click* and choose 'MySewNet' -> 'Send'" -ForegroundColor Green
+            }
+        
+    }
+    $firstfile = $(get-childitem -path $newfiledir -File -depth 1)
+    if ($firstfile.count -gt 0) {
+        $firstfile = $firstfile[0].FullName
+        $explorercmd = "explorer  '/select,$firstfile'"
+        } else { 
+        Write-Host " There are NO Files to upload" -ForegroundColor Yellow
+        $firstfile = $newfiledir + "\."
+
+        $explorercmd = "explorer  '$newfiledir'"
+    }
+    Write-Host "-----------------------------------------------------------------------------------------" -ForegroundColor Green
+    
+    if ($DragUpload) { 
+        Start-Process $opencloudpage 
+        }
+    Invoke-expression  $explorercmd
+
+    if (-not $DragUpload) { 
+        $file = Join-Path -path $(Split-Path -path $PSCommandPath) -ChildPath 'HowToSend-w10.gif'
+        if (test-path $file) {
+            write-host "Opening Example"
+            Add-Type -AssemblyName 'System.Windows.Forms'
+            $file = (get-item $file)
+            $img = [System.Drawing.Image]::Fromfile((get-item $file))
+
+            [System.Windows.Forms.Application]::EnableVisualStyles()
+            $form = new-object Windows.Forms.Form   
+            $form.Text = "How to Do it"
+            $form.Width = $img.Size.Width;
+            $form.Height =  $img.Size.Height;
+            $pictureBox = new-object Windows.Forms.PictureBox
+            $pictureBox.Width =  $img.Size.Width;
+            $pictureBox.Height =  $img.Size.Height;
+
+            $pictureBox.Image = $img;
+            $form.controls.add($pictureBox)
+            $form.Add_Shown( { $form.Activate() } )
+            $form.ShowDialog()
+            $form.Close()
+
+        } else {
+                write-host "Error: Could not find example file : $file" -foregroundcolor red
+        }
+    }
+}
+
 write-host "Calculating size"
 ShowSomeProgress  "Calculating size"
 $librarySizeAfter = 0
 if ($Global:savecnt -gt 0) {
-    Write-Host "Opening File Explorer - Select all files and MySewNet -> SEND" -ForegroundColor Green
-
-    $firstfile = $(get-childitem -path $newfiledir -File -depth 1)[0].FullName
-    Invoke-expression  "explorer  '/select,$firstfile'"   
+    OpenForUpload
     Get-ChildItem -Path ($EmbrodRootDir  ) -Recurse -file  | ForEach-Object { $librarySizeAfter = $librarySizeAfter + $_.Length}
+} else {
+    if (MyPause "Do you want to open the web page & directory to upload files from last time?" $true) {
+        OpenForUpload
+    }
 }
 
 
@@ -777,5 +903,5 @@ if ($Global:savecnt -gt 0) {
 else {
     Write-host "   *** $CollectionTypeofStr size is : $librarySizeBefore ****   "  -ForegroundColor Green 
 }
-MyPause 'Press any key to Close'
+$cont = MyPause 'Press any key to Close'
 Write-Host ( "End") -ForegroundColor Green

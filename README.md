@@ -5,18 +5,22 @@
 
 # EmbroideryCollection-Cleanup.ps1
 
-### patched for EOL Cloud Sync
-It seems that the MySewnet Cloud Sync tool has been discontinued as of September 2023 and is no longer supported by mySewnet.  This is a major problem has this code depends on that to sync in the updating of the cloud. I'm going to see if I can discovery the interface for pushing files to the cloud and keep the functionality alive.
+## Why?
+Why would I build a long powershell to move a file a few files around?  So this was created in order to help my wife manage the many embroidery files that she downloads from online stores moving them on to her pfaff sewing machine. 
+So the sewing machine includes the capability to synchronize those files that you download from the cloud my MySewnet.  When you buy embroidery files it usually comes with many different types plus the PDF of instructions all as part of a zip file.
+Now the challenge is that that zip file has a lot of junk in it that you don't need to be sent to MySewnet and it is limited to 100 megabytes unless you want to pay for the subscription service. 
+So unzip the files, find the ones that you really need to keep, separate the instruction files out from the embroidery files, transfer the right ones on to the cloud and therefor the sewing machine, easy pessy.
 
-It has been superceded by the Explorer Plug-in which appears as a right click in File Explorer.  (Great, so obviously they have not tried this out in Windows 11, because W11 hides that in the classic functionaity.)
+That is what this is.  Originally she could only keep about 40 downloads on her space on MySewnet.
+
+#### Updated to remove Cloud Sync functionality
+It seems that the MySewnet Cloud Sync tool has been discontinued as of September 2023 and is no longer supported by MySewnet.  This is a major problem has this code depends on that to sync in the updating of the cloud. I'm going to see if I can discovery the interface for pushing files to the cloud and keep the functionality alive.
+
+It has been superceded by the Explorer Plug-in which appears as a right click in File Explorer.  (**Great**, so obviously they have not tried this out in Windows 11, because W11 hides that in the classic functionality.)
 This is [MySewnet Embroidery Software](https://softwarehelp.mysewnet.com/MSW/140/Configure/#t=Topics%2FUsing_the_Explorer_Plugin.htm)  
 
 
-It appears that v1.5 is the current version:
-https://download.mysewnet.com/en/
-
-
-So the new approach is to sustatin the cached copy of Embroidary files and then pop a new Explorer directory with the new files found in the lastest download since it was last run.
+It appears that v1.5 is the current version: https://download.mysewnet.com/en/.  So the new approach is to sustatin the cached copy of Embroidary files locally on the computer and then pop a new Explorer directory with the new files found in the lastest download since it was last run.
 
 ![Running example 01.2 version](docs/images/run-example-2023-1017.gif)
 
@@ -25,22 +29,29 @@ This new approach is a little more work but opens up options for people who use 
 
 #### more changes to come...
 
-### back to the regularly scheduled instructions which are no longer applicable....
+### back to the regularly scheduled instructions which are only partly applicable....
 A powershell script to deal with the many different types of embroidery files, put the right format types in [mySewnet™](https://mysewnet.com/).  If you take all the zip files when you get purchase Embroidery patterns, it will come with many different types, along with PDF and Word docs exampling how to use the pattern.  That's all well and nice but only give you 100 megabytes to put all your files into, so why would you want to waste it with instructions. This script strips it down to the that are appropriate to sync onto my sewing net and get spread of a lot of the folder structure that comes along with it.  It is great that the creates of the file images produce so many variations, but you only need one type of make your mahine work.
 
 Once it is setup with a shortcut you can simply download your patterns from online stores and then double-click the shortcut to copy the **right patterns** into yuor collection location.
 
 ## Getting started
-This is a self contained single powershell script.  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to unblock the downloaded file (Right-click properties of the file and at the bottom check the `unblock`.
+This is a self contained single powershell script.  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to unblock the downloaded file (Right-click properties of the file and at the bottom check the `unblock`.  Once you have copy the script into a location you will keep referencing (and unblocked), then you can run the script with -setup
+
+```
+    powershell .\EmbroideryCollection-Cleanup.ps1 -setup
+
+    powershell .\EmbroideryCollection-Cleanup.ps1
+```
 
 
 ## parameters
-`-includeEmbFilesWithInstruction` Put a copy of the Embrodery in with the instructions in addition to putting them into the mySewnet™ cloud folders.  Not recommended
-`-CleanCollection` or `-CleanCollectionIgnoreDir`  Clean out non embroidery files from the mySewnet™ cloud directory since it is limits on the amount of space you have to work with.  IgnoreDir will look for duplicates reguardless if there they are in different directory structure.  The files are deleted to the **recycle bin** so they can be restored. (use -$HardDelete to delete without recycle)
-`-DownloadDaysOld = 7`  determine how old of zip files to look for (in days) 
-`-Testing`  Run it without it doing actual copying of files or cleaning up.
-`-KeepAllTypes` Keep all of the preferred types of pattern files (rather than only the top preferred)
-`-$aSetSizeis
+- `-Setup`    Create the directories required, and create a shortcut on the Desktop Icon linked to this Powershell script.
+- `-includeEmbFilesWithInstruction` Put a copy of the Embrodery in with the instructions in addition to putting them into the MySewnet™ cloud folders.  Not recommended
+- `-CleanCollection` or `-CleanCollectionIgnoreDir`  Clean out non embroidery files from the MySewnet™ cloud directory since it is limits on the amount of space you have to work with.  IgnoreDir will look for duplicates reguardless if there they are in different directory structure.  The files are deleted to the **recycle bin** so they can be restored. (use `-HardDelete` to delete without recycle)
+- `-DownloadDaysOld 7`    determine how old of zip files to look for (in days) 
+- `-Testing`  Run it without it doing actual copying of files or cleaning up.
+- `-KeepAllTypes` Keep all of the preferred types of pattern files (rather than only the top preferred)
+- `-SetSize 10`     When this many files are found together, it will keep the files together in a directory using the zip file name
 
 ## Functions
 
@@ -55,10 +66,10 @@ When vendors build zip files and put in all the different formats, it means digg
 
 ## Requirements
 
-It was designed to work with [mySewnet™ Cloud](https://cloud.mysewnet.com/) which is a type of file share service for sewing machines.
+It was designed to work with [mySewnet™ Cloud](https://cloud.mysewnet.com/) which is a type of file share service for sewing machines.  It can also be used
 
-`$EmbrodRootDirtop = "Embroidery"` is the directory name within your mysewingnet cloud that this program will put all the files and clean our file types that do not match the type you set.  It must exist in in the root directory of the **mySewnet cloud folders**, order for the program to run.
-`$instructions = "Embroidery Instructions"`  this is where all the instructions are saved (outside of mysewingnet).  It must exist within the users **Documents** folder in order for the program to run
+`$EmbrodRootDirtop = "Embroidery"` is the directory name within your MySewnet cloud that this program will put all the files and clean our file types that do not match the type you set.  It must exist in in the root directory of the **mySewnet cloud folders**, order for the program to run.
+`$instructions = "Embroidery Instructions"`  this is where all the instructions are saved (outside of MySewnet).  It must exist within the users **Documents** folder in order for the program to run
 
 Depending on the types Embrodery file extensions your machine uses then you may what to change the sewing file types of for you machine.  Order matter, if will find the first one in your list of types and try and keep files of that type over the other types.
 `$preferredSewType = ('vp3', 'vp4')`
@@ -78,13 +89,28 @@ This are the directories (plus the if the directory name equals the format type)
  - **[Other docs](docs/)**
 
 ## Issues/Future
-- Needs a GUI interface for the general user to configure and use.
-- Needs to support USB for people who are not Mysewnet based.
+- Needs a GUI interface for the general user to configure and use. (Some progress is underway)
+- Needs to support USB for people who are not MySewnet based.
+- Should have a Settings .ini file and keep values in that config
+  - allow for switch between MySewnet and automatic update of a USB stick
+  - keep DownloadDaysOld & SetSizeis 
+  - keep new directory 
+  - keep preferredSewType 
+- Reverse-engineer the API to query for the contents in the cloud
 
 ## Releases
+### 0.1.3
+- Add Example to show how to use Send Via Add-in
+- Keeps the previous 'New files' if there is nothing new to add
+- automatically open web page if the plug in not installed
+- Added History Logging of when a file was added
+- Add setup to add Icon to desktop, create folders
+- bug fix MyPause
+- adjusted Setsize
+- 
 ### 0.1.2
 - Added Support for Zip inside of Zip
-- Adjust the code to start to deal with the end-of-life for the mySewnet Cloud Sync tool.
+- Adjust the code to start to deal with the end-of-life for the MySewnet Cloud Sync tool.
 - Improved some logging
 - It does require more manual effort to send the file results to the cloud.
 - It still managed the local repository of files but it create a temporary new location for any recent downloads.
