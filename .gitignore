@@ -4,7 +4,8 @@
 
 XAML/
 /docs/setting_up.pub
-
+token.txt
+authentication.json
 
 # User-specific files
 *.rsuser

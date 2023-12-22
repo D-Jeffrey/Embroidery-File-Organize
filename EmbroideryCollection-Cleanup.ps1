@@ -27,8 +27,8 @@ param
   [Switch]$DragUpload                               # Use the web page instead of the plug in to drag and drop
   )
 
- # $VerbosePreference =  "Continue"
- $InformationPreference =  "Continue"
+# $VerbosePreference =  "Continue"
+# $InformationPreference =  "Continue"
 
 # ******** CONFIGURATION 
 $preferredSewType = ('vp4', 'vp3',  'vip', 'pcs', 'dst')
@@ -64,7 +64,7 @@ $opencloudpage = "https://www.mysewnet.com/en-us/my-account/#/cloud/"
 #
 #
 
-$ECCVERSION = "0.1.3"
+$ECCVERSION = "0.1.4"
 write-host "Embroidery Collection Cleanup version: $ECCVERSION" -ForegroundColor Cyan
 
 $filecnt = 0
@@ -125,17 +125,17 @@ $FilesCollection = $docsdir
 $CollectionTypeofStr = "Default Documents"
 
 # CLOUD SYNC IS NO LONGER SUPPORTED by mySewnet
-$cfgfile = "${env:LOCALAPPDATA}\Mysewnet\mySewnetCache\cclibrary.config"
-if (test-path -path $cfgfile) {
-    write-host "*** Warning - If you used this program before, it worked from the mySewnet Cloud Sync Directory, it now works from the Documents/$EmbrodRootDirtop directory" -ForegroundColor DarkMagenta
-#    $CollectionTypeofStr = "MySewnet Cloud"
-#    get-content -path $cfgfile | where-object {$_ -like "files-path=*" } | 
-#        foreach-object { ($mp, $FilesCollection) = $_ -split "=" }
-#        if ($FilesCollection.substring($FilesCollection.length-1,1) -in @('\','/')) {
-#            $FilesCollection = $FilesCollection.substring(0,$FilesCollection.length-1)
-#        }
-    write-verbose "Found MySewnet configuration file $FilesCollection" 
-    }
+    #$cfgfile = "${env:LOCALAPPDATA}\Mysewnet\mySewnetCache\cclibrary.config"
+    #if (test-path -path $cfgfile) {
+    # write-host "*** Warning - If you used this program before, it worked from the mySewnet Cloud Sync Directory, it now works from the Documents/$EmbrodRootDirtop directory" -ForegroundColor DarkMagenta
+    #    $CollectionTypeofStr = "MySewnet Cloud"
+    #    get-content -path $cfgfile | where-object {$_ -like "files-path=*" } | 
+    #        foreach-object { ($mp, $FilesCollection) = $_ -split "=" }
+    #        if ($FilesCollection.substring($FilesCollection.length-1,1) -in @('\','/')) {
+    #            $FilesCollection = $FilesCollection.substring(0,$FilesCollection.length-1)
+    #        }
+    #    write-verbose "Found MySewnet configuration file $FilesCollection" 
+    #    }
 if ((get-itemproperty -path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.vp3\ShellEx\{e357fccd-a995-4576-b01f-234630154e96}").'(default)' -ne "{370F9E36-A651-4BB3-89A9-A6DB957C63CC}") {
     write-host "** Install the Explorer Plug-in https://download.mysewnet.com/MSW/ so the pattern images appear in Windows Explorer" -ForegroundColor Yellow
     $DragUpload = $true
@@ -273,6 +273,193 @@ function CheckNewfilesDirectory {
     }
     }
 
+
+
+#===============================================
+#
+#  Working on the API interface
+#
+#===============================================
+$global:tokens = $null
+$global:authorize = $null
+
+$authfile =  "authentication.json"
+
+
+function loginSewnet($username, $pass)
+{
+
+    $loc = ""
+    # $loc = $PSScriptRoot + "\"
+
+    $requestUri = "https://api.mysewnet.com/api/v2/accounts/login"
+
+    $headers = @{
+        "Origin"="https://www.mysewnet.com"
+        "Referer"="https://www.mysewnet.com"
+        "Cookie"="epslanguage=en; country=US; svpCulture=en-US;"
+        "Accept-Encoding"="gzip, deflate, br"
+        "Accept-Language"="en-US,en;q=0.9"
+        "Content-Type"="application/json"
+        "Sec-Fetch-Dest"="empty"
+        "Sec-Fetch-Mode"="cors"
+        "Sec-Fetch-Site"="same-site"
+    }
+    $body = '{"Email":"'+ $username+'","Password":"' + $pass + '"}'
+    
+    $global:tokens = Invoke-RestMethod -Uri $requestUri -Method POST -Headers $headers -Body $body 
+
+    # A Valid tokens contains
+    # $tokens.session_token
+    # $tokens.encrypted_user_id
+    # $token.refresh_token
+    # $token.expires_in
+    # $token.refresh_expires_in 
+    # $token.profile
+
+    if ($null -eq $global:tokens.session_token) {
+        write-host "Authenication Failed" -ForegroundColor Yellow
+        $global:tokens
+        return $false
+    } 
+    Set-Content $loc"Token.txt" $($global:tokens | select-object *)
+    $global:authorize = $global:tokens.session_token
+
+    return $true
+}
+
+Function refreshToken() 
+{
+$refreshTokenParams = @{
+    client_id=$clientId;
+    client_secret=$clientSecret;
+    refresh_token=$refreshToken;
+    grant_type="refresh_token"; # Fixed value
+  }
+  
+  $global:tokens = Invoke-RestMethod -Uri $requestUri -Method POST -Body $refreshTokenParams
+
+}
+
+Function ReadMeta() 
+{
+
+    $requestUri = "https://api.mysewnet.com/api/v2/cloud/metadata"
+
+    $authHeader = @{ 
+        "Authorization" = "Bearer " + $global:authorize
+        "Accept"="application/json, text/plain, */*"
+        "Accept-Encoding"="gzip, deflate, br"
+        "Accept-Language"="en-US,en;q=0.9"
+        "Origin"="https://www.mysewnet.com"
+        "Referer"="https://www.mysewnet.com"
+    }
+    $result = Invoke-RestMethod -Headers $authHeader -Uri $requestUri -Method GET -ContentType 'application/json'
+
+    $result.files
+    $result.folders
+    $result.folders.files
+    $result.folders.folders
+        # for each folder it can contain an array of files
+    return $result
+}
+
+Function PushFile($name, $folder, $filepath)
+{
+    if (test-Path -Path $filepath) {
+        $authHeader = @{ 
+            "Authorization" = "Bearer " + $global:authorize
+            "Accept"="application/json, text/plain, */*"
+            "Accept-Encoding"="gzip, deflate, br"
+            "Accept-Language"="en-US,en;q=0.9"
+            "Origin"="https://www.mysewnet.com"
+            "Referer"="https://www.mysewnet.com"
+        }
+        
+        $requestUri = 'https://api.mysewnet.com/api/v2/cloud/files';
+        
+        $fileBytes = [System.IO.File]::ReadAllBytes($filepath);
+        $fileEnc = [System.Text.Encoding]::GetEncoding('UTF-8').GetString($fileBytes);
+        $boundary = "--" + [System.Guid]::NewGuid().ToString(); 
+        $LF = "`r`n";
+        
+        
+        $bodyLines = ( 
+            "--$boundary",
+            "Content-Disposition: form-data; name=`"File`"; filename=`"blob`"",
+            "Content-Type: application/octet-stream$LF",
+            $fileEnc,
+            "--$boundary",
+            "Content-Disposition: form-data; name=`"FileName`"$LF",
+            $name,
+            "--$boundary"
+        ) -join $LF
+        if ($folder) {
+            $bodyLines = (
+                $bodyLines,
+                "Content-Disposition: form-data; name=`"FolderId`"$LF",
+                $folder,
+                "--$boundary--"
+            ) -join $LF
+        }
+        $bodyLines = $bodyLines + $LF
+        
+        $result = Invoke-RestMethod -Uri $requestUri -Method POST -Headers $authHeader -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines  
+        return $result
+    } else {
+        write-host "File Not found : $filepath"
+    }
+
+}
+#----------------------------------------------
+#
+# API Interface to query files from the cloud
+#
+#----------------------------------------------
+function doWebAPI() {
+
+    if (!(Test-Path -path $authfile)) {
+        $userid = read-host -Prompt "What is your User id for MySewnet: "
+        if ($userid -eq "") {
+            write-host "user id is required - stopping" -ForegroundColor Yellow
+            return
+        }
+        $pw = read-host -Prompt "password for MySewnet: "
+        if ($pw -eq "") {
+            write-host "pw is required - stopping" -ForegroundColor Yellow
+            return
+        }
+        write-host "Testing Authenication" -ForegroundColor Blue
+        if (!(loginSewnet $userid $pw)) {
+            write-host "--- stopping ---" -ForegroundColor Yellow
+            return
+        }
+        
+        Set-Content -Path $authfile  $(@{userid = $userid; pw= $pw} | ConvertTo-Json)
+        
+    }
+
+
+
+    $setupvars = (Get-Content -Path  $authfile |  ConvertFrom-Json)
+
+    $userid = $setupvars.userid
+    $pw = $setupvars.pw
+
+
+    if (!$global:authorize) {
+        write-host "Using username: '$userid' to access MySewnet" -ForegroundColor Green 
+
+        if (!(loginSewnet $userid $pw)) {
+            write-host "If you are experience login issues, update the password in $authfile"
+            write-host "--- stopping ---" -ForegroundColor Yellow
+            return
+        }
+    }
+
+    ReadMeta
+}
+
 #-----------------------------------------------------------------------
 # Move From Directory to either Embrodery or Instrctions directory
 function MoveFromDir ( 
@@ -334,11 +521,14 @@ function MoveFromDir (
             if (test-path $_) {
                 if (test-path $npath) { Remove-item -path $npath -force -ErrorAction  SilentlyContinue }
                     CheckNewfilesDirectory
-                    Copy-Item -Path $_ -Destination $newfiledir
+                    if (!(test-path ($newfiledir + $newdir))) {
+                        $null = New-Item -Path ($newfiledir + $newdir) -ItemType Directory  
+                        }
+                    Copy-Item -Path $_ -Destination (Join-Path -Path ($newfiledir + $newdir) -ChildPath $newfile)
                     LogAddFile $newfile
                     Move-Item $_ -Destination $npath  # -ErrorAction SilentlyContinue
                     $newFileCount += 1
-                    Write-Information "+++ Saving ${dtype}:'$_' to ${newdir}"
+                    Write-Information "+++ Saving ${dtype}:'$_' to ${newdir} & ${newfiledir}"
                     if ($isEmbrodery) { 
                         $Global:addsizecnt = $Global:addsizecnt + (Get-Item -Path $npath).Length 
                         $Global:savecnt = $Global:savecnt + 1
@@ -641,7 +831,7 @@ foreach ($t in $preferredSewType) {
                 if (!(test-path -path (join-path -Path $EmbrodRootDir -ChildPath $_.Name))) { 
                     CheckNewfilesDirectory
                     $_ | Copy-Item -Destination $EmbrodRootDir -ErrorAction SilentlyContinue
-                    Copy-Item -Path $_ -Destination $newfiledir -ErrorAction SilentlyContinue
+                    $_ | Copy-Item -Destination $newfiledir -ErrorAction SilentlyContinue
                     LogAddFile $f
 
                     Write-Information "+++ Copied from Download :'$($_.Name)' to $EmbrodRootDir"
@@ -848,7 +1038,7 @@ Function OpenForUpload {
     if (-not $DragUpload) { 
         $file = Join-Path -path $(Split-Path -path $PSCommandPath) -ChildPath 'HowToSend-w10.gif'
         if (test-path $file) {
-            write-host "Opening Example"
+            write-host "Opening Example (Close it by clicking on the 'X' in the top right corner)"
             Add-Type -AssemblyName 'System.Windows.Forms'
             $file = (get-item $file)
             $img = [System.Drawing.Image]::Fromfile((get-item $file))

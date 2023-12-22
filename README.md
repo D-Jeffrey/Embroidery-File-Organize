@@ -99,6 +99,10 @@ This are the directories (plus the if the directory name equals the format type)
 - Reverse-engineer the API to query for the contents in the cloud
 
 ## Releases
+### 0.1.4
+- Started work on using API
+- Smaller how to image example
+- Fixed nested folders not copying to new upload directory
 ### 0.1.3
 - Add Example to show how to use Send Via Add-in
 - Keeps the previous 'New files' if there is nothing new to add
