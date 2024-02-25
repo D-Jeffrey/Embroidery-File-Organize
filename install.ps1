@@ -1,12 +1,13 @@
 $scriptDir = join-path -Path ${env:ProgramData} -childpath 'EmbroideryOrganize' 
 function Get-FileTo($file) {
-    $url = "https://raw.githubusercontent.com/D-Jeffrey/Embroidery-File-Organize/main/$file"
-    $downloadFromGitHub = Invoke-WebRequest -Uri "$url"
+    $url = "https://raw.githubusercontent.com/D-Jeffrey/Embroidery-File-Organize/main/" + $file
     $downloadFile = Join-Path -Path $scriptDir -ChildPath $file
-    Set-Content -Path $downloadFile -Value $downloadFromGitHub.Content
+    write-host "Downloading .. $url to $downloadFile"
+    $downloadFromGitHub = Invoke-WebRequest -Uri "$url" 
+    Set-Content -Path $downloadFile -Value $downloadFromGitHub.Content -Force
 }
 
-New-Item -ItemType Directory -Path $scriptDir | out-null
+New-Item -ItemType Directory -Path $scriptDir -ErrorAction SilentlyContinue| out-null
 
 $pushscript = 'EmbroideryCollection-Cleanup.ps1'
 $pushscript = 'testcall.ps1'
