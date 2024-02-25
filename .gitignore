@@ -221,3 +221,5 @@ MigrationBackup/
 
 # Local History for Visual Studio Code
 .history/
+/EmbroideryCollection.cfg
+/.vscode
