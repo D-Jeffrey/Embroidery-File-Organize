@@ -4,7 +4,7 @@ function Get-FileTo($file) {
     $downloadFile = Join-Path -Path $scriptDir -ChildPath $file
     write-host "Downloading ..`n  $url to`n  $downloadFile" -ForegroundColor Green
     $downloadFromGitHub = Invoke-WebRequest -Uri "$url" 
-    if (*$downloadFromGitHub.Content.Length -gt 0) {
+    if ($downloadFromGitHub.Content.Length -gt 0) {
         Set-Content -Path $downloadFile -Value $downloadFromGitHub.Content -Force
     }
 }
