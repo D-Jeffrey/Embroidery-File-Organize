@@ -36,6 +36,15 @@ Format|Machine Type|Preferred|Preview|Comment|
 |xxx| Singer Compucon PSW embroidery|4|Y| XXX files are used by Singer Compucon PSW embroidery machines and software to store design information |
 |zsk| ZSK USA Embroidery | |N| ZSK files are used by ZSK embroidery machines to store design information |
 |10o| Toyota embroidery |1|N| 10O files are used by Toyota embroidery machines to store design information |
+|mhv| Husqvarna Viking Embroidery| |N| MHV Husqvarna Viking Embroidery |
+|pxf| | |N|  |
+|svg| | |N|  |
+|dxf| | |N|  |
+|pec| | |N|  |
+|pcm| | |N|  |
+|pxf| | |N|  |
+|dem| | |N|  |
+|phc| | |N|  |
 
 - 'Preview' with MySewnet Explorer Plug-in
 - 'Preferred' lower preferred number is a better format

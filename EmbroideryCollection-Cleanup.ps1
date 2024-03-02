@@ -20,7 +20,7 @@ param
   [Switch]$CleanCloud,                              # Remove extra instructions and files from the cloud
 # BUG in NoDirectory
 #  [Switch]$NoDirectory,                             # Do not create directory structure in the upload from space
-  [Switch]$OneDirectory,                              #Limit the folders to one directly deep only 
+#  [Switch]$OneDirectory,                              #Limit the folders to one directly deep only 
   [string]$EmbroidDir = "Embroidery",               # You may want to change this directory name inside of the 'Collection ' Directory wihtin your 'Documents' directory
                                                     # If it is just a name, then it is assumed to be within the defeault Documents directory, otherwise it will be taken as a full path
 #   [string]$InstructDir = "Embroidery\Instructions",# This is a Directory name inside of "Documents" where instructions are saved
@@ -38,7 +38,7 @@ param
   [Switch]$SwitchDefault,                           # Clear all the preview Switch enabled Values
   [Switch]$FirstRun,                                # Scan all the ZIP files
   [Switch]$Sync,                                    # Sync MySewnet to local folders
-  [Switch]$APIBeta                                  # use MySewNet cloud API
+  [Switch]$CloudAPI                                  # use MySewNet cloud API
   
   )
 
@@ -47,7 +47,7 @@ param
 
 # ******** CONFIGURATION 
 $preferredSewType = 'vp3', 'vip', 'pcs','dst', 'pes', 'hus'
-$alltypes = 'hus', 'dst', 'exp', 'jef', 'pes', 'vip', 'vp3', 'xxx', 'sew', 'vp4', 'pcs', 'vf3', 'csd', 'zsk', 'emd', 'ese', 'phc', 'art', 'ofm', 'pxf', 'svg', 'dxf'
+$alltypes = 'hus', 'dst', 'exp', 'jef', 'pes', 'vip', 'vp3', 'xxx', 'sew', 'vp4', 'pcs', 'vf3', 'csd', 'zsk', 'emd' , 'ese', 'phc', 'art', 'ofm', 'shv', 'pxf', 'svg', 'dxf'
 $foldupDir = 'images', 'sewing helps', 'Designs', 'Design Files'
 
 $goodInstructionTypes = ('pdf','doc', 'docx', 'txt','rtf', 'mp4', 'ppt', 'pptx', 'gif', 'jpg', 'png', 'bmp','mov', 'wmv', 'avi','mpg', 'm4v' )
@@ -61,7 +61,8 @@ $paramstring =  [ordered]@{
  "EmbroidDir" = "Embriodary Files directory";
  "USBDrive"="USB drive letter (example E: or H:)";
  "MySewNetuserid"= "User ID to Login to MySewNet";
- "MySewNetpw"="" 
+ "MySewNetpw"=""
+ "LastCheckedGithub"=""
 }
 
 
@@ -72,7 +73,7 @@ $parambool = [ordered]@{
 'ShowExample'= 'Show how to upload to mySewnet';
 'NoDirectory'= 'Do not use Directories from Zip files which creating collection';
 'OneDirectory'= 'Keep files a maximum of one directory deep ';
-'APIBeta'= 'Use MySewnet Cloud';
+'CloudAPI'= 'Use MySewnet Cloud';
 'PromptPassword'= 'Always prompt for password to login to MySewnet Cloud'}
 $paramarray = [ordered]@{
 'preferredSewType' = 'The preferred types of Embriodary file types';
@@ -83,7 +84,7 @@ $paramarray = [ordered]@{
 $paramswitch =[ordered]@{
     'CleanCollection' = 'Clean the Collection folder';
     'CleanCollectionIgnoreDir' = 'Clean the Collection folder and Ignore Directory structure';
-    'APIBeta' = "Using BETA API for mySewNet";
+    'CloudAPI' = "Using BETA API for mySewNet";
     'Sync' = 'Syncronize computer folders to Cloud'
 }
 
@@ -107,7 +108,7 @@ $paramswitch =[ordered]@{
 #
 #
 
-$ECCVERSION = "0.5.3"
+$ECCVERSION = "v0.5.4"
 write-host " ".padright(15) "Embroidery Collection Cleanup version: $ECCVERSION".padright(70) -ForegroundColor White -BackgroundColor Blue
 
 
@@ -211,7 +212,7 @@ function SaveAllParams
 if ($missingSewnetAddin) {
     $DragUpload = $true
 }
-if ($APIBeta) {
+if ($CloudAPI) {
     $DragUpload = $false
     $ShowExample = $false
 }
@@ -233,10 +234,10 @@ if ($env:COMPUTERNAME -eq "DESKTOP-R3PSDBU_") { # -and $Testing) {
     
 #=============================================================================================
 
-function LogAction($File, $Action = "++Added", [Boolean]$isInstructions = $false) {
+function LogAction($File, $Action, [Boolean]$isInstructions = $false) {
     $now = Get-Date -Format "yyyy/MMM/dd HH:mm "
-    $extra = (&{if ($isInstructions) { " Instructions"} else { "" } })
-    write-verbose "$Action $File typeof $extra"
+    $extra = (&{if ($isInstructions) { " Instructions"} else { "Embroidery" } })
+    write-verbose "$Action $File type: $extra"
     Add-Content -Path $LogFile -Value ("$now$Action $File $extra")
 }
 
@@ -502,6 +503,102 @@ function FetchImageFile ([string]$source, [string]$destination) {
     }
 }
 
+function Get-LatestGitHubTag {
+    param (
+        [string]$RepositoryOwner,
+        [string]$RepositoryName
+    )
+
+    # Construct the GitHub API URL for releases
+    $apiUrl = "https://api.github.com/repos/$RepositoryOwner/$RepositoryName/releases"
+
+    try {
+        # Fetch the releases using Invoke-RestMethod
+        $releases = Invoke-RestMethod -Uri $apiUrl
+
+        # Filter the releases to get the latest one
+        $latestRelease = $releases | Sort-Object -Property created_at -Descending | Select-Object -First 1
+
+        # Extract and return the tag name
+        return $latestRelease.tag_name
+    }
+    catch {
+        Write-Verbose "Error fetching releases from GitHub: $_"
+        return $null
+    }
+}
+
+
+
+Function OpenForUpload {
+    
+    Write-Host "-----------------------------------------------------------------------------------------" -ForegroundColor Green
+        
+    if ($DragUpload) {
+        Write-Host "Opening File Explorer & MySewnet Web page" -ForegroundColor Green
+        Write-Host " ** on MySewNet web page choose 'Upload' and Select all files in Explorer and " -ForegroundColor Green
+        Write-Host "    drag/drop the files a maximum of 5 at a time into the upload box" -ForegroundColor Green
+        
+    } else {
+        
+        if ((Get-WmiObject -class Win32_OperatingSystem).Caption -match "Windows 11") {
+            $wtype = "W11"
+            Write-Host "Opening File Explorer (using mysewnet add-in)" -ForegroundColor Green
+            Write-Host " ***  Select all files *right-click* and choose 'Show more Options' -> choose 'MySewNet' -> 'Send'" -ForegroundColor Green
+        } else {
+            # Assume it is Windows 10 with add-in
+            $wtype = "W10"
+            Write-Host "Opening File Explorer (using mysewnet add-in)" -ForegroundColor Green
+            Write-Host " ***  Select all files *right-click* and choose 'MySewNet' -> 'Send'" -ForegroundColor Green
+            }
+        
+    }
+    $firstfile = $(get-childitem -path $NewFilesDir -File -depth 1)
+    if ($firstfile.count -gt 0) {
+        $firstfile = $firstfile[0].FullName
+        $explorercmd = "explorer  '/select,""$firstfile""'"
+        } 
+    else { 
+        Write-Host " There are NO Files to upload" -ForegroundColor Yellow
+        $firstfile = $NewFilesDir + "\."
+        $explorercmd = "explorer  '$NewFilesDir'"
+    }
+    Write-Host "-----------------------------------------------------------------------------------------" -ForegroundColor Green
+    
+    if ($DragUpload) { 
+        Start-Process $opencloudpage 
+        }
+    Invoke-expression  $explorercmd
+
+    if (-not $DragUpload -and $ShowExample) { 
+        $file = Join-Path -path $(Split-Path -path $PSCommandPath) -ChildPath 'HowToSend-w10.gif'
+        FetchImageFile $file "https://raw.githubusercontent.com/D-Jeffrey/Embroidery-File-Organize/docs/images/main/HowToSend-$wtype.gif"
+        if (test-path $file) {
+            write-host "Opening Example (Close it by clicking on the 'X' in the top right corner)"
+            Add-Type -AssemblyName 'System.Windows.Forms'
+            $file = (get-item $file)
+            $img = [System.Drawing.Image]::Fromfile((get-item $file))
+
+            [System.Windows.Forms.Application]::EnableVisualStyles()
+            $form = new-object Windows.Forms.Form   
+            $form.Text = "How to Do it"
+            $form.Width = $img.Size.Width;
+            $form.Height =  $img.Size.Height;
+            $pictureBox = new-object Windows.Forms.PictureBox
+            $pictureBox.Width =  $img.Size.Width;
+            $pictureBox.Height =  $img.Size.Height;
+
+            $pictureBox.Image = $img;
+            $form.controls.add($pictureBox)
+            $form.Add_Shown( { $form.Activate() } )
+            $form.ShowDialog()
+            $form.Close()
+
+        } else {
+                write-host "Error: Could not find example file : $file" -foregroundcolor red
+        }
+    }
+}
 
 function makeAES {
     # create aes key - keep this secure at all times
@@ -731,7 +828,11 @@ Function ReadCloudMeta()
 .NOTES
     The function uses the global variable $webcollection as the default value for the metafolder parameter.
 #>
-function CloudMetaAddPath ($path, $metafolder = $webcollection) {
+function CloudMetaAddPath {
+param (
+    [string]$path,
+    [object]$metafolder = $webcollection
+)    
     foreach ($fid in $metafolder.folders) {
         $pathHere = if ($path -eq "") { "\" + $fid.name } else { Join-Path -Path $path -ChildPath $fid.name }
         Add-Member -InputObject $fid -MemberType NoteProperty -Name 'path' -Value $pathHere
@@ -740,8 +841,12 @@ function CloudMetaAddPath ($path, $metafolder = $webcollection) {
 }
 
 
-Function GetFileIDfromCloud ($fileNameExt, $metafolder = $webcollection)
+Function GetFileIDfromCloud 
 {
+param (
+    [string]$fileNameExt,
+    [object]$metafolder = $webcollection
+)
     if ($metafolder) {
         if ($fileNameExt ) {
             if ($metafolder.files | where-object { $_.name -like $fileNameExt}) {
@@ -759,7 +864,11 @@ Function GetFileIDfromCloud ($fileNameExt, $metafolder = $webcollection)
     return $null
 }
 
-function findMetaDirectory($folderid, $metafolder = $webcollection) {
+function findMetaDirectory {
+    param (
+        [string]$folderid,
+        [object]$metafolder = $webcollection
+    )
     if ($folderid) {
         if ($metafolder) {
             if ($metafolder.folders | where-object { $_.id -like $folderid}) {
@@ -767,7 +876,7 @@ function findMetaDirectory($folderid, $metafolder = $webcollection) {
             } else {
                 foreach($fid in $metafolder.folders) {
                     $retdir = findMetaDirectory -folderid $folderid -metafolder $fid 
-                    if ($null -ne $retdir) {
+                    if ($retdir) {
                         return $retdir
                     }
                 }
@@ -780,7 +889,10 @@ function findMetaDirectory($folderid, $metafolder = $webcollection) {
     
 }
 
-function GetCloudDirectoryNameFromId($folderid) {
+function GetCloudDirectoryNameFromId {
+    param (
+        [string]$folderid
+    )
     if ($folderid) {
         $nameCollect = findMetaDirectory -folderid $folderid
         $parent = GetCloudDirectoryNameFromId -folderid $nameCollect.parentFolderId
@@ -792,22 +904,28 @@ function GetCloudDirectoryNameFromId($folderid) {
 <#
 Return a CloudRef which contains id for a path value of foldername  (example \folder1\f2\f3 )
 #>
-function FindCloudidfromPath($foldername, $metafolder = $webcollection) {
-    if ($metafolder) {
-        if ($metafolder.folders | where-object { $_.path -like $foldername}) {
-            # write-host "Meta _Path" ($metafolder.folders | where-object { $_.path -like $foldername})
-            return $metafolder.folders | where-object { $_.path -like $foldername}
-        } else {
-            foreach($fid in $metafolder.folders) {
-                $retdir = FindCloudidfromPath $foldername  $fid 
-                if ($retdir) {
-                    # write-host "Ret $retdir"
-                    return $retdir
-                }
-            }
-        }
-    }
-    return $null
+function FindCloudidfromPath {
+    param (
+        [string]$foldername,
+        [object]$metafolder = $webcollection
+    )
+    return $metafolder | Select-Object -ExpandProperty Folders | Where-Object {$_.path -like $foldername} 
+
+#    if ($metafolder) {
+#        if ($metafolder.folders | where-object { $_.path -like $foldername}) {
+#            # write-host "Meta _Path" ($metafolder.folders | where-object { $_.path -like $foldername})
+#            return $metafolder.folders | where-object { $_.path -like $foldername}
+#        } else {
+#            foreach($fid in $metafolder.folders) {
+#                $retdir = FindCloudidfromPath $foldername  $fid 
+#                if ($retdir) {
+#                    # write-host "Ret $retdir"
+#                    return $retdir
+#                }
+#            }
+#        }
+#    }
+#    return $null
     
 }
 function GetCloudDirectoryid($foldername) {
@@ -984,8 +1102,6 @@ Function MakeCloudPathID($path){
                 $lastpathid = $pathid.id
             } else {
                 $lastpathid = CreateCloudFolder -name $nextpath -inFolderID $lastpathid
-                # Create a Delay (Deal with BUG later TODO)
-                # start-sleep -Seconds 1
                 # TODO ERROR / BUG on their side
                 if ($lastpathid -eq "") {
                     Write-Warning "Problem creating folders $buildpath"
@@ -1130,12 +1246,25 @@ function MoveFromDir (
     ShowProgress "Copying" "Added ${Global:savecnt} files"
     if ($isEmbrodery) { 
         $dtype = 'Embroidery' 
-        $objs = Get-ChildItem -Path $fromPath -include $SewTypeStar -File -Recurse -filter $whichfiles
+        $objs = Get-ChildItem -Path $fromPath -include $PrefSewTypeStar -File -Recurse -filter $whichfiles 
         $targetdir = $EmbroidDir
     } else { 
         # Move anything that is not a Embrodery type file (alltypes)
         $dtype = 'Instructions'
-        $objs = Get-ChildItem -Path $fromPath -exclude ($excludetypes +$TandCs)  -File -Recurse -filter $whichfiles
+        $Excludes = ($excludetypes.trim() +$PrefSewTypeStar +$TandCs)
+        $objs = Get-ChildItem $fromPath -file -Recurse -Exclude $Excludes -filter $whichfiles | %{ 
+            $allowed = $true
+            foreach ($exclude in $Excludes) { 
+                if ($_.Name -ilike $exclude) { 
+                    $allowed = $false
+                    break
+                }
+            }
+            if ($allowed) {
+                $_
+            }
+        }
+#        $objs = Get-ChildItem -Path $fromPath -exclude ($excludetypes +$TandCs)  -File -Recurse -filter $whichfiles
         $targetdir = $InstructDir
         }
 
@@ -1175,6 +1304,7 @@ function MoveFromDir (
                 Write-Verbose "Skipping ${dtype}:'$_' to ${newdir}" 
                 }
             if (test-path $_) {
+                # # BUG this is where the issues with cleaning up the directories has problems
                 if (test-path $npath) { Remove-item -path $npath -force -ErrorAction  SilentlyContinue }
                     ChecktoClearNewFilesDirectory
                     if ($NoDirectory) {
@@ -1186,7 +1316,8 @@ function MoveFromDir (
                             }
                         Copy-Item -Path $_ -Destination (Join-Path -Path $newpath -ChildPath $newfile)
                     }
-                    LogAction $newfile
+                    LogAction $newfile -Action "++Added-MoveFrom"
+                    # BUG THIS IS THE LINE THAT ERRORS out wiht Directory Not Found
                     Move-Item $_ -Destination $npath  # -ErrorAction SilentlyContinue
                     $newFileCount += 1
                     Write-Information "+++ Saving ${dtype}:'$_' to ${newdir} & ${newfiledir}"
@@ -1253,8 +1384,7 @@ function NiceSize ($size) {
 
 #>
 Function LoadSewfiles  {
-    
-    $thelist = (Get-ChildItem -Path $EmbroidDir  -Recurse -file -include $SewTypeStar)| ForEach-Object { 
+    $thelist = (Get-ChildItem -Path $EmbroidDir  -Recurse -file -include $PrefSewTypeStar)| ForEach-Object { 
         if ($keepAllTypes) {
             $n = $_.Name} 
         else {
@@ -1274,17 +1404,20 @@ Function LoadSewfiles  {
             Push = $null
             } 
         }
+    if ($thelist.getType().Name -eq 'Object[]') {
+        $thelist = @($thelist)
+        }
     if ($null -eq $thelist) {
         $thelist =    @([PSCustomObject]@{ 
-                NameIndexed ="mysewingfiles.placeholder"
-                N = "mysewingfiles.placeholder"
-                Base  = "mysewingfiles"
+                NameIndexed ="zzzmysewingfiles.placeholder"
+                N = "zzzmysewingfiles.placeholder"
+                Base  = "zzzmysewingfiles"
                 Ext  = "placeholder"
-                DirectoryName = "DirectoryName"
+                DirectoryName = "zzzDirectoryName"
+                Hash = $null # We will calculate it when we need it
                 DirWBase = "DirWBase"
                 Priority = 100
                 RelPath = '?????'
-                Hash = $null # We will calculate it when we need it
                 CloudRef = $null  
                 Push = $null
                 })
@@ -1325,8 +1458,8 @@ function ShowPreferences ($showall = $false)
     Write-host    $($paramstring['DownloadDaysOld']).padright($padder)  ": $DownloadDaysOld"
     }
     Write-host    $($parambool['keepAllTypes']).padright($padder)  ": $keepAllTypes"
-    if ($APIBeta) {
-        Write-host    $($paramswitch['APIBeta']).padright($padder)   -ForegroundColor yellow
+    if ($CloudAPI) {
+        Write-host    $($paramswitch['CloudAPI']).padright($padder)   -ForegroundColor yellow
     }
     }
 }
@@ -1375,7 +1508,7 @@ function  CheckUSBDrive ($USBPath) {
 # Building out all the directory structures and File lists
 #
 #======================================================================================
-$SewTypeStar = $preferredSewType | ForEach-Object { "*.$_" }
+$PrefSewTypeStar = $preferredSewType | ForEach-Object { "*.$_" }
 $SewTypeMatch = $preferredSewType -join '|'
 $foldupDirs = $foldupDir + $preferredSewType | ForEach-Object { $_.ToLower() }
 
@@ -1407,34 +1540,56 @@ $InstructDir = $EmbroidDir
 
 # TODO test path for exists
 
-$LogFile = join-path $PSScriptRoot "EmbroideryCollection-Cleanup.Log"
+$LogFile = join-path $PSScriptRoot "EmbroideryCollection.Log"
 if (!(test-path $LogFile)) {
-    "EmbroideryCollection-Cleanup\n" | Set-Content -Path $LogFile 
+    "$PSCommandPath Powershell action log file\n" | Set-Content -Path $LogFile 
 }
+
+
+if ($null -eq $LastCheckedGithub -or (${get-date} -gt $(get-date $LastCheckedGithub).adddays(7)))  {
+    $latestTag = Get-LatestGitHubTag -RepositoryOwner "D-Jeffrey" -RepositoryName "Embroidery-File-Organize"
+    $script:LastCheckedGithub = get-date -format "g"
+    if ($latestTag) {
+        Write-Verbose "Latest tag in D-Jeffrey/Embroidery-File-Organize $latestTag"
+        if ($latestTag -ne $ECCVERSION) {
+            Write-host "  *** Newer version ($latestTag) of this script is available" -ForegroundColor Green
+        }
+    }
+    else {
+        Write-Verbose "Failed to retrieve the latest tag for $owner/$repo from github."
+    }
+    }
 
 
 
 if ($setup) {
     write-host "   ".padright(70) -BackgroundColor Yellow -ForegroundColor Black
     $Desktop = [Environment]::GetFolderPath("Desktop")
-    if (!(test-path ($Desktop + "\Embroidery Organizator.lnk"))) {
+    if (!(test-path ($Desktop + "\Embroidery Organizer.lnk"))) {
         write-host "  Creating shortcut on the Desktop".padright(70) -BackgroundColor Yellow -ForegroundColor Black
         $WshShell = New-Object -comObject WScript.Shell
-        $Desktop = $Desktop + "\Embroidery Organizator.lnk"
+        $Desktop = $Desktop + "\Embroidery Organizer.lnk"
         write-Debug "Link: $Desktop"
         $Shortcut = $WshShell.CreateShortcut($Desktop)
 
         $Shortcut.TargetPath = "$pshome\Powershell.exe"
     
-        
         $Shortcut.IconLocation = (join-path -Path $PSScriptRoot -childpath "embroiderymanager.ico")
+        if (!(test-path -path $Shortcut.IconLocation )) {
+            $downloadFromGitHub = Invoke-WebRequest -Uri https://raw.githubusercontent.com/D-Jeffrey/Embroidery-File-Organize/main/embroiderymanager.ico
+            if ($downloadFromGitHub.Content.Length -gt 0) {
+                if ($downloadFromGitHub.Content.substring(0,1) -eq '?') { 
+                    $downloadFromGitHub.Content = $downloadFromGitHub.Content.Substring(1)
+                }
+                Set-Content -Path $Shortcut.IconLocation -Value $downloadFromGitHub.Content -Force
+            }
+        }
         $Shortcut.Arguments = "-NoLogo -ExecutionPolicy Bypass -File ""$PSCommandPath"""
         $Shortcut.Description = "Run EmbroideryCollection-Cleanup.ps1 to extract the patterns from the download directory"
         $Shortcut.Save()
         LogAction -File "Desktop Shortcut" -Action "Created"
         }
     ShowPreferences
-#TODO NEED TO FIX THIS BLOCK
     # Load the System.Windows.Forms assembly
     Add-Type -AssemblyName System.Windows.Forms
 
@@ -1466,13 +1621,13 @@ if ($setup) {
                     $notvalid = ($udrive -eq "")
                     }
             } while ($notvalid)
-            $APIBeta = $false
+            $CloudAPI = $false
         } else {
             $USBDrive = ""
         }
         if ($USBDrive -eq "") {
-            if (myPause -Message "Are you using MySewnet Cloud" -Choice $true -ChoiceDefault $APIBeta) {
-                $APIBeta = $true
+            if (myPause -Message "Are you using MySewnet Cloud" -Choice $true -ChoiceDefault $CloudAPI) {
+                $CloudAPI = $true
                 $USBDrive = ""
                 $meid = Read-host -Prompt "What is your user name for MySewnet? ($MySewNetuserid)"
                 if ($meid) { $MySewNetuserid = $meid }
@@ -1480,7 +1635,7 @@ if ($setup) {
                 $savep = myPause -Message "Are you okay with saving an encrypted copy of that password for future logins" -Choice $true -ChoiceDefault (!$PromptPassword)
                 $PromptPassword = -not $savep
             } else {
-                $APIBeta = $false
+                $CloudAPI = $false
                 $USBDrive = ""
             }
         }
@@ -1490,7 +1645,7 @@ if ($setup) {
         }         
         $KeepAllTypes = myPause $parambool['KeepAllTypes'] -Choice $true -ChoiceDefault $KeepAllTypes
         $KeepEmptyDirectory = myPause $parambool['KeepEmptyDirectory'] -Choice $true -ChoiceDefault $KeepEmptyDirectory
-        if ($APIBeta) {
+        if ($CloudAPI) {
             $DragUpload = myPause $parambool['DragUpload'] -Choice $true -ChoiceDefault $DragUpload
             $ShowExample =myPause $parambool['ShowExample'] -Choice $true -ChoiceDefault $ShowExample
             }
@@ -1502,9 +1657,11 @@ if ($setup) {
         
         
         Write-host "What are the preferred types of files for your machine in order of preference"
-        write-host "Current list is: $preferredSewType"
+        write-host "Current list is: " $($preferredSewType -join ", " )  -ForegroundColor Yellow
+        
         do {
-            $ptype = Read-Host "Files types (seperated by comma)?" 
+            write-host "Files types (seperated by comma)?"  -NoNewline  -ForegroundColor Yellow
+            $ptype = Read-Host 
             if ($ptype) {
                 $ptype = ($ptype.split(',')).trim()
                 $ptype = $ptype |Where-Object {$_.length -gt 0}
@@ -1512,6 +1669,7 @@ if ($setup) {
                 if ($problemext) {
                     write-host "Problem with the extension of: $problemext" -ForegroundColor Red
                 } else {
+                    # BUG must be an Array
                     $preferredSewType = $ptype
                 }
             }
@@ -1596,7 +1754,7 @@ Write-Verbose ("Rollup match pattern".padright($padder-8) + ": $foldupDirs")
 Write-Verbose ("Ignore Terms Conditions files".padright($padder-8) + ": $TandCs")
 Write-Verbose ("Excludetypes".padright($padder-8) + ": $excludetypes")
 
-if ($APIBeta) {
+if ($CloudAPI) {
     ($MySewNetuserid, $MySewNetpw) = doWebAPI $MySewNetuserid $MySewNetpw
     if (!$Script:authorize) {
         return
@@ -1641,7 +1799,12 @@ Add-Type -assembly "system.io.compression.filesystem"
 
 ShowProgress  "Calculating size"
 $librarySizeBefore = 0
-Get-ChildItem -Path ($EmbroidDir)  -Recurse -file  | ForEach-Object { $librarySizeBefore = $librarySizeBefore + $_.Length}
+$libraryEmbSizeBefore = 0
+Get-ChildItem -Path ($EmbroidDir)  -Recurse -file  | ForEach-Object { 
+    $librarySizeBefore +=  $_.Length
+    if ($_.Extension -and $preferredSewType.Contains($_.Extension.Substring(1)))  {  $libraryEmbSizeBefore += $_.Length }
+}
+write-host "Starting with All files: $(niceSize $librarySizeBefore) - Embroidery files:  $(niceSize $libraryEmbSizeBefore)"
 
 ShowProgress  "Loading file list"
 $mysewingfiles = $null
@@ -1654,6 +1817,8 @@ if ($FirstRun) {
 }
 # $mysewingfiles | ft
 $isNewInstruct = $false
+$tmpdirlength = $resultTmpDir.length
+$havewarning = $false
 Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.CreationTime -gt (Get-Date).AddDays(- $DownloadDaysOld ))  -and ($_.gettype().Name -eq 'FileInfo')} |
   
     ForEach-Object {
@@ -1667,9 +1832,9 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.Cre
         $isNewInstruct = $false
         $isnew = $false
         $numnew = 0
-        foreach ($t in $preferredSewType) {
+        foreach ($thistype in $preferredSewType) {
             $filesOfThisType = @()
-            $ts = "*."+ $t
+            $ts = "*."+ $thistype
             if ($filelist.Name -like $ts) {
                 $isnew = $false
                 $myfl = $filelist | where-object {$_.Name -like $ts} 
@@ -1696,7 +1861,7 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.Cre
                         if ($keepAllTypes) {
                             $filesOfThisType += $filenameInZip
                         } else {
-                            $filesOfThisType += ($filenameInZip + "." + $t)
+                            $filesOfThisType += ($filenameInZip + "." + $thistype)
                         }
                         if ($keepAllTypes) {
                            $n = $filesinZip.Name 
@@ -1704,9 +1869,14 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.Cre
                             $n = $fs
                             }
 
-            # TODO BUG This does not work # -and -not $NoDirectory 
-            # without changing MoveFromDir  and normalizing NoDirectory everywhere
+                        # TODO BUG This does not work # -and -not $NoDirectory 
+                        # without changing MoveFromDir  and normalizing NoDirectory everywhere
                         if ($filesinZip.FullName.LastIndexOf('/') -ge 0 ) {
+                            if (($filesinZip.FullName.Length + $tmpdirlength) -ge 260) {
+                                Write-Warning "May have a Problem with file name in zip - shorten folder name of: $($filesinZip.FullName)"
+                                $havewarning = $true
+                                }
+                            
                             $relativepath = $filesinZip.FullName.Substring(0,$filesinZip.FullName.LastIndexOf('/'))
                         } else {
                             $relativepath = ""
@@ -1717,12 +1887,12 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.Cre
                             [PSCustomObject]@{ 
                                 NameIndexed = $n
                                 N = $filesinZip.Name
-                                Ext = "." + $t
+                                Ext = "." + $thistype
                                 Base = $fs
                                 DirectoryName = $dirn
                                 Hash = $null
                                 DirWBase =  join-path -Path $dirn -ChildPath $fs
-                                Priority = $preferredSewType.Indexof($t.tolower())
+                                Priority = $preferredSewType.Indexof($thistype.tolower())
                                 RelPath = '?????'
                                 CloudRef = $null
                                 Push = '\'+ $relativepath
@@ -1740,10 +1910,29 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.Cre
                             }
                         $resultTmpDir = Join-Path $tmpdir $madeDir
                         $isNewInstruct = $true
-                        Expand-Archive -Path $zips -DestinationPath $resultTmpDir -Force
+                        # Check for long path names inside the zip file
+                        
+                        if ($havewarning) {
+                            $keepgoing = myPause -Message "There maybe a problem with this zip file, continue?" -Timeout 30 -Choice $true -ChoiceDefault $true
+                            if ($keepgoing) {
+                                try {
+                                    Expand-Archive -Path $zips -DestinationPath $resultTmpDir -Force
+                                } catch {
+                                    $keepgoing = $false
+                                    write-error "Zip extract of $zip failed"
+                                    $_ | Format-List
+                                }
+                                if (!($keepgoing)) {
+                                    myPause "Failed"
+                                }
+
+                            }
+                        } else {
+                            Expand-Archive -Path $zips -DestinationPath $resultTmpDir -Force
                         }
+                    }
                   
-                    $numnew += $(MoveFromDir $tmpdir $true $ts $filesOfThisType)
+                    $numnew += $(MoveFromDir -fromPath $tmpdir -isEmbrodery $true -whichfiles $ts -files $filesOfThisType)
                     }
                 }               
             }
@@ -1767,9 +1956,9 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.Cre
                             #TODO this needs to be a new path (put it into the same directory where of the orginal extract of other files
                             if ($NeedToExpandedZip) {
                                 $NeedToExpandedZip = $false
-                                Expand-Archive -Path $tempFile -DestinationPath $tmpdir -Force
+                                Expand-Archive -Path $tempFile -DestinationPath "$tmpdir" -Force
                                 }
-                                $numnew += $(MoveFromDir $tmpdir $true $thisname) 
+                                $numnew += $(MoveFromDir -fromPath $tmpdir -isEmbrodery $true -whichfiles $thisname) 
                             
                         }
                     
@@ -1786,7 +1975,7 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.Cre
             }
         # we extracted the Zip already and now let's check for instructions
         if ($isNewInstruct) { 
-            $numnew += $(MoveFromDir $tmpdir $false)
+            $numnew += $(MoveFromDir -fromPath $tmpdir -isEmbrodery $false)
             Get-ChildItem -Path $tmpdir -Recurse | Remove-Item -force -Recurse
             }
    
@@ -1801,9 +1990,9 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.Cre
 # Look for Files which are not part of a ZIP file, just the selected file types that we are looking for that is in the download directory
 $DownloadDaysOld = 365*10  # 10 years of downloads (when you download files, it keeps the old data)
 $ppp = 0
-foreach ($t in $preferredSewType) {
+foreach ($thistype in $preferredSewType) {
 
-    $ts = "*."+ $t
+    $ts = "*."+ $thistype
     write-Information "Working on File type: $ts"
     Get-ChildItem -Path $downloaddir  -file -include $ts -Depth 1 -Recurse| Where-Object { $_.CreationTime -gt (Get-Date).AddDays(- $DownloadDaysOld ) } |
         ForEach-Object {
@@ -1830,15 +2019,15 @@ foreach ($t in $preferredSewType) {
                     } else {
                         $fullname | Copy-Item -Destination $NewFilesDir  -ErrorAction SilentlyContinue
                     }
-                    LogAction $f
+                    LogAction $f -Action "++Added-from-Download"
                     
                     Write-host $("* New  : '$f'").padright(65) " 1 new pattern" 
                     Write-Information "+++ Copied from Downloads :'$($_.Name)' to $EmbroidDir"
-                    $fd = join-Path -Path $d -ChildPath ($fs + "." + $t)
+                    $fd = join-Path -Path $d -ChildPath ($fs + "." + $thistype)
                     if (test-path -path $fd) {
                         Copy-Item -Path $fd -Destination $InstructDir -ErrorAction SilentlyContinue 
                         Write-Information "+++ Copied instructions from Downloads :'$($_.Name)' to $InstructDir"
-                        LogAction -File $($_.Name), -isInstrution $true
+                        LogAction -File $($_.Name) -Action "++Added-from-Download" -isInstrution $true
                         }
                     $Script:addsizecnt = $Script:addsizecnt + $_.Length 
                     $Script:savecnt = $Script:savecnt + 1 
@@ -1848,12 +2037,12 @@ foreach ($t in $preferredSewType) {
                             $l = (split-path -Path $fullname -Parent).Substring($downloaddir.Length).trim('\')
                     }
                     $d = (join-path -path $EmbroidDir -childpath $l).Trim('\')
-                    $prefno = $preferredSewType.Indexof($t.tolower())
+                    $prefno = $preferredSewType.Indexof($thistype.tolower())
                     $mysewingfiles +=  [PSCustomObject]@{ 
                                 NameIndexed = $f
                                 N = $f
                                 Base = $fs
-                                Ext = '.' + $t
+                                Ext = '.' + $thistype
                                 DirectoryName = $d
                                 DirWBase = join-path -path $d -childpath $fs
                                 Priority = $prefno
@@ -1895,7 +2084,7 @@ if ($CleanCollection -or $CleanCollectionIgnoreDir) {
     
     write-host "Moving Instructions to selected 'Instructions' directory"
     foreach ($g in $goodInstructionTypes) {
-        $numnew += $(MoveFromDir $EmbroidDir $false ("*."+ $g))        
+        $numnew += $(MoveFromDir -fromPath $EmbroidDir -isEmbrodery $false -whichfiles ("*."+ $g))        
         }
 }    
 
@@ -1909,7 +2098,7 @@ if (-not $KeepEmptyDirectory) {
 }
 
 
-if ($APIBeta) {
+if ($CloudAPI) {
     $webcollection = ReadCloudMeta
     if ($null -eq $webcollection) {
         write-host "Cloud is not working *** STOPPING" -ForegroundColor Red
@@ -1951,23 +2140,26 @@ if ($APIBeta) {
 
     $cm = 0
     $cf = 0
-    $tolist = @()
+#     $tolist = @()
+
     $MySewingfiles | ForEach-Object {
         $thisfile = $_
         $cm = $cm + 1
-        if ( $cm % 25 -eq 0) {
-            ShowProgress ("Matching files to Cloud ($cm) : " + $thisfile.N)
+        if ( $cm % 100 -eq 0) {
+            write-Progress -Activity "Matching files to Cloud :  $($thisfile.N)" -PercentComplete ($cm * 100 / $mysewingfiles.count) -Status "$cm of $($mysewingfiles.count)"
         }
         $thisfile.CloudRef = GetFileIDfromCloud $_.N
-        if ($thisfile.DirectoryName.length -lt $EmbroidDir.Length) {
-            $thisfile.DirectoryName
-        }
+#        if ($thisfile.DirectoryName.length -lt $EmbroidDir.Length) {
+#            $thisfile.DirectoryName
+#        }
         $spl = $thisfile.DirectoryName.substring($EmbroidDir.Length)
         $thisfile.RelPath = $spl
         $samepath = FindCloudidfromPath -foldername $spl
 
         if ($thisfile.CloudRef)   {
             $cf = $cf +1
+            }
+<# 
             $tolist += [PSCustomObject]@{ 
                 Name = $thisfile.N
                 Path = $spl
@@ -1985,9 +2177,9 @@ if ($APIBeta) {
             }
             # write "?? API file for " $_.N
             }
+#>
         }
-        $tmf = $MySewingfiles.count
-    write-host "Found $cf file which match in cloud of $tmf"
+    write-host "Found $cf file which match in cloud of $($MySewingfiles.count)"
 #    $tolist | Out-GridView
 
 
@@ -2003,19 +2195,18 @@ if ($APIBeta) {
         }
      else {
         $filestopush = ($mysewingfiles | Where-Object { $_.Push -ne $null}).count
-    }
+        }
 
     if (-not $KeepEmptyDirectory) {
         $emtpyfoldersList = $webcollection |   Select-Object -ExpandProperty Folders | where-object {$_.folders.count -eq 0 -and $_.files.count -eq 0 } 
         if ($emtpyfoldersList.count -gt 0) {
             write-host "Clearing Empty Cloud folders : $($emtpyfoldersList.count)"
-        }
+            }
         $emtpyfoldersList | ForEach-Object { 
             ShowProgress "Delete Cloud Folder $($_.Name)"
-                DeleteCloudFolder -id $_.id | Out-null
+            DeleteCloudFolder -id $_.id | Out-null
+            }
         }
-        
-    }
     write-host "Beginning push to MySewnet: $filestopush files" -ForegroundColor Green
     $i = 0
     if ($filestopush) {
@@ -2024,7 +2215,7 @@ if ($APIBeta) {
             if ($thisfile.push -and $thisfile.push.contains("\") ) {
                 Write-Progress -PercentComplete ($i++*100/$filestopush) "Pushing files to the Cloud : " -Status $thisfile.N
                 PushCloudFileToDirectory -filepath ($thisfile.DirWBase + $thisfile.Ext) -folderpath $thisfile.push | Out-Null
-                LogAction -File $thisfile.N -Action "Added"
+                LogAction -File ($thisfile.push + "\" + $thisfile.N) -Action "Cloud-Added"
                 $thisfile.push = ""
                 }
             if ($sync -and ($null -eq $thisfile.CloudRef)) {
@@ -2032,111 +2223,56 @@ if ($APIBeta) {
                 Write-Progress -PercentComplete ($i++*100/$filestopush) "Syncing files to the Cloud : " -Status $thisfile.N
                 $spl = $thisfile.DirectoryName.substring($EmbroidDir.Length)
                 PushCloudFileToDirectory -filepath ($thisfile.DirWBase + $thisfile.Ext) -folderpath $spl | Out-null
-                LogAction -File $thisfile.N -Action "Added-Sync"
+                LogAction -File ($spl + "\" + $thisfile.N) -Action "Cloud-Added-Sync"
+                }
+            }
+        }
+        
+        if ($sync) {
+            $MySewingfiles | ForEach-Object {
+                $thisfile = $_
+                if ($thisfile.DirectoryName.length -lt $EmbroidDir.Length) {
+                    $thisfile.DirectoryName
+                }
+                $samepath = FindCloudidfromPath -foldername $thisfile.RelPath
+                if ($thisfile.CloudRef)   {
+                    # Need to move
+                    if  (""+$samepath.id -ne ""+$thisfile.CloudRef.FolderId) {
+                        ShowProgress -stat "Moving Cloud files" -Area $thisfile.N
+                        LogAction -File $thisfile.N -Action "Moved CloudFolders"
+        # BUG we need to moka directory if samepath errors                   
+        #                    $folderid = MakeCloudPathID -path $folderpath
+        
+                        MoveCloudFile -fileid $thisfile.CloudRef.Id -toFolderid $samepath.id
+                    }
                 }
             }
         }
     }
-    if ($sync) {
-        $MySewingfiles | ForEach-Object {
-            $thisfile = $_
-            if ($thisfile.DirectoryName.length -lt $EmbroidDir.Length) {
-                $thisfile.DirectoryName
-            }
-            $samepath = FindCloudidfromPath -foldername $thisfile.RelPath
-            if ($thisfile.CloudRef)   {
-                # Need to move
-                if  (""+$samepath.id -ne ""+$thisfile.CloudRef.FolderId) {
-                    ShowProgress -stat "Moving Cloud files" -Area $thisfile.N
-                    LogAction -File $thisfile.N -Action "Moved CloudFolders"
- # BUG we need to moka directory if samepath errors                   
-#                    $folderid = MakeCloudPathID -path $folderpath
-
-                    MoveCloudFile -fileid $thisfile.CloudRef.Id -toFolderid $samepath.id
-                }
-            }
-        }
-    }
     
 
 
-Function OpenForUpload {
-    
-    Write-Host "-----------------------------------------------------------------------------------------" -ForegroundColor Green
-        
-    if ($DragUpload) {
-        Write-Host "Opening File Explorer & MySewnet Web page" -ForegroundColor Green
-        Write-Host " ** on MySewNet web page choose 'Upload' and Select all files in Explorer and " -ForegroundColor Green
-        Write-Host "    drag/drop the files a maximum of 5 at a time into the upload box" -ForegroundColor Green
-        
-    } else {
-        if ((Get-WmiObject -class Win32_OperatingSystem).Caption -match "Windows 11") {
-                Write-Host "Opening File Explorer (using mysewnet add-in)" -ForegroundColor Green
-                Write-Host " ***  Select all files *right-click* and choose 'Show more Options' -> choose 'MySewNet' -> 'Send'" -ForegroundColor Green
-        } else {
-            # Assume it is Windows 10 with add-in
-            Write-Host "Opening File Explorer (using mysewnet add-in)" -ForegroundColor Green
-            Write-Host " ***  Select all files *right-click* and choose 'MySewNet' -> 'Send'" -ForegroundColor Green
-            }
-        
-    }
-    $firstfile = $(get-childitem -path $NewFilesDir -File -depth 1)
-    if ($firstfile.count -gt 0) {
-        $firstfile = $firstfile[0].FullName
-        $explorercmd = "explorer  '/select,""$firstfile""'"
-        } 
-    else { 
-        Write-Host " There are NO Files to upload" -ForegroundColor Yellow
-        $firstfile = $NewFilesDir + "\."
-        $explorercmd = "explorer  '$NewFilesDir'"
-    }
-    Write-Host "-----------------------------------------------------------------------------------------" -ForegroundColor Green
-    
-    if ($DragUpload) { 
-        Start-Process $opencloudpage 
-        }
-    Invoke-expression  $explorercmd
 
-    if (-not $DragUpload -and $ShowExample) { 
-        $file = Join-Path -path $(Split-Path -path $PSCommandPath) -ChildPath 'HowToSend-w10.gif'
-        FetchImageFile $file "https://raw.githubusercontent.com/D-Jeffrey/Embroidery-File-Organize/main/HowToSend-w10.gif"
-        if (test-path $file) {
-            write-host "Opening Example (Close it by clicking on the 'X' in the top right corner)"
-            Add-Type -AssemblyName 'System.Windows.Forms'
-            $file = (get-item $file)
-            $img = [System.Drawing.Image]::Fromfile((get-item $file))
-
-            [System.Windows.Forms.Application]::EnableVisualStyles()
-            $form = new-object Windows.Forms.Form   
-            $form.Text = "How to Do it"
-            $form.Width = $img.Size.Width;
-            $form.Height =  $img.Size.Height;
-            $pictureBox = new-object Windows.Forms.PictureBox
-            $pictureBox.Width =  $img.Size.Width;
-            $pictureBox.Height =  $img.Size.Height;
-
-            $pictureBox.Image = $img;
-            $form.controls.add($pictureBox)
-            $form.Add_Shown( { $form.Activate() } )
-            $form.ShowDialog()
-            $form.Close()
-
-        } else {
-                write-host "Error: Could not find example file : $file" -foregroundcolor red
-        }
-    }
-}
 
 write-host "Calculating size"
 ShowProgress  "Calculating size"
 $librarySizeAfter = 0
+$libraryEmbSizeAfter = 0
+$byExt = @{}
 if ($Script:savecnt -gt 0) {
-    if ($null -eq $APIBeta) {
+    if ($null -eq $CloudAPI) {
         OpenForUpload
     }
-    Get-ChildItem -Path ($EmbroidDir  ) -Recurse -file  | ForEach-Object { $librarySizeAfter = $librarySizeAfter + $_.Length}
+    Get-ChildItem -Path ($EmbroidDir)  -Recurse -file  | ForEach-Object { 
+        $librarySizeAfter +=  $_.Length
+        if ($_.Extension -and $preferredSewType.Contains($_.Extension.Substring(1)))  {  $libraryEmbSizeAfter += $_.Length }
+    }
+    Get-ChildItem -Path ($EmbroidDir  ) -Recurse -file  | ForEach-Object { 
+        $librarySizeAfter = $librarySizeAfter + $_.Length
+        $byExt[$_.Extension] +=  $_.Length
+    }
 } else {
-    if ($null -eq $APIBeta) {
+    if ($null -eq $CloudAPI) {
         if (MyPause "Do you want to open the web page & directory to upload files from last time?" $true) {
             OpenForUpload
         }
@@ -2145,9 +2281,6 @@ if ($Script:savecnt -gt 0) {
 
 
   
-$librarySizeBefore = niceSize $librarySizeBefore
-$librarySizeAfter = niceSize $librarySizeAfter
-$sizecntB = niceSize  $sizecnt
 $addsizecntB = niceSize $Script:addsizecnt
 write-progress -PercentComplete  100  "Done"
 if ($Script:dircnt -gt 0 -or $filesToRemove.length -gt 0) {
@@ -2155,17 +2288,20 @@ if ($Script:dircnt -gt 0 -or $filesToRemove.length -gt 0) {
     Write-Host "Cleaned up - Directories removed: '$Script:dircnt    Files removed : '$filecnt' ($sizecntB)." -ForegroundColor Green
     }
 if ($Script:savecnt -gt 0) {
-    write-host "+++ Added files to ${CollectionTypeofStr}: '${Global:savecnt}' ($addsizecntB) " -ForegroundColor Green
-    Write-host "   *** Instructions size is now : $librarySizeAfter was $librarySizeBefore ****   "  -ForegroundColor Green 
+    write-host "+++ Added files to ${CollectionTypeofStr}: '${Global:savecnt}' $(niceSize  $sizecnt) " -ForegroundColor Green
+    write-host "File size after All: $(niceSize $librarySizeAfter) - Embroidery files: $(niceSize $libraryEmbSizeAfter)"
+
     }
 else {
-    Write-host "   *** Instructions size is : $librarySizeBefore ****   "  -ForegroundColor Green 
+    Write-host "   *** Instructions size is   : $(niceSize ($librarySizeBefore - $libraryEmbSizeBefore)) ****   "  -ForegroundColor Green 
+    write-host "   *** Embroidary file size is: $(niceSize $libraryEmbSizeBefore) ****"
 }
-if ($APIBeta) {
+if ($CloudAPI) {
     write-Host "Cloud Storage currently is: " -ForegroundColor Green
     write-Host "       Used of Total:".padright(25) (NiceSize $webcollection.storage.usedSize) "/" (NiceSize $webcollection.storage.totalSize)
     write-Host "       Space remaining:".padright(25) (NiceSize $webcollection.storage.availableSize)
 }
 # $mysewingfiles | out-GridView
-# MyPause 'Press any key to Close' | out-null
+$byExt | Out-GridView
 Write-Host ( "End") -ForegroundColor Green
+MyPause 'Press any key to Close' | out-null

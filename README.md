@@ -9,12 +9,12 @@ Anyone who have an Embroidery machine (Pfaff, Viking, Husqvarna, Janome, Brother
 wanting to manage all the files that you have purchased and downloaded and get them onto your machine either by MySewnet or on an USB.
 
 ## Make it work
-Once you have download your embroidary files click on the `icon for EmbroideryCollection-Cleanup`![alt text](EmbroideryManager.ico "EmbroideryCollection-Cleanup") and it will look through the download folder and place any downloaded sewing files into the Embroidory folder on your computer.  Depending if you are using a USB to transfer the files or using MySewnet Cloud, the script will look at the recently
+Once you have download your embroidary files click on the `icon for EmbroideryCollection-Cleanup`<img src="EmbroideryManager.ico" width="24"> and it will look through the download folder and place any downloaded sewing files into the Embroidory folder on your computer.  Depending if you are using a USB to transfer the files or using MySewnet Cloud, the script will look at the recently
 downloaded files and find the ones that what for your machine, and put them onto the USB stick or push them up the cloud (without wasting space).  And it will seperate out the instructions and the instructions on your computer with the embroidary files, but not duplicate them to the USB or cloud.  In the process, it will limit the numbers of folders in folders, while still bring some organization to the files.
 
 ## How to Install Simple
 
-*This working on Windows computers (sorry Apple Mac people)*
+*This working on Windows computers (not sure if it will work on a Apple Mac, [can a MAC run Powershell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)?)*
 
 Click `start` -> `Run` -> `Powershell`
 In the windows that appears cut and paste the follow 2 lines
@@ -27,7 +27,7 @@ Invoke-Expression $($ScriptFromGitHub.Content)
 I will say, this is generally a bad idea to run random code from the Internet, but in this case, it is hosted in public view on Github and can be checked for Security issues.
 If you know a security guy, have them take a look.  Then paste in the two lines and have this *package of care* installed.  See below for the manual install steps.
 
-After running the install, you should have a desktop icon ![alt text](EmbroideryManager.ico "EmbroideryCollection-Cleanup") for the script.  It will also create a folder in Document called 'Embroidory' where the embroidory files on your computer are kept and will be organized.  By default the script (and associated files) are installed in `c:\programdata\EmbroideryOrganize\`
+After running the install, you should have a desktop icon <img src="EmbroideryManager.ico" width="24"> for the script.  It will also create a folder in Document called 'Embroidory' where the embroidory files on your computer are kept and will be organized.  By default the script (and associated files) are installed in `c:\programdata\EmbroideryOrganize\`
 
 ## Why?
 Why would I build a massive long powershell to move a file a few files around?  So this was created in order to help my wife manage the many embroidery files that she downloads from online stores and move them on to her Pfaff sewing machine. 
@@ -42,19 +42,19 @@ A powershell script to deal with the many different types of embroidery files, p
 Once it is setup with a shortcut you can simply download your patterns from online stores and then double-click the shortcut to copy the **right patterns** into yuor collection location and leave the instructions on your computer for reference later.
 
 ## Getting started
-This is a self contained single powershell script.  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to `unblock` the downloaded file (`Right-click` properties of the file and at the bottom check the `unblock`.  Once you have copy the script into a location you will keep referencing (and unblocked), then you can run the script with -setup
+This is a self contained single powershell script.  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to `unblock` the downloaded file (`Right-click` properties of the file and at the bottom check the `unblock`.  Once you have copy the script into a location (suggested `c:\ProgramData\EmbroideryOrganize`)  (and unblocked), then you can run the script with -setup
 
 ```
     powershell .\EmbroideryCollection-Cleanup.ps1 -setup
 
     powershell .\EmbroideryCollection-Cleanup.ps1
 ```
-One you have run it once, it will create a EmbroideryCollection.CFG file in the same directory as the script, which you can edit to adjust the settings (and/or you can use command line parameters to change the settings).
+Once you have run it once, it will create a EmbroideryCollection.CFG file in the same directory as the script, which you can edit to adjust the settings (and/or you can use command line parameters to change the settings).  It will also a file `EmbroideryCollection.Log` for any of it's actions
 
 
 ## WIP All these have changed - Parameters
-- `-Setup`    Create the directories required, and create a shortcut on the Desktop Icon linked to this Powershell script.
-- `-includeEmbFilesWithInstruction` ◊ Put a copy of the Embrodery in with the instructions in addition to putting them into the MySewnet™ cloud folders.  Not recommended
+- `-Setup`    Interactive setup of parameters, create the directories required, and create a shortcut on the Desktop Icon linked to this Powershell script.
+- `-EmbroidDir documents\Embroidery` The local cache of embroidery files and instructions.
 - `-CleanCollection` or `-CleanCollectionIgnoreDir`  Clean out non embroidery files from the MySewnet™ cloud directory since it is limits on the amount of space you have to work with.  IgnoreDir will look for duplicates reguardless if there they are in different directory structure.  The files are deleted to the **recycle bin** so they can be restored. (use `-HardDelete` to delete without recycle)
 - `-DownloadDaysOld 7` ▫  determine how old of zip files to look for (in days) 
 - `-KeepAllTypes` ◊ Keep all of the preferred types of pattern files (rather than only the top preferred)
@@ -62,11 +62,17 @@ One you have run it once, it will create a EmbroideryCollection.CFG file in the 
 - `-KeepAllTypes` ◊  Keep all the different types of a file (duplicate name but different extensions), normally this will find your most preferred file type and only keep that one.  See preferredSewType below
 - `-DragUpload` ◊  Use the web page instead of the plug in to drag and drop
 - `-Testing`  Run it without it doing actual copying of files or cleaning up.
-- `-SkipExample` ◊  Don't show the example GIF on how to send files to the cloud (different image for Windows 10 vs Windows 11)
+- `-ShowExample` ◊  Show the example GIF on how to send files to the cloud (different image for Windows 10 vs Windows 11)
 - `-USBDrive I:` ▫  Copy the new files to a USB drive specified (in the form of I: or H: or E:).  To Disable USB use 'OFF' for the drive letter
 - `-ConfigFile EmbroideryCollection.cfg` The name of the configuration file which is located in the same directory as the script itself.  The options selected are saved into the configuration file so the next time the script is run the same settings stay in effect.
 - `-ConfigDefault` Reset the default settings and options to orginal default any of the ◊ or ▫ marked options
 - `-SwitchDefault` Use to turn off the Switches you might have turned on - Any of the ◊ marked options  (this is the only command-line way to reset the options because of the config file saving the settings state)
+- `-CloudAPI` Use MySewNet Cloud to save file after they have been added to the local computer cache  (Either USBDrive or CloudAPI but not both at the sametime).  Only preferred embroidery types will be uploaded to the cloud.
+- `-Sync` Syncronize the files in the local `EmbroidDir` cache to the Mysewnet Cloud cache.  This include creating folders and removing files if they are removed from the local cache.  This will only copy the preferred embroidery types to the cloud.
+
+### Future
+- `-OneDirectory` Only put files one folder deep.
+
 
 ## Functions
 
@@ -123,23 +129,27 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 
 # Issues/Future
 - If is processes a group of seperate zip files which have the same file in different patterns, it will choose a different preferred type than desired
-- Needs a GUI interface for the general user to configure and use. (Some progress is underway)
-- Needs to support USB for people who are not MySewnet based.
-- Should have a Settings .cfg file and keep values in that config
-  - allow for switch between MySewnet and automatic update of a USB stick
-- Reverse-engineer the API to query for the contents in the cloud
 
 
 # Releases
+### 0.5.4
+- Bug fixes with cloud push
+- Update Readme to match parameters
+- Fixed move files from zip exclusion
+- Added Check for version update
 ### 0.5.3
 - More testing and bug files - first public available
 ### 0.5.2
 - Clearing and files of folders in cloud
 - interactive setup
 ### 0.5.1
-- Major added Support for USB
+- Major added Support for USB for people who do not have Mysewnet
 ### 0.5.0
 - Major cloud add for MySewnet
+### 0.4.0
+- Refactoring
+### 0.3.0
+- Simple cloud functions
 ### 0.2.0
 - Major re-write of code
 - Add Configiration Options file saving
