@@ -5,6 +5,11 @@ function Get-FileTo($file) {
     write-host "Downloading ..`n  $url to`n  $downloadFile" -ForegroundColor Green
     $downloadFromGitHub = Invoke-WebRequest -Uri "$url" 
     if ($downloadFromGitHub.Content.Length -gt 0) {
+        if ($downloadFromGitHub.Content.gettype().Name -eq 'String') {
+            if (($downloadFromGitHub.Content).substring(0,1) -eq '?') { 
+                $downloadFromGitHub.Content = $downloadFromGitHub.Content.Substring(1)
+            }
+        }
         Set-Content -Path $downloadFile -Value $downloadFromGitHub.Content -Force
     }
 }
