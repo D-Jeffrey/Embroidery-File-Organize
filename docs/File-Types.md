@@ -2,7 +2,7 @@
 
 Format|Machine Type|Preferred|Preview|Comment|
 |----|---|---|---|---|
-|art| Bernina embroidery | 3 |Y| ART files are native to Bernina embroidery software and contain information about colors, stitches, and objects |
+|art| Bernina embroidery, NMeF | 3 |Y| ART files are native to Bernina embroidery software and contain information about colors, stitches, and objects. |
 |blf| Designer's Gallery Embroidery | |N| BLF files are used by Designer's Gallery software to store embroidery designs |
 |cop| Husqvarna embroidery | |N| COP files are used by Husqvarna embroidery machines to store design information |
 |csd| Singer Embroidery | |N| CSD files are used by Singer embroidery machines and software to store design information |
@@ -10,7 +10,7 @@ Format|Machine Type|Preferred|Preview|Comment|
 |dst| Tajima embroidery | 5 |Y| DST files are an old file format that most embroidery machines can read. They are even less complex than machine files and don’t contain thread color information |
 |dsz| ZSK USA Embroidery | |N| DSZ files are used by ZSK embroidery machines to store design information. |
 |exp| Melco Expanded embroidery | |N| EXP files are used by Melco embroidery machines and software to store design information |
-|emb| Wilcom embroidery | |N| EMB files are native to Wilcom embroidery software and contain information about colors, stitches, and objects |
+|emb| Wilcom embroidery, NMeF | |N| EMB files are native to Wilcom embroidery software and contain information about colors, stitches, and objects |
 |emd| Elna Embroidery | |N| EMD files are used by Elna embroidery machines and software to store design information |
 |gnc| Great Notions Embroidery | |N| GNC files are used by Great Notions embroidery software to store design information |
 |gpf| Gunold Pfaff Embroidery | |N| GPF files are used by Gunold Pfaff embroidery software to store design information |
@@ -38,17 +38,18 @@ Format|Machine Type|Preferred|Preview|Comment|
 |10o| Toyota embroidery |1|N| 10O files are used by Toyota embroidery machines to store design information |
 |mhv| Husqvarna Viking Embroidery| |N| MHV Husqvarna Viking Embroidery |
 |pxf| | |N|  |
-|svg| | |N|  |
-|dxf| | |N|  |
+|svg| | NMeF |N|  |
+|dxf| | NMeF|N|  |
 |pec| | |N|  |
 |pcm| | |N|  |
 |pxf| | |N|  |
 |dem| | |N|  |
 |phc| | |N|  |
+|jan| Janome embroidery, NMeF|
 
 - 'Preview' with MySewnet Explorer Plug-in
 - 'Preferred' lower preferred number is a better format
-
+- 'NMeF' - Non-Machine embroidery Format - include much more detail and the orginal picture - See https://romneyridgefarm.com/embroidery-machine-file-formats/
 
 ## Software
 

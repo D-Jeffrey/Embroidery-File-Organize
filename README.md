@@ -1,7 +1,9 @@
-[![License][license-shield]][LICENSE]
-![Project Maintenance][maintenance-shield]
-[![GitHub Activity][commits-shield]][commits]
-![GitHub Activity][releases-shield]
+![GitHub License](https://img.shields.io/github/license/D-Jeffrey/Embroidery-File-Organize)
+![GitHub Release](https://img.shields.io/github/v/release/D-Jeffrey/Embroidery-File-Organize)
+![GitHub Release Date](https://img.shields.io/github/release-date/D-Jeffrey/Embroidery-File-Organize)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/D-Jeffrey/Embroidery-File-Organize)
+![Github Created At](https://img.shields.io/github/created-at/D-Jeffrey/Embroidery-File-Organize)
+
 
 # EmbroideryCollection-Cleanup.ps1
 ## Who is this for?
@@ -129,9 +131,28 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 
 # Issues/Future
 - If is processes a group of seperate zip files which have the same file in different patterns, it will choose a different preferred type than desired
-
+- does not support onedirectory deep switch yet
+- sync should work with USB as well as cloud
+- does not warn if cloud will exceed limits with the latest push
+- need more refactoring
+- some interactive setup options should have other choices before deciding.
+- inconsistant treatment of zip vs nested zip for folding directory
 
 # Releases
+### 0.5.6
+- KNOWN ISSUE - MySewnet changed to Auth0 and now the authenication does not work  (Fix is process)
+- dealing with nested zip (but not recursive zip)
+- fixed duplicate files issues
+- speed up extract if 7zip is available for zip over 100 MB
+- speed up 
+- add more foldupDir values
+- Bug fixes
+- fixed up clean up, added pop-up of files it will clean
+- copy a nest zip only if 2 deep
+- added try/catch on reading zip to avoid corruption errors
+- Added upgrade to latest release option (weekly checks)
+### 0.5.5
+- Bug fixes
 ### 0.5.4
 - Bug fixes with cloud push
 - Update Readme to match parameters
@@ -186,10 +207,3 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 ### 0.0.1
 - It has been in use for over a year, good based, but only every been used by one person
 
-
-[license-shield]: https://img.shields.io/github/license/D-Jeffrey/Embroidery-File-Organize.svg?style=for-the-badge
-[license]: LICENSE
-[commits]: https://github.com/D-Jeffrey/Embroidery-File-Organize/commits
-[commits-shield]: https://img.shields.io/github/commit-activity/y/D-Jeffrey/Embroidery-File-Organize?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2023.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/v/release/D-Jeffrey/Embroidery-File-Organize.svg?style=for-the-badge

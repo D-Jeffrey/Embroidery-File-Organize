@@ -19,5 +19,7 @@ $pushscript = 'EmbroideryCollection-Cleanup.ps1'
 Get-FileTo -file $pushscript
 $scriptname = Join-Path -Path $scriptDir -ChildPath $pushscript
 Get-FileTo -file 'EmbroideryManager.ico'
+# for next upgrade
+Get-FileTo -file 'install.ps1'
 
 Powershell -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup
