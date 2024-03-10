@@ -103,7 +103,7 @@ $paramswitch =[ordered]@{
 #
 #
 
-$ECCVERSION = "v0.6.0"
+$ECCVERSION = "v0.6.1"
 write-host " ".padright(15) "Embroidery Collection Cleanup version: $ECCVERSION".padright(70) -ForegroundColor White -BackgroundColor Blue
 
 
@@ -2335,19 +2335,18 @@ if ($CloudAPI -and $CloudAuthAvailable) {
                     if ($samePath -eq $null) {
                         $samePathid = ""
                         if ($thisfile.RelPath -ne '') {
-                            write-host "Making New Path : " $thisfile.RelPath
+                            write-verbose "Making New Path : " $thisfile.RelPath
                             $samePathid = MakeCloudPathID -path $thisfile.RelPath
                         }    
                     } else {
-                        
                         $samePathid = $samePath.id
                     }
                     
                     
-                    write-host ")) Is  $($thisfile.N) from '$($thisfile.CloudRef.FolderId)' to '$($samePathid)'"
                     if ($thisfile.CloudRef.FolderId -ne $samePathid -and $isOkToMove) {
-                        write-host ")) Relocated $($thisfile.N) from $($thisfile.CloudRef.FolderId) to $($samePathid)"
+                        write-verbose ")) Relocated $($thisfile.N) from $($thisfile.CloudRef.FolderId) to $($samePathid)"
                         MoveCloudFile -fileid $thisfile.CloudRef.Id -toFolderid $samePathid
+                        LogAction -File ($thisfile.RelPath + "\" + $thisfile.N) -Action "^^Cloud-Move"
                     }
 
                 } else {
