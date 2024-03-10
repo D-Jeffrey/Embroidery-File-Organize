@@ -32,7 +32,6 @@ param
   [Switch]$DragUpload,                              # Use the web page instead of the plug in to drag and drop
   [Switch]$ShowExample,                             # Show the example GIF
   [string]$ConfigFile = "EmbroideryCollection.cfg", # This is the file in the same directory as this script otherwise it is a full path
-  [Switch]$PromptPassword,                          # Always Prompt for a password for MySewnet
   [Switch]$ConfigDefault,                           # Got back to default settings
   [Switch]$SwitchDefault,                           # Clear all the preview Switch enabled Values
   [Switch]$FirstRun,                                # Scan all the ZIP files
@@ -59,8 +58,6 @@ $paramstring =  [ordered]@{
  "SetSize" = "Keep collections of files together if there are at least this many";
  "EmbroidDir" = "Embriodary Files directory";
  "USBDrive"="USB drive letter (example E: or H:)";
- "MySewNetuserid"= "User ID to Login to MySewNet";
- "MySewNetpw"=""
  "LastCheckedGithub"=""
 }
 
@@ -72,8 +69,8 @@ $parambool = [ordered]@{
 'ShowExample'= 'Show how to upload to mySewnet';
 'NoDirectory'= 'Do not use Directories from Zip files which creating collection';
 'OneDirectory'= 'Keep files a maximum of one directory deep ';
-'CloudAPI'= 'Use MySewnet Cloud';
-'PromptPassword'= 'Always prompt for password to login to MySewnet Cloud'}
+'CloudAPI'= 'Use MySewnet Cloud'
+}
 $paramarray = [ordered]@{
 'preferredSewType' = 'The preferred types of Embriodary file types';
 'alltypes' = 'All the possible types of files which are an Embriodary file'; 
@@ -82,7 +79,7 @@ $paramarray = [ordered]@{
 }
 $paramswitch =[ordered]@{
     'CleanCollection' = 'Clean the Collection folder';
-    'CloudAPI' = "Using API to update mySewNet Cloud (It is buggy, try again if you get warnings)";
+    'CloudAPI' = "Using API to update mySewNet Cloud (It is buggy, try again if you get errors/warnings)";
     'Sync' = 'Syncronize computer folders to Cloud'
 }
 
@@ -106,7 +103,7 @@ $paramswitch =[ordered]@{
 #
 #
 
-$ECCVERSION = "v0.5.6"
+$ECCVERSION = "v0.6.0"
 write-host " ".padright(15) "Embroidery Collection Cleanup version: $ECCVERSION".padright(70) -ForegroundColor White -BackgroundColor Blue
 
 
@@ -125,8 +122,6 @@ $Script:p = 0
 $padder = 45
 $use7zipsize = 1024*1024*100    # 100 MB switch to 7zip if it is install for zip files over 100 MB
 $filesToRemove = @()
-$MySewNetuserid = ""
-$MySewNetpw = ""
 
 $shell = New-Object -ComObject 'Shell.Application'
 $downloaddir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
@@ -172,11 +167,15 @@ if (Test-Path -Path $ConfigFile) {
             Set-Variable -Name $param -Value $SavedParam.$param
             # write-host "$param = " $SavedParam.$param
         }
+        # toggle a Switch Option 
+        if ($isParamPresent -and ($parambool.keys.Contains($param) -and $null -ne $SavedParam.$param)) {
+            Set-Variable -Name $param -Value (-not $SavedParam.$param)
+        }
     }
 
     foreach ($param in ($paramarray.Keys)) {
         if ($null -ne $SavedParam.$param) {
-            Set-Variable -Name $param -Value $SavedParam.$param.value
+            Set-Variable -Name $param -Value $SavedParam.$param
             
         }
     }
@@ -202,7 +201,7 @@ function SaveAllParams
     }
 
     # Convert the object to a JSON string and save it to a file
-    $SavedParam | ConvertTo-Json | Set-Content -Path $ConfigFile -Encoding Utf8
+    $SavedParam | ConvertTo-Json  | Set-Content -Path $ConfigFile -Encoding Utf8
 }
 
 
@@ -210,9 +209,26 @@ function SaveAllParams
 if ($missingSewnetAddin) {
     $DragUpload = $true
 }
+$CloudAuthAvailable = $false
 if ($CloudAPI) {
     $DragUpload = $false
     $ShowExample = $false
+    $CloudAuthAvailable = ((Get-Module -Name PSAuthClient).count -gt 0)
+    if (-not $CloudAuthAvailable) {
+        
+        if ((Get-Module -ListAvailable | Where-Object { $_.Name -eq "PSAuthClient" }).count -gt 0) {
+            Import-Module PSAuthClient 
+            $CloudAuthAvailable = ((Get-Module -Name PSAuthClient).count -gt 0)
+        }
+        else {
+            write-host "-- Please wait while the script installs missing module --" -foreground Yellow -NoNewline
+            Install-Module -name PSAuthClient -scope:CurrentUser
+            Import-Module PSAuthClient 
+            $CloudAuthAvailable = ((Get-Module -Name PSAuthClient).count -gt 0)
+            write-host "Completed" -foreground Yellow
+        }
+    }
+    
 }
 
 $doit = !$Testing
@@ -571,10 +587,8 @@ function Get-LatestGitHubTag {
     try {
         # Fetch the releases using Invoke-RestMethod
         $releases = Invoke-RestMethod -Uri $apiUrl
-
         # Filter the releases to get the latest one
         $latestRelease = $releases | Sort-Object -Property created_at -Descending | Select-Object -First 1
-
         # Extract and return the tag name
         return $latestRelease.tag_name
     }
@@ -690,8 +704,6 @@ function DecryptStr ($secureObject) {
 #=======================================================================
 #  Cloud API MySewnet interface reversed by Darren Jeffrey
 #=======================================================================
-$Script:tokens = $null
-$Script:authorize = $null
 
 <#
 .SYNOPSIS
@@ -701,84 +713,55 @@ $Script:authorize = $null
     The LoginSewnetCloud function sends a POST request to the SewnetCloud API to authenticate a user. 
     It takes a username and password as parameters, and if the authentication is successful, it stores the session token in a global variable.
 
-.PARAMETER username
-    The username of the SewnetCloud account.
-
-.PARAMETER pass
-    The password of the SewnetCloud account.
 
 .EXAMPLE
-    LoginSewnetCloud -username "user@example.com" -pass "password"
+    LoginSewnetCloud 
 
 .OUTPUTS
     Boolean. Returns $true if the login is successful, $false otherwise.
 
 .NOTES
-    The function sets the global variable $Script:authorize to the session token if the login is successful.
+    The function sets the global variable $Global:sewAuthorizeToken to the session token if the login is successful.
 #>
-function LoginSewnetCloud($username, $pass)
+function LoginSewnetCloud
 {
-    $requestUri = "https://api.mysewnet.com/api/v2/accounts/login"
-    $headers = @{
-        "Origin"="https://www.mysewnet.com"
-        "Referer"="https://www.mysewnet.com"
-        "Cookie"="epslanguage=en; country=US; svpCulture=en-US;"
-        "Accept-Encoding"="gzip, deflate, br"
-        "Accept-Language"="en-US,en;q=0.9"
-        "Content-Type"="application/json"
-        "Sec-Fetch-Dest"="empty"
-        "Sec-Fetch-Mode"="cors"
-        "Sec-Fetch-Site"="same-site"
-        "User-Agent"="EmbroideryCollection Manager Cleanup $ECCVERSION"
+    $authorization_endpoint = "https://auth.singer.com/authorize"
+    $token_endpoint = "https://auth.singer.com/oauth/token"
+    $idparams = @{
+        Client_Id="rEJOLIIM2rpa155BupM4MxantCGqDc7o"
+        scope="openid profile email offline_access"
+        Redirect_Uri="https://mysewnet.com/my-account/login"
+        customParameters = @{ 
+            audience="https://api.mysewnet.com/"
+            ui_locales="en"
+        }
     }
+    if ($Global:sewAuthorizeToken) {
+        ShowProgress "Using previous MySewNet Logon"
+    } else {
+        ShowProgress "Logginning onto MySewNet"
+        $code = Invoke-OAuth2AuthorizationEndpoint -uri $authorization_endpoint @idparams
+        ShowProgress "Logginning onto MySewNet"
+        $tokens = Invoke-OAuth2TokenEndpoint -uri $token_endpoint  @code  
+        ShowProgress "Completed Logon to MySewNet"
+
+        $Global:sewAuthorizeToken = $tokens.access_token
+
+
+        if ($null -eq $tokens.access_token) {
+            Write-error "Authentication Failed" 
+            return $false
+        } 
+        $expires_on = (get-date).AddMinutes($tokens.expires_in)
+
+        Set-Content -Path (Join-Path -Path $PSScriptRoot -childpath "Token.txt") $(($expires_on | ConvertTo-Json) + ($tokens | ConvertTo-Json))
+    }
+
     
-    $body = @{
-        "Email"=$username
-        "Password"=$pass
-    } | ConvertTo-Json
-    ShowProgress "Logginning onto MySewNet"
-    try {
-        $Script:tokens = Invoke-RestMethod -Uri $requestUri -Method POST -Headers $headers -Body $body 
-    } catch {
-        # Note that value__ is not a typo.
-        # Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
-        # Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
-        # write-host "Error: " $_ -ForegroundColor Red
-        $errorPack = $_ | convertfrom-json
-        write-host "Error: " $errorPack.message -ForegroundColor Red
-    } 
-    # A Valid tokens contains
-    # $tokens.session_token
-    # $tokens.encrypted_user_id
-    # $token.refresh_token
-    # $token.expires_in
-    # $token.refresh_expires_in 
-    # $token.profile
-
-
-    if ($null -eq $Script:tokens.session_token) {
-        Write-error "Authentication Failed" 
-        return $false
-    } 
-
-    Set-Content "Token.txt" $($Script:tokens | ConvertTo-Json)
-    $Script:authorize = $Script:tokens.session_token
 
     return $true
 }
  
-Function refreshToken() 
-{
-$refreshTokenParams = @{
-    client_id=$clientId;
-    client_secret=$clientSecret;
-    refresh_token=$refreshToken;
-    grant_type="refresh_token"; # Fixed value
-  }
-  
-  $Script:tokens = Invoke-RestMethod -Uri $requestUri -Method POST -Body $refreshTokenParams
-
-}
 
 <#
 .SYNOPSIS
@@ -786,7 +769,7 @@ $refreshTokenParams = @{
 
 .DESCRIPTION
     The authHeaderValues function returns a hashtable of HTTP headers for authorization. 
-    It uses the global variable $Script:authorize to set the "Authorization" header.
+    It uses the global variable $Global:sewAuthorizeToken to set the "Authorization" header.
 
 .EXAMPLE
     $headers = authHeaderValues
@@ -795,13 +778,13 @@ $refreshTokenParams = @{
     Hashtable. Returns a hashtable of HTTP headers for authorization.
 
 .NOTES
-    The function uses the global variable $Script:authorize to set the "Authorization" header.
+    The function uses the global variable $Global:sewAuthorizeToken to set the "Authorization" header.
 #>
 
 function authHeaderValues ()
 {
     return @{ 
-        "Authorization" = "Bearer " + $Script:authorize
+        "Authorization" = "Bearer " + $Global:sewAuthorizeToken
         "Accept"="application/json, text/plain, */*"
         "Accept-Encoding"="gzip, deflate, br"
         "Accept-Language"="en-US,en;q=0.9"
@@ -965,24 +948,24 @@ function FindCloudidfromPath {
         [string]$foldername,
         [object]$metafolder = $webcollection
     )
-    return $metafolder | Select-Object -ExpandProperty Folders | Where-Object {$_.path -like $foldername} 
-
-#    if ($metafolder) {
-#        if ($metafolder.folders | where-object { $_.path -like $foldername}) {
-#            # write-host "Meta _Path" ($metafolder.folders | where-object { $_.path -like $foldername})
-#            return $metafolder.folders | where-object { $_.path -like $foldername}
-#        } else {
-#            foreach($fid in $metafolder.folders) {
-#                $retdir = FindCloudidfromPath $foldername  $fid 
-#                if ($retdir) {
-#                    # write-host "Ret $retdir"
-#                    return $retdir
-#                }
-#            }
-#        }
-#    }
-#    return $null
+    # return $metafolder | Select-Object -ExpandProperty Folders | Where-Object {$_.path -like $foldername} 
     
+    if ($metafolder) {
+        if ($metafolder.folders | where-object { $_.path -like $foldername}) {
+            # write-host "Meta _Path" ($metafolder.folders | where-object { $_.path -like $foldername})
+            return $metafolder.folders | where-object { $_.path -like $foldername}
+        } else {
+            foreach($fid in $metafolder.folders) {
+                $retdir = FindCloudidfromPath $foldername  $fid 
+                if ($retdir) {
+                    # write-host "Ret $retdir"
+                    return $retdir
+                }
+            }
+        }
+    }
+    return $null
+
 }
 function GetCloudDirectoryid($foldername) {
     # Give a folder name find the folder id #
@@ -1078,7 +1061,7 @@ Function MoveCloudFile ($fileid, $toFolderid)
             write-warning ("Error Moving file id: '$fileid'  [ "  + $eDetails + " ]" )
         }
         else {
-            # Update Cache
+            # TODO Update Cache
         }
     return $result
 }
@@ -1280,79 +1263,6 @@ Function PushCloudFile($name, $inFolderID, $filepath)
     }
 
 }
-<#
-.SYNOPSIS
-    Authenticates a user with MySewnet and returns the user ID and encrypted password.
-
-.DESCRIPTION
-    The doWebAPI function prompts the user for MySewnet credentials, encrypts the password,
-    and attempts to authenticate with the cloud service. If successful, it returns the user ID
-    and encrypted password. If any credentials are missing or authentication fails, the function
-    will stop and return empty strings.
-
-.PARAMETER userid
-    The user ID for MySewnet. If not provided, the function will prompt for it.
-
-.PARAMETER pw
-    The password for MySewnet. If not provided or if $PromptPassword is set, the function will prompt for it.
-
-.EXAMPLE
-    $credentials = doWebAPI -userid 'exampleUser' -pw 'examplePass'
-
-    This example attempts to authenticate with MySewnet using the provided user ID and password.
-
-.INPUTS
-    String
-    You can input the user ID and password as strings.
-
-.OUTPUTS
-    Array
-    Returns an array containing the user ID and encrypted password.
-
-.LINK
-    https://www.mysewnet.com/
-
-#>
-function doWebAPI($userid, $pw) {
-
-    if (([string]$userid -eq "") -or ([string]$pw -eq "") -or $PromptPassword) {
-        
-        $userid = read-host -Prompt "What is your User id for MySewnet: "
-        if ($userid -eq "") {
-            write-host "user id is required - stopping" -ForegroundColor Yellow
-            return ("", "")
-        }
-        $dpw = read-host -Prompt "password for MySewnet: "
-        $pw = EncryptStr $dpw
-        
-        if ($dpw -eq "") {
-            write-host "MySewNet password is required - stopping" -ForegroundColor Yellow
-            return ("", "")
-        }
-        write-host "Testing Authenication" -ForegroundColor Blue
-        $dpw = DecryptStr $pw
-        if (!(LoginSewnetCloud -username $userid -pass $dpw )) {
-            write-host "--- stopping ---" -ForegroundColor Yellow
-            return ("", "")
-        }
-    }
-
-    if (!$Script:authorize) {
-        write-host "Using username: '$userid' to access MySewnet" -ForegroundColor Green 
-        $dpw = DecryptStr $MySewNetpw
-        if (!(LoginSewnetCloud -username $userid -pass $dpw )) {
-            write-host "If you continue to experience login issues, update the password in $ConfigFile"
-            write-host "--- stopping ---" -ForegroundColor Yellow
-            return ("", "")
-        }
-    }
-    if ($PromptPassword) {
-        $pw = ""
-    }
-    return ($userid, $pw)
-    
-}
-
 function FoldupDirPath {
     param (
         [string]$directoryPath
@@ -1512,7 +1422,9 @@ function NiceSize ($size) {
         DirWBase        C:\Dir\File : Directory name with Base 
         Filedatetime                : lastwritetime of file on disk or zip
         Priority                    : sorted type based on preference
+        LastWriteTime
         CloudRef                    : See object below
+        RelPath
         Push                        : Path if new file else null
 
     CloudRef = 
@@ -1628,8 +1540,12 @@ function ShowPreferences ($showall = $false)
     }
     Write-host    $($parambool['keepAllTypes']).padright($padder)  ": $keepAllTypes"
     if ($CloudAPI) {
-        Write-host    $($paramswitch['CloudAPI']).padright($padder)   -ForegroundColor yellow
-    }
+        if ($CloudAuthAvailable)  {
+            Write-host    $($paramswitch['CloudAPI']).padright($padder)   -ForegroundColor yellow
+        } else {
+            Write-host "Using API to update mySewNet Cloud requires PSAuthClient to be installed to use CloudAPI feature" -ForegroundColor Red
+            }
+        }
     }
 }
 
@@ -1802,11 +1718,20 @@ if ($setup) {
             if (myPause -Message "Are you using MySewnet Cloud" -Choice $true -ChoiceDefault $CloudAPI) {
                 $CloudAPI = $true
                 $USBDrive = ""
-                $meid = Read-host -Prompt "What is your user name for MySewnet? ($MySewNetuserid)"
-                if ($meid) { $MySewNetuserid = $meid }
-                write-host "You will be asked for your password the first time you run the script again" -ForegroundColor Yellow
-                $savep = myPause -Message "Are you okay with saving an encrypted copy of that password for future logins" -Choice $true -ChoiceDefault (!$PromptPassword)
-                $PromptPassword = -not $savep
+                if ((get-module -name PSAuthClient).count -lt 1) {
+                    write-Host "This requires the installation of PSAuthClient"
+                    if (myPause -Message "Do you want to install that module now" -Choice $true -ChoiceDefault $false) {
+                        if (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                            write-host "This may take a few minutes to complete - using Adminstrator access" -ForegroundColor Green
+                            install-module -name PSAuthClient -Scope:AllUsers
+                            write-host "Completed" -ForegroundColor Green
+                        } else {
+                            write-host "This may take a few minutes to complete" -ForegroundColor Green
+                            install-module -name PSAuthClient -scope:CurrentUser
+                            write-host "Completed" -ForegroundColor Green
+                        }
+                    }
+                }
             } else {
                 $CloudAPI = $false
                 $USBDrive = ""
@@ -1870,6 +1795,12 @@ if ($setup) {
             LogAction -File $instructDir -Action "Created-Directory"
         }
     }
+    if ($CloudAPI -and ((get-module -name PSAuthClient).count -lt 1)) {
+        write-host "You will need to install the Powershell module in order to access MySewnet use the following command:" -ForegroundColor Yellow
+        write-host "      install-module -name PSAuthClient" -ForegroundColor Blue
+        write-host "with completing that you will not be able to use the CloudAPI feature" -ForegroundColor Yellow
+
+    }
     write-host "All Done " -BackgroundColor Yellow -ForegroundColor Black
     MyPause 'Press any key to Close' | out-null
     Return
@@ -1927,9 +1858,8 @@ Write-Verbose ("Rollup match pattern".padright($padder-8) + ": $foldupDirs")
 Write-Verbose ("Ignore Terms Conditions files".padright($padder-8) + ": $TandCs")
 # Write-Verbose ("Excludetypes".padright($padder-8) + ": $excludetypes")
 
-if ($CloudAPI) {
-    ($MySewNetuserid, $MySewNetpw) = doWebAPI $MySewNetuserid $MySewNetpw
-    if (!$Script:authorize) {
+if ($CloudAPI -and $CloudAuthAvailable) {
+    if (-not (LoginSewnetCloud)) {
         return
     }
 }
@@ -1994,7 +1924,8 @@ if ($FirstRun) {
 $isNewInstruct = $false
 $tmpdirlength = $resultTmpDir.length
 $havewarning = $false
-Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { ($_.CreationTime -gt (Get-Date).AddDays(- $DownloadDaysOld ))  -and ($_.gettype().Name -eq 'FileInfo')} |
+$afterdate = (Get-Date).AddDays(- $DownloadDaysOld )
+Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.CreationTime -gt $afterdate) -OR ($_.LastWriteTime -gt $afterdate)) -and ($_.gettype().Name -eq 'FileInfo')} |
   
     ForEach-Object {
         $thisfileBase = $_.BaseName
@@ -2320,9 +2251,9 @@ if (-not $KeepEmptyDirectory) {
 }
 
 
-if ($CloudAPI) {
+if ($CloudAPI -and $CloudAuthAvailable) {
     # Re-read the Sewing files
-    $mysewingfiles = LoadSewfiles
+    ##### $mysewingfiles = LoadSewfiles
     $webcollection = ReadCloudMeta
     if ($null -eq $webcollection) {
         write-host "Cloud is not working *** STOPPING" -ForegroundColor Red
@@ -2343,37 +2274,14 @@ if ($CloudAPI) {
             write-Progress -Activity "Matching files to Cloud :  $($thisfile.N)" -PercentComplete ($cm * 100 / $mysewingfiles.count) -Status "$cm of $($mysewingfiles.count)"
         }
         $thisfile.CloudRef = GetFileIDfromCloud $_.N
-#        if ($thisfile.DirectoryName.length -lt $EmbroidDir.Length) {
-#            $thisfile.DirectoryName
-#        }
         $spl = $thisfile.DirectoryName.substring($EmbroidDir.Length)
         $thisfile.RelPath = $spl
-        $samepath = FindCloudidfromPath -foldername $spl
-
+        
         if ($thisfile.CloudRef)   {
             $cf = $cf +1
             }
-<# 
-            $tolist += [PSCustomObject]@{ 
-                Name = $thisfile.N
-                Path = $spl
-                ShouldBeid = $samepath.id 
-                CurrentFolderID = $thisfile.CloudRef.FolderId
-                NeedtoMove = (""+$samepath.id -ne ""+$thisfile.CloudRef.FolderId)
-            }
-        } else {
-            $tolist += [PSCustomObject]@{ 
-                Name = $thisfile.N
-                Path = $spl
-                ShouldBeid = $samepath.id 
-                CurrentFolderID = ""
-                NeedtoMove = ""
-            }
-            # write "?? API file for " $_.N
-            }
-#>
         }
-    write-host "Found $cf file which match in cloud of $($MySewingfiles.count)"
+    write-host "Found $cf cloud file which match local cache of $($MySewingfiles.count) files"
 #    $tolist | Out-GridView
 
 
@@ -2409,7 +2317,7 @@ if ($CloudAPI) {
         }
     write-host "Beginning push to MySewnet: $filestopush files" -ForegroundColor Green
     $i = 0
-    if ($filestopush) {
+    if ($filestopush -or $sync) {
         $MySewingfiles | ForEach-Object {
             $thisfile = $_
             if ($thisfile.push -and $thisfile.push.contains("\") ) {
@@ -2418,23 +2326,52 @@ if ($CloudAPI) {
                 LogAction -File ($thisfile.push + "\" + $thisfile.N) -Action "^^Cloud-Added"
                 $thisfile.push = ""
                 }
-            if ($sync -and ($null -eq $thisfile.CloudRef)) {
-                # TODO This Progress should be %
-                Write-Progress -PercentComplete (($i++)*100/$filestopush) "Syncing files to the Cloud : " -Status $thisfile.N
-                $spl = $thisfile.DirectoryName.substring($EmbroidDir.Length)
-                PushCloudFileToDirectory -filepath ($thisfile.DirWBase + $thisfile.Ext) -folderpath $spl | Out-null
-                LogAction -File ($spl + "\" + $thisfile.N) -Action "^^Cloud-Added-Sync"
+            if ($sync) {
+
+                if ($thisfile.CloudRef) {
+                                    
+                    $samePath = FindCloudidfromPath -foldername $thisfile.RelPath
+                    # Check to see if the proper path can not be found
+                    if ($samePath -eq $null) {
+                        $samePathid = ""
+                        if ($thisfile.RelPath -ne '') {
+                            write-host "Making New Path : " $thisfile.RelPath
+                            $samePathid = MakeCloudPathID -path $thisfile.RelPath
+                        }    
+                    } else {
+                        
+                        $samePathid = $samePath.id
+                    }
+                    
+                    
+                    write-host ")) Is  $($thisfile.N) from '$($thisfile.CloudRef.FolderId)' to '$($samePathid)'"
+                    if ($thisfile.CloudRef.FolderId -ne $samePathid -and $isOkToMove) {
+                        write-host ")) Relocated $($thisfile.N) from $($thisfile.CloudRef.FolderId) to $($samePathid)"
+                        MoveCloudFile -fileid $thisfile.CloudRef.Id -toFolderid $samePathid
+                    }
+
+                } else {
+                    Write-Progress -PercentComplete (($i++)*100/$filestopush) "Syncing files to the Cloud : " -Status $thisfile.N
+                    $spl = $thisfile.DirectoryName.substring($EmbroidDir.Length)
+                    PushCloudFileToDirectory -filepath ($thisfile.DirWBase + $thisfile.Ext) -folderpath $spl | Out-null
+                    LogAction -File ($spl + "\" + $thisfile.N) -Action "^^Cloud-Added-Sync"
+                    }
                 }
             }
         }
-        
+<#        
         if ($sync) {
+            $mysewingfiles | Out-GridView
+
+
+            
             $MySewingfiles | ForEach-Object {
                 $thisfile = $_
                 if ($thisfile.DirectoryName.length -lt $EmbroidDir.Length) {
                     $thisfile.DirectoryName
                 }
                 $samepath = FindCloudidfromPath -foldername $thisfile.RelPath
+
                 if ($thisfile.CloudRef)   {
                     # Need to move
                     if  (""+$samepath.id -ne ""+$thisfile.CloudRef.FolderId) {
@@ -2448,6 +2385,7 @@ if ($CloudAPI) {
                 }
             }
         }
+    #>
     }
     
 
@@ -2460,7 +2398,7 @@ $librarySizeAfter = 0
 $libraryEmbSizeAfter = 0
 $byExt = @{}
 if ($Script:savecnt -gt 0) {
-    if ($null -eq $CloudAPI) {
+    if (-not $CloudAPI) {
         OpenForUpload
     }
     Get-ChildItem -Path ($EmbroidDir)  -Recurse -file  | ForEach-Object { 
@@ -2472,7 +2410,7 @@ if ($Script:savecnt -gt 0) {
         $byExt[$_.Extension] +=  $_.Length
     }
 } else {
-    if ($null -eq $CloudAPI) {
+    if (-not $CloudAPI) {
         if (MyPause "Do you want to open the web page & directory to upload files from last time?" $true) {
             OpenForUpload
         }
@@ -2496,7 +2434,7 @@ else {
     Write-host "   *** Instructions size is   : $(niceSize ($librarySizeBefore - $libraryEmbSizeBefore)) ****   "  -ForegroundColor Green 
     write-host "   *** Embroidary file size is: $(niceSize $libraryEmbSizeBefore) ****"
 }
-if ($CloudAPI) {
+if ($CloudAPI -and $CloudAuthAvailable) {
     $updatedMeta = ReadCloudMeta
     write-Host "Cloud Storage currently is: " -ForegroundColor Green
     write-Host "       Used of Total:".padright(25) (NiceSize $updatedMeta.storage.usedSize) "/" (NiceSize $updatedMeta.storage.totalSize)

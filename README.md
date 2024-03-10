@@ -16,7 +16,7 @@ downloaded files and find the ones that what for your machine, and put them onto
 
 ## How to Install Simple
 
-*This working on Windows computers (not sure if it will work on a Apple Mac, [can a MAC run Powershell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)?)*
+*This working on Windows computers (not sure if it will work on a Apple Mac or Linux, [can a MAC run Powershell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)?)*
 
 Click `start` -> `Run` -> `Powershell`
 In the windows that appears cut and paste the follow 2 lines
@@ -24,6 +24,7 @@ In the windows that appears cut and paste the follow 2 lines
 ```
 $ScriptFromGitHub = Invoke-WebRequest https://raw.githubusercontent.com/D-Jeffrey/Embroidery-File-Organize/main/install.ps1
 Invoke-Expression $($ScriptFromGitHub.Content)
+
 ```
 
 I will say, this is generally a bad idea to run random code from the Internet, but in this case, it is hosted in public view on Github and can be checked for Security issues.
@@ -44,15 +45,17 @@ A powershell script to deal with the many different types of embroidery files, p
 Once it is setup with a shortcut you can simply download your patterns from online stores and then double-click the shortcut to copy the **right patterns** into yuor collection location and leave the instructions on your computer for reference later.
 
 ## Getting started
-This is a self contained single powershell script.  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to `unblock` the downloaded file (`Right-click` properties of the file and at the bottom check the `unblock`.  Once you have copy the script into a location (suggested `c:\ProgramData\EmbroideryOrganize`)  (and unblocked), then you can run the script with -setup
+This is a self contained single powershell script (See note below).  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow running of powershell.  You may also have to `unblock` the downloaded file (`Right-click` properties of the file and at the bottom check the `unblock`.  Once you have copy the script into a location (suggested `c:\ProgramData\EmbroideryOrganize`)  (and unblocked), then you can run the script with -setup
 
 ```
     powershell .\EmbroideryCollection-Cleanup.ps1 -setup
 
     powershell .\EmbroideryCollection-Cleanup.ps1
+    
 ```
 Once you have run it once, it will create a EmbroideryCollection.CFG file in the same directory as the script, which you can edit to adjust the settings (and/or you can use command line parameters to change the settings).  It will also a file `EmbroideryCollection.Log` for any of it's actions
 
+If you are wanting to push your files into MySewnet, then you will need one additional module [`PSAutheClient`](https://github.com/alflokken/PSAuthClient) from [`alflokken`](https://github.com/alflokken)
 
 ## WIP All these have changed - Parameters
 - `-Setup`    Interactive setup of parameters, create the directories required, and create a shortcut on the Desktop Icon linked to this Powershell script.
@@ -139,6 +142,11 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 - inconsistant treatment of zip vs nested zip for folding directory
 
 # Releases
+### 0.6.0
+- Added support OpenID using PSAuthClient
+- remove user/pw need and caching
+- fixed sync moving of files in the cloud
+- addressed install script issues
 ### 0.5.6
 - KNOWN ISSUE - MySewnet changed to Auth0 and now the authenication does not work  (Fix is process)
 - dealing with nested zip (but not recursive zip)
