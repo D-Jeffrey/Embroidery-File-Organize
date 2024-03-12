@@ -54,13 +54,12 @@ $TandCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*','READ ME FI
 $opencloudpage = "https://www.mysewnet.com/en-us/my-account/#/cloud/"
 # List of paramstring to check
 $paramstring =  [ordered]@{
- "DownloadDaysOld" = "Age of files in Download directory";
- "SetSize" = "Keep collections of files together if there are at least this many";
  "EmbroidDir" = "Embriodary Files directory";
  "USBDrive"="USB drive letter (example E: or H:)";
- "LastCheckedGithub"=""
+ "LastCheckedGithub"="";
+ "DownloadDaysOld" = "Age of files in Download directory";
+ "SetSize" = "Keep collections of files together if there are at least this many"
 }
-
 
 $parambool = [ordered]@{
 'KeepAllTypes'= 'Keep all variations of files types' ; 
@@ -103,7 +102,7 @@ $paramswitch =[ordered]@{
 #
 #
 
-$ECCVERSION = "v0.6.1"
+$ECCVERSION = "v0.6.2"
 write-host " ".padright(15) "Embroidery Collection Cleanup version: $ECCVERSION".padright(70) -ForegroundColor White -BackgroundColor Blue
 
 
@@ -154,7 +153,7 @@ if (Test-Path -Path $ConfigFile) {
 
     # Iterate over each parameter
     if ($null -eq $SwitchDefault) {
-        $paralist = ($paramstring.Keys )
+        $paralist = ($paramstring.Keys)
     } else {
         $paralist = ($paramstring.Keys + $parambool.Keys)
     }
@@ -168,22 +167,25 @@ if (Test-Path -Path $ConfigFile) {
             # write-host "$param = " $SavedParam.$param
         }
         # toggle a Switch Option 
-        if ($isParamPresent -and ($parambool.keys.Contains($param) -and $null -ne $SavedParam.$param)) {
+        if ($isParamPresent -and ($parambool.Contains($param))) {
             Set-Variable -Name $param -Value (-not $SavedParam.$param)
         }
     }
-
     foreach ($param in ($paramarray.Keys)) {
         if ($null -ne $SavedParam.$param) {
-            Set-Variable -Name $param -Value $SavedParam.$param
+            $newvalue = $SavedParam.$param.value
+            if ($null -eq $newvalue) {
+                $newvalue = $SavedParam.$param
+            }
+            Set-Variable -Name $param -Value $newvalue
             
         }
     }
 } else {
     $FirstRun = $true
 }
-    
 
+    
 function SaveAllParams
 {
     # Save the state of the variables and settings
@@ -242,6 +244,7 @@ if ($env:COMPUTERNAME -eq "DESKTOP-R3PSDBU_") { # -and $Testing) {
     $downloaddir = "d:\Users\kjeff\downloads"
     $doit = $true
     }
+
 
 
     
@@ -506,7 +509,7 @@ function CheckAndRemove {
             $howDeleted = if ($HardDelete) { 'Deleting ' } else { 'Recycling ' }
             $fcs = 0
             ForEach ($f in $RemoveFiles) {
-                
+# TODO need to remove it from $mysewingfiles
                 RecycleFile -file $f.FullName -purge $DeleteWithoutRecycle
                 LogAction -File $f.Name -Action "--Remove-file"
                 ShowProgress  ($howDeleted  + "extra files from cache") "$fcs of $fcr - $($f.Name)"
@@ -980,9 +983,25 @@ function GetCloudDirectoryid($foldername) {
 
 Function DeleteCloudFolder ($id)
 {
+    if ($null -eq $id) {
+        return
+    }
     $authHeader = authHeaderValues
     $myError = $null    
     $requestUri = 'https://api.mysewnet.com/api/v2/cloud/folders/'+ $id;
+    $webcollection.folderId
+    $pool = $webcollection
+    # BUGS
+    <#
+        do {
+            $pool | Select-Object -ExpandProperty Folders |  Where-Object {$id -in ($_.folder.Id)} | ForEach-Object { 
+                $_.folderId = ($id -notin ($_.FolderId))
+                $pool = $null
+                break
+                }
+            $pool = $pool | Select-Object -ExpandProperty Folders 
+            } while ($pool.folders.count -gt 0)
+#>
     try {        
 	        $result = Invoke-RestMethod -Uri $requestUri -Method "DELETE" -Headers $authHeader 
 	} catch {
@@ -999,6 +1018,7 @@ Function DeleteCloudFolder ($id)
 		write-warning ("Error Deleting folder id: '$id'  [ " + $eDetails.message + " ] -- The cloud API is buggy try again")
 	}
     else {
+
         # TODO Manage the copy of the shadow structure for Cloud files
     }
     return $result
@@ -1510,16 +1530,12 @@ function BuildHashofMySewingFiles {
 function ShowPreferences ($showall = $false)
 {
     if ($showall) {
-        foreach ($paramselect in ($paramstring.Keys)) {
-            if ($($paramstring[$paramselect])) {
+        Set-Variable -Name $param -Value $SavedParam.$param
+        foreach ($paramselect in ($paramstring.Keys  + $parambool.Keys)) {
+            $description = $paramstring[$paramselect] + $parambool[$paramselect]
+            if ($description) {
                 $val = Get-Variable -Name $paramselect -ValueOnly
-                Write-host $($paramstring[$paramselect]).padright($padder+20) ": " $val
-            }
-        }
-        foreach ($paramselect in ($parambool.Keys)) {
-            if ($($parambool[$paramselect])) {
-                $val = Get-Variable -Name $paramselect -ValueOnly
-                Write-host $($parambool[$paramselect]).padright($padder+20) ": " $val
+                Write-host $($description).padright($padder+20) ": " $val
             }
         }
         foreach ($paramselect in ($paramarray.Keys)) {
@@ -1594,8 +1610,16 @@ function  CheckUSBDrive ($USBPath) {
 #
 #======================================================================================
 $PrefSewTypeStar = $preferredSewType | ForEach-Object { "*.$_" }
+if ($PrefSewTypeStar.count -eq 0 -or $PrefSewTypeStar -eq $null) {
+    write-error "Miss configuration of 'preferredSewType', can not continue"
+    return
+}
 $SewTypeMatch = $preferredSewType -join '|'
 $foldupDirs = $foldupDir + $preferredSewType | ForEach-Object { $_.ToLower() }
+if ($foldupDirs.count -eq 0 -or $foldupDir -eq $null) {
+    write-error "Miss configuration of 'foldupDir', can not continue"
+    return
+}
 $allTypesStar = $alltypes | ForEach-Object {"*.$_"}
 
 
@@ -2287,33 +2311,52 @@ if ($CloudAPI -and $CloudAuthAvailable) {
 
 
     if ($sync) {
-        $cloudfileremove  = $webcollection | Select-Object -ExpandProperty Folders | select-Object -ExpandProperty Files| Where-Object {$_.Name -notin ($mysewingfiles.N)} 
+        $pool = $webcollection
+        $cloudfileremove = @()
+        do {
+        $cloudfileremove  += $pool | Select-Object -ExpandProperty Folders | select-Object -ExpandProperty Files| Where-Object {$_.Name -notin ($mysewingfiles.N)} 
+        $pool = $pool | Select-Object -ExpandProperty Folders 
+        } while ($pool.files.count + $pool.folders.count -gt 0)
         if ($cloudfileremove.count -gt 10) {
             write-host "Removing $($cloudfileremove.count) files from Mysewnet Cloud, this is going to take some time... " -ForegroundColor Yellow
         }
         $i = 0
-        $cloudfileremove | ForEach-Object  {
-            # write-host " --Removing from the cloud" $_.Name
-            Write-Progress -PercentComplete (($i++)*100/$cloudfileremove.count) "Removing files from cloud :" -Status $_.Name
-            LogAction -File $_.Name -Action "--Deleted-Sync"
-            DeleteCloudFile -id $_.id | Out-Null
+        if ($cloudfileremove) {
+            $cloudfileremove | ForEach-Object  {
+                # write-host " --Removing from the cloud" $_.Name
+                Write-Progress -PercentComplete (($i++)*100/$cloudfileremove.count) "Removing files from cloud :" -Status $_.Name
+                LogAction -File $_.Name -Action "--Deleted-Sync"
+                DeleteCloudFile -id $_.id | Out-Null
+            }
         }
         $filestopush = ($mysewingfiles | Where-Object { ($_.Push -and $_.Push.contains('\'))  -or ($_.CloudRef -eq $null)}).count
 
         }
      else {
-        $filestopush = ($mysewingfiles | Where-Object { !($_.Push) -and (!($_.CloudRef))}).count
+        $filestopush = ($mysewingfiles | Where-Object { ($_.Push -and $_.Push.contains('\')) }).count
         }
 
     if (-not $KeepEmptyDirectory) {
-        $emtpyfoldersList = $webcollection |   Select-Object -ExpandProperty Folders | where-object {$_.folders.count -eq 0 -and $_.files.count -eq 0 } 
-        if ($emtpyfoldersList.count -gt 0) {
-            write-host "Clearing Empty Cloud folders : $($emtpyfoldersList.count)"
+        $totalfoldersremoved = 0
+        # BUG need CloudDeleteFolder to manage deletions
+        #do {
+            $emtpyfoldersList = @()
+        
+            $pool = $webcollection
+            do {
+                $emtpyfoldersList  += $pool | Select-Object -ExpandProperty Folders |  Where-Object {$_.files.count -eq 0 -and $_.folders.count -eq 0} 
+                $pool = $pool | Select-Object -ExpandProperty Folders 
+                } while ($pool -and $pool.folders.count -gt 0)
+
+            if ($emtpyfoldersList.count -gt 0) {
+                $totalfoldersremoved += $emtpyfoldersList.count
+                write-host "Clearing Empty Cloud folders : $($emtpyfoldersList.count) / $totalfoldersremoved"
+                $emtpyfoldersList | ForEach-Object { 
+                    ShowProgress "Delete Cloud Folder $($_.Name)"
+                    DeleteCloudFolder -id $_.id | Out-null
+                    }
             }
-        $emtpyfoldersList | ForEach-Object { 
-            ShowProgress "Delete Cloud Folder $($_.Name)"
-            DeleteCloudFolder -id $_.id | Out-null
-            }
+         #   } while ($emtpyfoldersList.count -gt 0)
         }
     write-host "Beginning push to MySewnet: $filestopush files" -ForegroundColor Green
     $i = 0
@@ -2358,33 +2401,7 @@ if ($CloudAPI -and $CloudAuthAvailable) {
                 }
             }
         }
-<#        
-        if ($sync) {
-            $mysewingfiles | Out-GridView
 
-
-            
-            $MySewingfiles | ForEach-Object {
-                $thisfile = $_
-                if ($thisfile.DirectoryName.length -lt $EmbroidDir.Length) {
-                    $thisfile.DirectoryName
-                }
-                $samepath = FindCloudidfromPath -foldername $thisfile.RelPath
-
-                if ($thisfile.CloudRef)   {
-                    # Need to move
-                    if  (""+$samepath.id -ne ""+$thisfile.CloudRef.FolderId) {
-                        ShowProgress -stat "Moving Cloud files" -Area $thisfile.N
-                        LogAction -File $thisfile.N -Action "}}Moved-CloudFolders"
-        # BUG we need to moka directory if samepath errors                   
-        #                    $folderid = MakeCloudPathID -path $folderpath
-        
-                        MoveCloudFile -fileid $thisfile.CloudRef.Id -toFolderid $samepath.id | Out-Null
-                    }
-                }
-            }
-        }
-    #>
     }
     
 
@@ -2392,7 +2409,8 @@ if ($CloudAPI -and $CloudAuthAvailable) {
 
 
 write-host "Calculating size"
-ShowProgress  "Calculating size"
+
+
 $librarySizeAfter = 0
 $libraryEmbSizeAfter = 0
 $byExt = @{}
@@ -2430,8 +2448,8 @@ if ($Script:savecnt -gt 0) {
 
     }
 else {
-    Write-host "   *** Instructions size is   : $(niceSize ($librarySizeBefore - $libraryEmbSizeBefore)) ****   "  -ForegroundColor Green 
-    write-host "   *** Embroidary file size is: $(niceSize $libraryEmbSizeBefore) ****"
+    Write-host "   *** Instructions size is   : $( ) ****   "  -ForegroundColor Green 
+    write-host "   *** Embroidary file size is: $(niceSize $libraryEmbSizeBefore) ****" -ForegroundColor Green 
 }
 if ($CloudAPI -and $CloudAuthAvailable) {
     $updatedMeta = ReadCloudMeta

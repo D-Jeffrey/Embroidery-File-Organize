@@ -12,7 +12,7 @@ wanting to manage all the files that you have purchased and downloaded and get t
 
 ## Make it work
 Once you have download your embroidary files click on the `icon for EmbroideryCollection-Cleanup`<img src="EmbroideryManager.ico" width="24"> and it will look through the download folder and place any downloaded sewing files into the Embroidory folder on your computer.  Depending if you are using a USB to transfer the files or using MySewnet Cloud, the script will look at the recently
-downloaded files and find the ones that what for your machine, and put them onto the USB stick or push them up the cloud (without wasting space).  And it will seperate out the instructions and the instructions on your computer with the embroidary files, but not duplicate them to the USB or cloud.  In the process, it will limit the numbers of folders in folders, while still bring some organization to the files.
+downloaded files and find the ones that what works for your Embroidery machine, and put them onto the USB stick or push them up the cloud (without wasting space).  And it will seperate out the instructions and the instructions on your computer with the embroidary files, but not duplicate them to the USB or cloud.  In the process, it will limit the numbers of folders in folders, while still bring some organization to the files.
 
 ## How to Install Simple
 
@@ -142,34 +142,28 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 - inconsistant treatment of zip vs nested zip for folding directory
 
 # Releases
+
+### 0.6.2
+- Added Logging and remove extra debug code
+- Fixed saving parameters via JSON for difference between PS 5,6 vs 7
+- fix issue with nest cloud folders add/removing of files and empty folders
 ### 0.6.0
 - Added support OpenID using PSAuthClient
 - remove user/pw need and caching
 - fixed sync moving of files in the cloud
 - addressed install script issues
 ### 0.5.6
-- KNOWN ISSUE - MySewnet changed to Auth0 and now the authenication does not work  (Fix is process)
 - dealing with nested zip (but not recursive zip)
 - fixed duplicate files issues
 - speed up extract if 7zip is available for zip over 100 MB
-- speed up 
 - add more foldupDir values
-- Bug fixes
 - fixed up clean up, added pop-up of files it will clean
 - copy a nest zip only if 2 deep
 - added try/catch on reading zip to avoid corruption errors
 - Added upgrade to latest release option (weekly checks)
-### 0.5.5
-- Bug fixes
-### 0.5.4
-- Bug fixes with cloud push
-- Update Readme to match parameters
-- Fixed move files from zip exclusion
-- Added Check for version update
 ### 0.5.3
 - More testing and bug files - first public available
 ### 0.5.2
-- Clearing and files of folders in cloud
 - interactive setup
 ### 0.5.1
 - Major added Support for USB for people who do not have Mysewnet
@@ -186,9 +180,6 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 - Change suggested top location to new location outside of OneDrive
 - Support for USB drives
 - lots of bugs fixed
-### 0.1.4.1
-- fixed bug in explorer command
-- This was a bad version
 ### 0.1.4
 - Started work on using API
 - Smaller how to image example
@@ -201,15 +192,8 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 - Add setup to add Icon to desktop, create folders
 - bug fix MyPause
 - adjusted Setsize
-- 
 ### 0.1.2
 - Added Support for Zip inside of Zip
-- Adjust the code to start to deal with the end-of-life for the MySewnet Cloud Sync tool.
-- Improved some logging
-- It does require more manual effort to send the file results to the cloud.
-- It still managed the local repository of files but it create a temporary new location for any recent downloads.
-- This may actually work better for people who did not use Cloud Sync or have Cloud Sync support but did use Direct USB
-
 ### 0.0.2
 - Fixed the script name, fixed error messages
 ### 0.0.1
