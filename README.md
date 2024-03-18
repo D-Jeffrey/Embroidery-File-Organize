@@ -105,9 +105,10 @@ Depending on the types Embrodery file extensions your machine uses then you may 
 
 ### Nice to know
 
+If you have 7zip installed on your computer, (that native version, not MS store version), then it will be used when working wiht large zip files as it is much faster.
 If will create folder when there is a number of files `-aSetSizeis` that are in a given zip file using the name of the zip file.  You most likely will want to rename it and give it a new name which reflects the folder.
 Ignore files which are terms and conditions (it does not mean you can ignore the laws, just don't save so many copies of the files.
-`$TandCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*')`  Edit your config (EmbroideryCollection.cfg) file to adjust these
+`$TandCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*')`  Edit your config (EmbroideryCollection.cfg) file to adjust these values. 
 This are the directories (plus the if the directory name equals the format type)  
 `$foldupDir = @('images','sewing helps','Designs', 'Design Files')` Edit your config file.
 
@@ -142,7 +143,8 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 - inconsistant treatment of zip vs nested zip for folding directory
 
 # Releases
-
+### 0.6.3
+- bug files to land in the right directory
 ### 0.6.2
 - Added Logging and remove extra debug code
 - Fixed saving parameters via JSON for difference between PS 5,6 vs 7
