@@ -100,8 +100,8 @@ $paramswitch =[ordered]@{
 #
 #
 
-$ECCVERSION = "v0.6.3"
-write-host " ".padright(15) "Embroidery Collection Cleanup version: $ECCVERSION".padright(70) -ForegroundColor White -BackgroundColor Blue
+$ECCVERSION = "v0.6.4"
+write-host " ".padright(15) "Embroidery Collection Cleanup version: $ECCVERSION on PS $($PSVersionTable.PSVersion.major).$($PSVersionTable.PSVersion.minor)".padright(70) -ForegroundColor White -BackgroundColor Blue
 
 
 if ($PSVersionTable['PSVersion'].major -lt 3 ) {
@@ -124,7 +124,11 @@ $script:lostfiles = @()
 
 $shell = New-Object -ComObject 'Shell.Application'
 $downloaddir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
-# $downloaddir = "C:\Users\darre\source\repos\Embroidery-File-Organize"
+$downloaddir = "C:\Users\darre\source\repos\Embroidery-File-Organize"
+if (!(test-path $downloaddir)) {
+    Write-Error "The Download Directory does not work, please correct the script"
+    return
+}
 $docsdir =[environment]::getfolderpath("mydocuments")
 if ($docsdir.tolower().contains('\onedrive')) {
     $docsdir = ${env:HOMEDRIVE} + ${env:HOMEPATH}
@@ -406,7 +410,7 @@ function DuplicateFiles($Path) {
     # Get all the files in the directory and sub-directories recursively
     $Files = Get-ChildItem -Path $Path -Recurse -File
     # Group the files by their name and extension
-    ShowProgress   "Sorting for duplicate files in different directories"
+    ShowProgress   "Sorting for duplicate files in different directories .... Please wait"
     $FileGroups = $Files | Group-Object -Property Name,Hash,LastWriteTime.date
     # Loop through each group of files
     foreach ($FileGroup in $FileGroups) {
@@ -443,7 +447,7 @@ function DuplicateFileNames($Path, $ExtensionsOrder = @()) {
     # If the preferred extensions list is not empty, check for duplicate names with different extensions
     if ($ExtensionsOrder.Count -gt 0) {
         # Group the files by their base name (without extension)
-        ShowProgress   "Sorting for unneeded formats"
+        ShowProgress   "Sorting for unneeded formats .... Please wait"
         $NameGroups = $Files | Group-Object -Property BaseName,LastWriteTime.date
         # Loop through each group of files
         foreach ($NameGroup in $NameGroups) {
@@ -530,7 +534,7 @@ function CheckAndRemove {
                 }
             
             }
-            write-progress -Activity "Updating Lists of removed files..."
+            write-progress -Activity "Updating Lists of removed files .... Please wait"
             $script:mysewingfiles = $mysewingfiles |where-object {$_.FullName -notin ($RemoveFiles.FullName)}
             write-progress -Completed $true
             
@@ -761,7 +765,7 @@ function LoginSewnetCloud
             ui_locales="en"
         }
     }
-    if ($Global:sewAuthorizeToken) {
+    if ($Global:sewAuthorizeToken -and $Global:expires_on -gt (get-date) ) {
         ShowProgress "Using previous MySewNet Logon"
     } else {
         ShowProgress "Logginning onto MySewNet"
@@ -772,14 +776,13 @@ function LoginSewnetCloud
 
         $Global:sewAuthorizeToken = $tokens.access_token
 
-
         if ($null -eq $tokens.access_token) {
             Write-error "Authentication Failed" 
             return $false
         } 
-        $expires_on = (get-date).AddMinutes($tokens.expires_in)
+        $Global:expires_on = (get-date).AddSeconds($tokens.expires_in)
 
-        Set-Content -Path $(Join-Path -Path $PSScriptRoot -childpath "Token.txt") $(($expires_on | ConvertTo-Json) + ($tokens | ConvertTo-Json))
+        Set-Content -Path $(Join-Path -Path $PSScriptRoot -childpath "Token.txt") $(($Global:expires_on.DateTime | ConvertTo-Json) + ($tokens | ConvertTo-Json))
     }
 
     
@@ -809,15 +812,16 @@ function LoginSewnetCloud
 function authHeaderValues ()
 {
     return @{ 
-        "Authorization" = "Bearer " + $Global:sewAuthorizeToken
         "Accept"="application/json, text/plain, */*"
-        "Accept-Encoding"="gzip, deflate, br"
+        "Accept-Encoding"="gzip, deflate, br, zstd"
         "Accept-Language"="en-US,en;q=0.9"
+        "Authorization" = "Bearer " + $Global:sewAuthorizeToken
         "Origin"="https://www.mysewnet.com"
-        "Referer"="https://www.mysewnet.com"
+        "Referer"="https://www.mysewnet.com/"
+        "Host"="api.mysewnet.com"
         "Pragma"= "no-cache"
         "Cache-Control"="no-cache"
-        "User-Agent"="EmbroideryCollection Manager Cleanup $ECCVERSION"
+        "User-Agent"="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0 EmbroideryCollection Manager Cleanup $ECCVERSION"
     }
 }
 <#
@@ -846,8 +850,8 @@ Function ReadCloudMeta()
     $authHeader = authHeaderValues
     $result = $null
     $tries = 0 
-    while ($null -eq $result -and $tries -lt 3) {
-        ShowProgress "Reading file list from MySewNet (attempt: $tries)"
+    do {
+        ShowProgress "Reading file list from MySewNet  $($tries.padleft($tries,[char]4))"
         try {
             $result = Invoke-RestMethod -Headers $authHeader -Uri $requestUri -Method GET -ContentType 'application/json'
         } catch {
@@ -855,7 +859,7 @@ Function ReadCloudMeta()
         }
         $tries++
         
-    }
+    } while ($null -eq $result -and $tries -lt 3)
     
     if ($null -eq $result){
         write-host "MySewNet error, please try again later" -ForegroundColor Red
@@ -904,6 +908,7 @@ param (
     }
 }
 
+# BUG This works if there are unique cloud ids only
 
 Function GetFileIDfromCloud 
 {
@@ -1377,7 +1382,7 @@ function MoveFromDir (
         $targetdir = $InstructDir
         }
     if ($objs.count) {
-        ShowProgress -Area "Copying" -stat "Added ${Script:savecnt} files"
+        ShowProgress -Area "Copying $dtype" -stat "Added ${Script:savecnt} files"
         }
 
     $objs | ForEach-Object {
@@ -1659,13 +1664,13 @@ function  CheckUSBDrive ($USBPath) {
 #
 #======================================================================================
 $PrefSewTypeStar = $preferredSewType | ForEach-Object { "*.$_" }
-if ($PrefSewTypeStar.count -eq 0 -or $PrefSewTypeStar -eq $null) {
+if ($PrefSewTypeStar.count -eq 0 -or $null -eq $PrefSewTypeStar) {
     write-error "Miss configuration of 'preferredSewType', can not continue"
     return
 }
 $SewTypeMatch = $preferredSewType -join '|'
 $foldupDirs = $foldupDir + $preferredSewType | ForEach-Object { $_.ToLower() }
-if ($foldupDirs.count -eq 0 -or $foldupDir -eq $null) {
+if ($foldupDirs.count -eq 0 -or $null -eq $foldupDir) {
     write-error "Miss configuration of 'foldupDir', can not continue"
     return
 }
@@ -1705,7 +1710,7 @@ if ($null -eq $LastCheckedGithub -or (${get-date} -gt $(get-date $LastCheckedGit
         Write-Verbose "Latest tag in D-Jeffrey/Embroidery-File-Organize $latestTag"
         if ($latestTag -ne $ECCVERSION) {
             Write-host "  *** Newer version ($latestTag) of this script is available" -ForegroundColor Green
-            $upgrademe = MyPause -Message "Do you want to upgrade" -Choice $true -Timeout 5 -ChoiceDefault $false
+            $upgrademe = MyPause -Message "Do you want to upgrade" -Choice $true -Timeout 300 -ChoiceDefault $false
             if ($upgrademe) {
                 $upgradescript = Join-Path -Path $PSScriptRoot -ChildPath "install.ps1"
                 if (test-path $upgradescript) {
@@ -2033,17 +2038,12 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.Cr
             if ($zipfilelist.Entries.Name -like $ts) {
                 $isnew = $false
                 $SpecificExtensionFiles = $zipfilelist.Entries | where-object {$_.Name -like $ts} 
-                ShowProgress  "Checking Zips - Looking at $($_.Name) - looking at $($ts.substring(2)) type"  -stat "Added $Script:savecnt files"
+                ShowProgress  "Checking Zips - Looking at $($_.Name) - looking at '$($ts.substring(2))' type"  -stat "Added $Script:savecnt files"
                 foreach ($fileInZip in $SpecificExtensionFiles) {
                     $isnewfile = $true
                     $filenameInZip = $fileInZip.Name
-                    if ($filenameInZip -match "\.") {
-                        # grab the base file name only
-                        $fs = $filenameInZip.substring(0,$filenameInZip.LastIndexOf('.')) 
-                    } else {
-                        # No Extension use whole name
-                        $fs = $fileInZip.Name
-                    }
+                    # grab the base file name only (works with or without extension)
+                    $fs = split-path -path $filenameInZip -LeafBase
                     if (!($keepAllTypes)) {
                         $filenameInZip = $fs
                         }
@@ -2128,7 +2128,6 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.Cr
                 
                 # we found a new file in the Zip.  If we have not expanded this Zip, then do it now
                 if ($isnew) { 
-                    write-Host "----------- Trigger expansion by $(join-path -Path $dirn -ChildPath $fileInZip.Name)"
                     if (-not $isNewInstruct) { 
                         
                         $resultTmpDir = (Join-Path $tmpdir -childpath $madeDir).trim("\")
@@ -2170,7 +2169,8 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.Cr
                 if ($_.FullName -match "\.zip$" ) {
                     $nestzipname = $_.FullName
                     $NeedToExpandedZip = $true
-                    Write-Host "- - Found: nested zip file $($_.FullName) checking"
+                    $thesefiles = @()
+                    Write-Host "- - Found: nested zip file $($_.FullName) checking" -nonewline
                     $tempFile = [System.IO.Path]::GetTempFileName() + ".zip"
                     $tempziplist += $tempFile
                     $relativepath = split-path $nestzipname -Parent
@@ -2181,6 +2181,7 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.Cr
                     try {
                         $nestzip = [io.compression.zipfile]::OpenRead($tempFile)
                     } catch {
+                        write-host " "
                         write-warning "- - - Problem with zip file, skipping : $Nestzipname"
                         if ($nestzip) {
                             $nestzip.Dispose()
@@ -2188,7 +2189,7 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.Cr
                         $nestzip = $null
                     }
                     if ($nestzip) {
-                        $thesefiles = @()
+                        
                         $nestzip.Entries  | foreach-object {
                             if ($_.FullName -match $SewTypeMatch) {
                                 $thesefiles += split-path $_.FullName  -leaf
@@ -2197,12 +2198,15 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.Cr
                                 if ($NeedToExpandedZip) {
                                     $NeedToExpandedZip = $false
                                     if ($makeASet) {
-                                        $topdir = join-path -path $tmpdir -ChildPath $((split-path $zips -leaf).trim("\.zip"))
+                                        $topdir = join-path -path $tmpdir -ChildPath $thisZipBase
                                     } else {
                                         $topdir = $tmpdir 
                                     }
                                     $topdir =  join-path -path $topdir -ChildPath $relativepath 
-                                    $nestdir = join-path -path $topdir -ChildPath  $((split-path $nestzipname -leaf).trim("\.zip"))
+                                    $nestdir = join-path -path $topdir -ChildPath  $(split-path $nestzipname -leafbase)
+                                    if (test-path -path $nestdir -PathType Leaf) {
+                                        $nestdir = $nestdir.replace(".","-")
+                                    }
                                     if (!(test-path ($nestdir))) {
                                         New-Item -Path $nestdir -ItemType Directory | Out-Null
                                     }
@@ -2213,7 +2217,9 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.Cr
                         }
                         if ($thesefiles) {
                             $numnew += $(MoveFromDir -fromPath $topdir -isEmbrodery $true -whichfiles $thesefiles -isFromNestedRelative $relativepath) 
+                            
                         }
+                        write-host " ... has $($thesefiles.count) patterns"
                         $nestzip.Dispose()
                     }
                 }
@@ -2348,34 +2354,55 @@ if ($CleanCollection) {
             CheckAndRemove -RemoveFiles $filesToRemove -DeleteWithoutRecycle $HardDelete -why "you have multiple files of different embroidery types"
             }
         }
-   
+        $Movelist = @()
         # Look for lone directories
         $maxtries = 15
         do {
             $foundone = $false
             Get-ChildItem -Path $EmbroidDir -Recurse -Directory | Where-Object { $_.GetFiles().count -eq 0 -and $_.GetDirectories().count -eq 1} | ForEach-Object {
                 # because we moved the directory in a previous iteration, this maybe null
-                if ($_ -and $_.GetDirectories().count) {
+                $thisdir = $_
+                if ($(split-path -path $_ -Qualifier) -like "C:") {
+                    Get-TraceSource
+                    Start-Sleep 3
+                }
+                if ($_ -and $_.Exists -and $_.GetDirectories().count) {
                     ShowProgress -Area $_ -stat "Moving Lone Directories"
-                    $subdir = get-item $_.GetDirectories()
-                    $subitem = get-item $subdir
+                    $subdir = $thisdir.GetDirectories()
+                    $subitem = get-item -path $subdir
                     if ($subitem.GetFileSystemInfos().count -eq 0) {
                         if (-not $KeepEmptyDirectory) {
                             remove-item $subdir
                         }
                     } else {
-                        move-item -Path $($subdir.FullName + "\*") -Destination $_.FullName -force
-                        write-host "move from $subdir to $_"
-                        $newlocation = $_.FullName
-                        $foundone = $true
-                        #then we need to fix the mysewing files list
-                        $mysewingfiles | Where-Object {$_.DirectoryName -eq $subdir } | ForEach-Object {
-                            $_.DirectoryName = $newlocation
-                            $_.FullName =  join-path -path $newlocation -ChildPath $_.Name
+                        $Movelist += [PSCustomObject]@{
+                            From = $subdir.FullName
+                            To = $thisdir.FullName
                         }
+                        move-item -Path $($subdir.FullName + "\*") -Destination $thisdir.FullName -force
+                        # write-host "move from $subdir to $thisdir"
+                        $foundone = $true
                     }
                 }
             }
+            $moveList | Out-GridView -Title "MoveList Before fixup"
+            # remove the items where we move it From X To Y To Z ... remove 'From X'
+            $MoveList = $moveList | where-object { $_.From -notin $moveList.To }
+            $moveList | Out-GridView -Title "MoveList After fixup"
+            #then we need to fix the mysewing files list
+            $mysewingfiles | Where-Object {$_.DirectoryName -in $MoveList.From } | ForEach-Object {
+                $MoveTo = $_.DirectoryName
+                foreach ($MoveLoc in ($MoveList)) {
+                    if ($MoveLoc.From -like $_.DirectoryName) {
+                        $MoveTo = $moveLoc.To
+                        break
+                    }
+                }
+                $_.DirectoryName = $MoveTo
+                $_.FullName =  join-path -path $MoveTo -ChildPath $_.Name
+                
+            } #>
+
             $maxtries--
         } while ($foundone -and $maxtries)
         

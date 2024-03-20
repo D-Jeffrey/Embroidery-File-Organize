@@ -143,8 +143,8 @@ It appears that v1.5 is the current version (as of Feb 2024): https://download.m
 - inconsistant treatment of zip vs nested zip for folding directory
 
 # Releases
-### 0.6.3
-- bug files to land in the right directory
+### 0.6.4 / 0.6.3
+- bug files to land in the right directory and error catching
 ### 0.6.2
 - Added Logging and remove extra debug code
 - Fixed saving parameters via JSON for difference between PS 5,6 vs 7
