@@ -138,6 +138,10 @@ It appears that v1.5 is the current version (as of Mar 2024): https://www.mysewn
 - Need to work on Duplicate files of the same name by different file types
 
 # Releases
+### 0.6.6
+- fixed issues with starting with no files
+- working on performance
+- Added option question for Firstrun when setup
 ### 0.6.5
 - Update Documentation
 - Another Major update

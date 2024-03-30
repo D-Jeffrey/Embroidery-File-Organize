@@ -35,7 +35,7 @@ param
   [Switch]$CloudAPI                                  # use MySewNet cloud API
   )
 
-$ECCVERSION = "v0.6.5"
+$ECCVERSION = "v0.6.6"
 
 # $VerbosePreference =  "Continue"
 # $InformationPreference =  "Continue"
@@ -1312,7 +1312,8 @@ Function PushCloudFile($name, $inFolderID, $filepath)
 }
 function FoldupDirPath {
     param (
-        [string]$directoryPath
+        [string]$directoryPath,
+        $minimumlen = 2
     )
 
     do {
@@ -1326,14 +1327,12 @@ function FoldupDirPath {
                     break
                 }
                 # Strip off the directory name and preserve the case of the directory and files
-                $originalPath = $directoryPath
                 # Carefully tested trimming
-                $directoryPath = $directoryPath.TrimEnd($r).Trim("\")
-                # Switch to plan B - caused by case mismatch
-                if ($originalPath -eq $directoryPath) {
-                    $directoryPath = $directoryPath.Substring(0, $directoryPath.Length - (1 + $r.Length))
-                }
-                $folding = $true
+                # Does fold it too much
+                if (($directoryPath.Length - $r.Length - 1)  -gt $minimumlen) {
+                    $directoryPath = $directoryPath -ireplace "\\$r$", ""
+                    $folding = $true
+                    }
             }
         }
     } while ($folding)
@@ -1354,15 +1353,20 @@ function MoveFromDir (
     $loopy = 0
     $newFileCount = 0
     if ($isEmbrodery) { 
-        $dtype = 'Embroidery' 
-        $objs = Get-ChildItem -Path $fromPath -include $PrefSewTypeStar -File -Recurse 
+        $dtype = "Embroidery"
         if ($whichfiles) {
-            $objs = $objs | where-Object { $whichfiles -ilike $_.Name } 
+            $objs = Get-ChildItem -Path $fromPath -include $whichfiles -File -Recurse  
+        } else {
+            $objs = Get-ChildItem -Path $fromPath -include $PrefSewTypeStar -File -Recurse  
+        }
+        $sublen = $fromPath.Length
+        if ($files) {
+            $objs = $objs | Where-Object {$_.Fullname.Substring($sublen) -iin $files -or $_.Fullname.Substring($sublen+1) -iin $files}
         }
         $targetdir = $EmbroidDir
     } else { 
         # Move anything that is not a Embrodery type file (alltypes)
-        $dtype = 'Instructions'
+        $dtype = "Instructions"
         $Excludes = ($allTypesStar + $TandCs )
         # if it is from a nested zip, then keep the zip because we don't yet expand that TODO
         if (!($isFromNestedRelative)) {
@@ -1380,7 +1384,7 @@ function MoveFromDir (
 
     $objs | ForEach-Object {
         # If all files or the name matching a file we should be moving..
-        if (($null -eq $files) -or ($_.Name -in $files)) {                
+#        if (($null -eq $files) -or ($_.Name -in $files)) {                
             # Get the relative path 
             $newdir = (Split-Path(($_.FullName).substring(($fromPath.Length), 
                                 ($_.FullName).Length - ($fromPath.Length) )))
@@ -1429,36 +1433,39 @@ function MoveFromDir (
                 if (test-path $npath) { 
                     Write-verbose " WARNING File already exists $npath for $($_.FullName) - maybe renaming - overwriting?"
                     }
-                ChecktoClearNewFilesDirectory
-                if ($NoDirectory) {
-                    Copy-Item -Path $_ -Destination $(Join-Path -Path $NewFilesDir  -ChildPath $newfile)
-                } else {
-                    $newpath = join-path -path $NewFilesDir -childpath $newdir
-                    if (!(test-path ($newpath))) {
-                        New-Item -Path ($newpath) -ItemType Directory  | Out-Null
+                else {
+                    ChecktoClearNewFilesDirectory
+                    if ($NoDirectory) {
+                        Copy-Item -Path $_ -Destination $(Join-Path -Path $NewFilesDir  -ChildPath $newfile)
+                    } else {
+                        $newpath = join-path -path $NewFilesDir -childpath $newdir
+                        if (!(test-path ($newpath))) {
+                            New-Item -Path ($newpath) -ItemType Directory  | Out-Null
+                            }
+                        Copy-Item -Path $_ -Destination $(Join-Path -Path $newpath -ChildPath $newfile)
                         }
-                    Copy-Item -Path $_ -Destination $(Join-Path -Path $newpath -ChildPath $newfile)
+                    LogAction $newfile -Action "++Added-MoveFrom"
+                    # BUG THIS IS THE LINE THAT ERRORS out wiht Directory Not Found
+                    $movedirto = split-path -path $npath -parent
+                    if (!(test-path -Path $movedirto -PathType Container)) {
+                        New-Item -Path $movedirto -ItemType Directory  | Out-Null
                     }
-                LogAction $newfile -Action "++Added-MoveFrom"
-                # BUG THIS IS THE LINE THAT ERRORS out wiht Directory Not Found
-                $movedirto = split-path -path $npath -parent
-                if (!(test-path -Path $movedirto -PathType Container)) {
-                    New-Item -Path $movedirto -ItemType Directory  | Out-Null
-                }
-                Move-Item $_ -Destination $npath  -force # -ErrorAction SilentlyContinue
-                $newFileCount += 1
-                Write-Information "+++ Saving ${dtype}:'$_' to ${newdir} & ${newfiledir}"
-                if ($isEmbrodery) { 
-                    $Script:addsizecnt = $Script:addsizecnt + (Get-Item -Path $npath).Length 
-                    $Script:savecnt = $Script:savecnt + 1
+                    Move-Item $_ -Destination $npath  -force # -ErrorAction SilentlyContinue
+                    $newFileCount += 1
+                    Write-Information "+++ Saving ${dtype}:'$_' to ${newdir} & ${newfiledir}"
+                    <#if ($isEmbrodery) { 
+                        $Script:addsizecnt = $Script:addsizecnt + (Get-Item -Path $npath).Length 
+                        $Script:savecnt = $Script:savecnt + 1
+                        }
+                        #>
                     }
                 }
-            } else {
-                Write-Verbose "Skipping ${_.Name}" 
-            }
+#            } else {
+#                Write-Verbose "Skipping ${_.Name}" 
+#            }
         
         if ($loopy++ % 20 -eq 0) {
-            ShowProgress -Area "Copying" -Stat "Added ${Script:savecnt} files"
+            ShowProgress -Area "Copying $($_.Name)" -Stat "Added ${Script:savecnt} files"
         }
     }
     return $newFileCount
@@ -1521,11 +1528,12 @@ Function LoadSewfiles  {
         else {
             $n = $_.BaseName
         }
-        [PSCustomObject]@{                          # C:\Dir\File.txt
+        
+            [PSCustomObject]@{                          # C:\Dir\File.txt
             NameIndexed = $n                               
             N = $_.Name                                         # File.txt
-            Base = $_.BaseName                                  # File
             Ext = $_.Extension                                  # txt
+            Base = $_.BaseName                                  # File
             DirectoryName = $_.DirectoryName                    # C:\Dir\
             Hash = [string]$null                                # hash value of the file calculated when we need it
             FullName = $_.FullName                              # C:\Dir\File.txt
@@ -1534,18 +1542,17 @@ Function LoadSewfiles  {
             RelPath = $_.DirectoryName.Substring($EmbroidDir.Length)
             CloudRef = $null                                    #
             Push = $null
+            TmpPath = $null
             } 
-        }
-    if ($thelist.getType().Name -eq 'Object[]') {
-        $thelist = @($thelist)
         }
     if ($null -eq $thelist) {
         $datenow = get-date
-        $thelist =    @([PSCustomObject]@{ 
+        $thelist =    
+            [PSCustomObject]@{ 
                 NameIndexed ="zzzmysewingfiles.placeholder"
                 N = "zzzmysewingfiles.placeholder"
-                Base  = "zzzmysewingfiles"
                 Ext  = "placeholder"
+                Base  = "zzzmysewingfiles"
                 DirectoryName = "zzzDirectoryName"
                 Hash = "A100000A"
                 FullName = "FullName"
@@ -1554,7 +1561,14 @@ Function LoadSewfiles  {
                 RelPath = '?????'
                 CloudRef = $null  
                 Push = $null
-                })
+                TmpPath = $null
+                } 
+                
+        }
+        
+    if ($thelist.getType().Name -ne 'Object[]') {
+        # Hack the object to cause it to be an array
+        $thelist = @( $thelist, $thelist )
         }
     return $theList
 }
@@ -1672,7 +1686,9 @@ function AddToSewList {
     $Name,
     $Directory,
     $LastWriteTime,
-    $RelativePath = $null
+    $RelativePath = $null,
+    [System.IO.FileInfo]$TmpPath = $null,
+    [System.IO.FileInfo]$keepPath = $null
     )
     if ($nameIndex -eq "" -or $nameIndex -eq $null) {
         
@@ -1689,10 +1705,10 @@ function AddToSewList {
     if (!($RelativePath)) {
         $RelativePath = (Split-path -Path $fullName -parent)
         if ($EmbroidDir.Length -lt $RelativePath.Length) {
-            $RelativePath.substring($EmbroidDir.Length+1)
+            $RelativePath = $RelativePath.substring($EmbroidDir.Length+1)
         } else {
             $RelativePath = ""
-        }
+            }
 
         }
     $isnewfile = $true
@@ -1753,6 +1769,8 @@ function AddToSewList {
         RelPath = $relativepath
         CloudRef = $null
         Push = '\'+ $RelativePath
+        TmpPath = $TmpPath
+        KeepPath = $keepPath
     }
     $currentSewingFile = $mysewingfiles.count
     if ($script:quickmysewfiles[$NameIndex.tolower()]) {
@@ -1763,8 +1781,11 @@ function AddToSewList {
         }
     $Script:addsizecnt = $Script:addsizecnt + $_.Length 
     $Script:savecnt = $Script:savecnt + 1 
-        
-    return $Name
+    if ($relativepath) {
+        return join-path -Path $relativepath -childpath $Name
+        } else {
+        return $Name
+        }
     
 }
 function ExpandAZip {
@@ -1774,7 +1795,7 @@ function ExpandAZip {
     )
     $resultTmpDir = (Join-Path $tmpdir -childpath $RelativePath).trim("\")
     # Check for long path names inside the zip file
-
+    write-progress "Expanding Zip Archive.. Please wait " -Status (split-path -path $zippath -leaf)
     $bigzip = (get-item $zippath).Length -gt $use7zipsize
     if (($bigzip -or $havewarning) -and (Test-Path "C:\Program Files\7-Zip\7z.exe")) {
         Set-Alias sevenz "C:\Program Files\7-Zip\7z.exe"
@@ -1783,6 +1804,7 @@ function ExpandAZip {
     } else {
         Expand-Archive -Path $zippath -DestinationPath $resultTmpDir -Force
     }
+    write-progress -Completed $true
     return $resultTmpDir
 }
 
@@ -1805,12 +1827,13 @@ function ProcessZipContents {
     
     $makeASet = ShouldMakeASet($zipfilelist)
     if ($makeASet) {     # This zip file is big enought to keep the files together
-        $madeDir = "\" + $thisZipBase
+        if ($NestedName) {
+            $madeDir = $NestedName + "\" + $thisZipBase
+        } else {
+            $madeDir = "\" + $thisZipBase
+        }
     } else {
-        $madeDir = ""
-    }
-    if ($NestedName) {
-        $madeDir = $NestedName + "\" + $madeDir
+        $madeDir = $NestedName
     }
     $resultTmpDir = $null
     $isNewInstruct = $false
@@ -1824,7 +1847,7 @@ function ProcessZipContents {
             $SpecificExtensionFiles = $zipfilelist.Entries | where-object {$_.Name -like $ts} 
             ShowProgress  "Checking Zips - Looking at $($_.Name) - looking at '$($ts.substring(2).ToUpper())' type"  -stat "Added $Script:savecnt files"
             foreach ($fileInZip in $SpecificExtensionFiles) {
-                $isnewfile = $true
+                $isnewfile = ""
                 $filenameInZip = $fileInZip.Name
                 # grab the base file name only (works with or without extension)
                 if ($PSVersionTable.PSVersion.Major -ge 6) {
@@ -1839,13 +1862,22 @@ function ProcessZipContents {
                     $n = $fs
                     }
                 $relativepath = Split-path -Path $fileInZip.FullName -parent
-                
-                if ($makeASet) {
-                    $relativepath = join-path -Path $thisZipBase -ChildPath $relativepath
-                    }
+                if ($madedir) {
+                $relativepath = join-path -Path $madeDir -ChildPath $relativepath
+                }
+                    
                 $dirn = (join-path -Path $EmbroidDir -ChildPath $relativepath).trim('\')
-
-                $isnewfile = AddToSewList -Name $fileInZip.Name -Directory $dirn -NameIndex $n -LastWriteTime $fileInZip.LastWriteTime -RelativePath $relativepath 
+                if ($isNewInstruct) {
+                    if ($madedir) {
+                        $buildpath = join-path -path $tmpdir -ChildPath $madeDir 
+                    } else {
+                        $buildpath = $tmpdir
+                        }
+                    $tempPath = get-item -path $(join-path -path $buildpath -childpath $fileInZip.FullName)
+                } else {
+                    $tempPath = $null
+                }
+                $isnewfile = AddToSewList -Name $fileInZip.Name -Directory $dirn -NameIndex $n -LastWriteTime $fileInZip.LastWriteTime -RelativePath $relativepath -TmpPath $tempPath
                 if ($isnewfile) {
                     Write-verbose "New file '${filenameInZip}'"
                     $isnew  = $true
@@ -1859,6 +1891,13 @@ function ProcessZipContents {
                                 $tmpfile = $(join-path -Path $tmpdir -ChildPath $mysewingfiles[$q-1].RelPath | join-path -ChildPath $mysewingfiles[$q-1].N)
                                 if (test-path $tmpfile) {
                                     $Script:mysewingfiles[$q-1].Hash = (get-FileHash -Algorithm md5 -Path $tmpfile).Hash
+                                    if ($madedir) {
+                                        $buildpath = join-path -path $tmpdir -ChildPath $madeDir 
+                                    } else {
+                                        $buildpath = $tmpdir
+                                        }
+                                    $tempPath = get-item -path $(join-path -path $buildpath -ChildPath $fileInZip.FullName)
+                                    $Script:mysewingfiles[$q-1].TmpPath = $tempPath
                                 }
                             }
                         }
@@ -1876,10 +1915,11 @@ function ProcessZipContents {
                 if ($isnew) { 
                     
                 
-                    $numnew += $(MoveFromDir -fromPath $tmpdir -isEmbrodery $true -files $filesInThisList )
+                    $numnew += $(MoveFromDir -fromPath $tmpdir -isEmbrodery $true -files $filesInThisList -whichfiles $ts)
                     # Fix look for missing files
+                    <# 
                     for ($index = 0; $index -lt $MySewingfiles.count; $index++) {
-                        if ($MySewingfiles[$index].Hash -eq $null) {
+                        if ($MySewingfiles[$index].Hash -eq "") {
                             if (test-path $MySewingfiles[$index].FullName) {
 #                                    $MySewingfiles[$index].Hash = $(get-filehash -Algorithm md5 -path $MySewingfiles[$index].FullName).Hash
                             } Else {
@@ -1888,6 +1928,7 @@ function ProcessZipContents {
                             
                         }
                     }
+                    #>
                 }               
             }
         }
@@ -1900,7 +1941,9 @@ function ProcessZipContents {
                     $tmpzip = $tmpdir
                 }
                 $tmpzip = join-path -path $tmpzip -ChildPath $_.FullName
-                ProcessZipContents -zips $tmpzip -Base $_.BaseName -NestedName $madeDir -isNested $true
+                $nestBase = $($_.FullName -replace '\.[^.]*$' ) -replace '\/','\' 
+                
+                ProcessZipContents -zips $tmpzip -Base $nestBase -NestedName $madeDir -isNested $true
             }
         }
         
@@ -1913,7 +1956,7 @@ function ProcessZipContents {
             } else {
                 $indent = "* "
             }
-            Write-host $("$indent New  : '$zf'").padright(65) " $numnew new patterns" 
+            Write-host $("$indent New  : '$zf'").padright(65) " $numnew new patterns" -foreground green
             ShowProgress  "Checking Zips"  "Added $Script:savecnt files"
         } else {
             Write-host $("- Found: '$zf'").padright(65) " nothing new" 
@@ -2142,13 +2185,16 @@ if ($setup) {
         write-host "with completing that you will not be able to use the CloudAPI feature" -ForegroundColor Yellow
 
     }
-    write-host "All Done " -BackgroundColor Yellow -ForegroundColor Black
-    MyPause 'Press any key to Close' | out-null
-    Return
+    write-host "All Setup " -BackgroundColor Yellow -ForegroundColor Black
+    $FirstRun = mypause -Message "What you like the run the script and collect all your Embroidery that you have every downloaded? " -Choice $true
+    if (-not $firstRun) {
+        Return
+    }
+    # If we got to this point then $FirstRun is $true
 }
 Write-Host " ".padright(5) "Let's begin managing the Embroidery files".padright(80) -ForegroundColor white -BackgroundColor blue
 if ($FirstRun) {
-    Write-Host " ".padright(15) $("Checking ALL Zip files ".padright(70)) -ForegroundColor white -BackgroundColor blue
+    Write-Host " ".padright(15) $("** Checking ALL Zip files **".padright(70)) -ForegroundColor white -BackgroundColor blue
 }
 
 # Clean out the old tmp working space
@@ -2323,7 +2369,7 @@ foreach ($thistype in $preferredSewType) {
                     }
                     LogAction $f -Action "++Added-from-Download"
                     
-                    Write-host $("* New  : '$f'").padright(65) " 1 new pattern" 
+                    Write-host $("* New  : '$f'").padright(65) " 1 new pattern" -foreground green
                     Write-Information "+++ Copied from Downloads :'$($_.Name)' to $EmbroidDir"
                     $fd = join-Path -Path $d -ChildPath $($fs + "." + $thistype)
                     if (test-path -path $fd) {
@@ -2337,7 +2383,7 @@ foreach ($thistype in $preferredSewType) {
                             $l = (split-path -Path $fullname -Parent).Substring($downloaddir.Length).trim('\')
                     }
                     $d = (join-path -path $EmbroidDir -childpath $l).Trim('\')
-                    AddToSewList -NameIndex $findfile -Name $f -Directory $d -LastWriteTime $thisfile.LastWriteTime
+                    AddToSewList -NameIndex $findfile -Name $f -Directory $d -LastWriteTime $thisfile.LastWriteTime -keepPath $thisfile
                     
                 }    
             }
@@ -2461,7 +2507,11 @@ if ($CloudAPI -and $CloudAuthAvailable) {
             write-Progress -Activity "Matching files to Cloud :  $($thisfile.N)" -PercentComplete ($cm * 100 / $mysewingfiles.count) -Status "$cm of $($mysewingfiles.count)"
         }
         $thisfile.CloudRef = GetFileIDfromCloud $_.N
-        $spl = $thisfile.DirectoryName.substring($EmbroidDir.Length)
+        if ($EmbroidDir.Length -lt $thisfile.DirectoryName.length) {
+            $spl = $thisfile.DirectoryName.substring($EmbroidDir.Length)
+        } else {
+            $spl = ""
+        }
         $thisfile.RelPath = $spl
         
         if ($thisfile.CloudRef)   {
