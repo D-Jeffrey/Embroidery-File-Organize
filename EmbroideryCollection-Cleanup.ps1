@@ -1,4 +1,5 @@
-﻿<# 
+﻿#Requires -Version 5.1
+<# 
  EmbroideryCollection-Cleanup.ps1
     GPL-3.0 license
 
@@ -35,7 +36,7 @@ param
   [Switch]$CloudAPI                                  # use MySewNet cloud API
   )
 
-$ECCVERSION = "v0.6.6"
+$ECCVERSION = "v0.6.7"
 
 # $VerbosePreference =  "Continue"
 # $InformationPreference =  "Continue"
@@ -99,13 +100,6 @@ $paramswitch =[ordered]@{
 
 write-host " ".padright(15) "Embroidery Collection Cleanup version: $ECCVERSION on PS $($PSVersionTable.PSVersion.major).$($PSVersionTable.PSVersion.minor)".padright(70) -ForegroundColor White -BackgroundColor Blue
 
-
-if ($PSVersionTable['PSVersion'].major -lt 3 ) {
-    write-Error "This will NOT work on your version of Powershell"
-    write-host $PSVersionTable['PSVersion'].major
-    $PSVersionTable
-    return
-}
 $RemovePrefix = ($PSVersionTable.PSVersion.Major -lt 7 ) 
 $filecnt = 0
 $script:sizecnt = 0
@@ -121,7 +115,6 @@ $script:CloudStatusGood = $true
 
 $shell = New-Object -ComObject 'Shell.Application'
 $downloaddir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
-# $downloaddir = "C:\Users\darre\source\repos\Embroidery-File-Organize"
 if (!(test-path $downloaddir)) {
     Write-Error "The Download Directory does not work, please correct the script"
     return
@@ -189,7 +182,163 @@ if (Test-Path -Path $ConfigFile) {
     $FirstRun = $true
 }
 
-    
+class CloudFile {
+    # Class properties
+    [string]        $Cloudid
+    [string]        $FileName
+    CloudFile() { $this.Init(@{}) }
+    # Convenience constructor from hashtable
+    CloudFile([hashtable]$Properties) { $this.Init($Properties) }
+    # Common constructor for id and FileName
+    CloudFile([string]$Cloudid, [string]$FileName) {
+        $this.Init(@{Cloudid = $Cloudid; File = $FileName })
+    }
+    # Shared initializer method
+    [void] Init([hashtable]$Properties) {
+        foreach ($Property in $Properties.Keys) {
+            $this.$Property = $Properties.$Property
+        }
+    }
+    # Method to return a string representation of the file
+    [string] ToString() {
+        return "$($this.CloudId) by $($this.FileName)"
+    }
+}
+class SewingFile {
+    # Class properties
+    [String]                $NameIndexed                            # could be file or file.txt
+    [String]                $Name                                      # File.txt
+    [String]                $Base                                   # File
+    [String]                $DirectoryName                          # C:\Dir\
+    [String]                $Hash                                   # hash value of the file calculated when we need it
+    [String]                $FullName                               # C:\Dir\File.txt
+    [System.IO.FileInfo]    $FileInfo
+    [System.DateTime]       $LastWriteTime
+    [int32]                 $Priority
+    [String]                $RelPath
+    [String]                     $CloudRef
+    [String]                $Push
+    [System.IO.FileInfo]    $TmpPath
+    [System.IO.FileInfo]    $KeepPath
+
+     # Default constructor
+    SewingFile() { $this.Init(@{}) }
+    # Convenience constructor from hashtable
+    SewingFile([hashtable]$Properties) { $this.Init($Properties) }
+    # Common constructor for id and FileName
+    SewingFile([string]$Cloudid, [string]$FileName) {
+        $this.Init(@{Cloudid = $Cloudid; File = $FileName })
+    }
+    # Shared initializer method
+    [void] Init([hashtable]$Properties) {
+        foreach ($Property in $Properties.Keys) {
+            $this.$Property = $Properties.$Property
+        }
+    }
+    # Method to return a string representation of the file
+    [string] ToString() {
+        return "$($this.relpath + $this.Name)"
+    }
+    [string] MoveFile() {
+        if ($this.TmpPath) {
+            copy-item -Path $this.TmpPath.FullName -Destination $this.FileInfo.FullName
+            $this.TmpPath = $null
+        } elseif ($this.KeepPath) {
+            copy-item -Path $this.KeepPath.FullName -Destination $this.FileInfo.FullName
+            $this.KeepPath = $null
+        } else {
+            # Nothing to move
+            return ""
+        }
+        return $this.FileInfo.FullName
+    }
+}
+
+class SewingFileList {
+    # Static property to hold the list of SewingFiles
+    static [System.Collections.Generic.List[SewingFile]] $SewingFiles
+    # Static method to initialize the list of SewingFiles. Called in the other
+    # static methods to avoid needing to explicit initialize the value.
+    static [void] Initialize()             { [SewingFileList]::Initialize($false) }
+    static [bool] Initialize([bool]$force) {
+        if ([SewingFileList]::SewingFiles.Count -gt 0 -and -not $force) {
+            return $false
+        }
+
+        [SewingFileList]::SewingFiles = [System.Collections.Generic.List[SewingFile]]::new()
+        return $true
+    }
+    # Ensure a SewingFile is valid for the list.
+    static [void] Validate([SewingFile]$SewingFile) {
+        $Prefix = @(
+            'SewingFile validation failed: SewingFile must be defined with the NameIndexed,'
+            'FullName, and LastWriteTime properties, but'
+        ) -join ' '
+        if ($null -eq $SewingFile) { throw "$Prefix was null" }
+        if ([string]::IsNullOrEmpty($SewingFile.NameIndexed)) {
+            throw "$Prefix NameIndexed wasn't defined"
+        }
+        if ([string]::IsNullOrEmpty($SewingFile.FullName)) {
+            throw "$Prefix FullName wasn't defined"
+        }
+        if ([datetime]::MinValue -eq $SewingFile.LastWriteTime) {
+            throw "$Prefix LastWriteTime wasn't defined"
+        }
+    }
+    # Static methods to manage the list of SewingFiles.
+    # Add a SewingFile if it's not already in the list.
+    static [void] Add([SewingFile]$SewingFile) {
+        [SewingFileList]::Initialize()
+        [SewingFileList]::Validate($SewingFile)
+        if ([SewingFileList]::SewingFiles.Contains($SewingFile)) {
+            throw "SewingFile '$SewingFile' already in list"
+        }
+
+        $FindPredicate = {
+            param([SewingFile]$s)
+
+            $s.NameIndexed -eq $SewingFile.NameIndexed -and
+            $s.AutFullNamehor -eq $SewingFile.FullName -and
+            $s.LastWriteTime -eq $SewingFile.LastWriteTime
+        }.GetNewClosure()
+        if ([SewingFileList]::SewingFiles.Find($FindPredicate)) {
+            throw "SewingFile '$SewingFile' already in list"
+        }
+
+[SewingFileList]::SewingFiles.Add($SewingFile)
+    }
+    # Clear the list of SewingFiles.
+    static [void] Clear() {
+      [SewingFileList]::Initialize()
+      [SewingFileList]::SewingFiles.Clear()
+    }
+    # Find a specific SewingFile using a filtering scriptblock.
+    static [SewingFile] Find([scriptblock]$Predicate) {
+        [SewingFileList]::Initialize()
+        return [SewingFileList]::SewingFiles.Find($Predicate)
+    }
+    # Find every SewingFile matching the filtering scriptblock.
+    static [SewingFile[]] FindAll([scriptblock]$Predicate) {
+        [SewingFileList]::Initialize()
+        return [SewingFileList]::SewingFiles.FindAll($Predicate)
+    }
+    # Remove a specific SewingFile.
+    static [void] Remove([SewingFile]$SewingFile) {
+        [SewingFileList]::Initialize()
+        [SewingFileList]::SewingFiles.Remove($SewingFile)
+    }
+    # Remove a SewingFile by property value.
+    static [void] RemoveBy([string]$Property, [string]$Value) {
+        [SewingFileList]::Initialize()
+        $Index = [SewingFileList]::SewingFiles.FindIndex({
+            param($b)
+            $b.$Property -eq $Value
+        }.GetNewClosure())
+        if ($Index -ge 0) {
+            [SewingFileList]::SewingFiles.RemoveAt($Index)
+        }
+    }
+}
 function SaveAllParams
 {
     # Save the state of the variables and settings
@@ -386,6 +535,20 @@ function GetKeystroke ($choices) {
     return  $getkey
 }
 
+function Test-ExistsOnPath {
+    param (
+        [string]$FileName
+    )
+    $found = $false
+    $env:Path.Split([System.IO.Path]::PathSeparator) | where-object {$_ -ne ""} | ForEach-Object {
+        $fullPath = Join-Path $_ $FileName
+        if (Test-Path $fullPath -PathType Leaf) {
+            $found = $true
+        }
+    }
+
+    return $found
+}
 
 # return the relative path of existing folders and files relative to a root path with the prefix of  .\
 function RelativeDirectory {
@@ -470,7 +633,10 @@ function DuplicateFileNames($Path, $ExtensionsOrder = @()) {
                     $FileList += $File 
                 }
             }
+
         }
+        $Files  | Sort-Object -Property @{Expression = {(&{if ($ExtensionsOrder.IndexOf($_.Extension) -ne -1) { $ExtensionsOrder.IndexOf($_.Extension) } else {100} })}; Descending = $false}   | Group-Object -Property BaseName | where-object count -gt 1 | Out-GridView -Title "Additional instances of these files will be removed - first instances is kept additional are removed" 
+
     }
     # Return the list of duplicate named files with different types
     return $FileList
@@ -586,11 +752,22 @@ Function TailRecursion {
 function ChecktoClearNewFilesDirectory {
     if ($Script:clearNewFiles) {
         if ((get-volume -filePath  $NewFilesDir).DriveType -eq "Fixed") {
-            Get-ChildItem -Path $NewFilesDir -Recurse | Remove-Item -Force -Recurse
+            Get-ChildItem -Path $("\\?\" + $NewFilesDir) -Recurse | Remove-Item -Force -Recurse
             write-verbose "CLEARED Copy File Space"
         }
         $Script:clearNewFiles = $false
     }
+}
+<#
+ function to convert characters which are not found in ASCII; such as á, é, í, ó, ú; into something acceptable such as a, e, i, o, u. 
+ #>
+function Remove-Diacritics
+{
+    Param([string]$Text)
+    $chars = $Text.Normalize([System.Text.NormalizationForm]::FormD).GetEnumerator().Where{ 
+        [System.Char]::GetUnicodeCategory($_) -ne [System.Globalization.UnicodeCategory]::NonSpacingMark
+    }
+    (-join $chars).Normalize([System.Text.NormalizationForm]::FormC)
 }
 
 function FetchImageFile ([string]$source, [string]$destination) {
@@ -1112,10 +1289,11 @@ Function CreateCloudFolder($name, $inFolderID)
     if ($name.substring(0,1) -eq '\') {
         $name = $name.substring(1)
     }
+    $dianame = Remove-Diacritics $name
     $CheckName = findMetaDirectory -folderid $inFolderID
     if ($null -ne $CheckName) {
         if ($CheckName.Folders.name -like $name) {
-            $fld = $CheckName.Folders | where-object { $_.name -like $name }
+            $fld = $CheckName.Folders | where-object { $_.name -like $dianame }
             # write-host "Folder " $fld.Name " ($name) exists as " $fld.id " for in " $fld.parentfolderid " ($inFoldID) "
             return $fld.id
         }
@@ -1123,7 +1301,7 @@ Function CreateCloudFolder($name, $inFolderID)
     $authHeader = authHeaderValues
     $requestUri = 'https://api.mysewnet.com/api/v2/cloud/folders';
     $bodyLines = @{ 
-        "folderName" = $name
+        "folderName" = $dianame
         "parentFolderId" = $inFolderID
         } | ConvertTo-Json
 
@@ -1242,9 +1420,10 @@ function PushCloudFileToDirectory($filepath, $folderpath )
 Function PushCloudFile($name, $inFolderID, $filepath)
 {
     if (test-Path -Path $filepath) {
+        $diaName = Remove-Diacritics $name
         $CheckFolder = findMetaDirectory -folderid $inFolderID
         if ($null -ne $CheckFolder) {
-            $fld = $CheckFolder.Files | where-object { $_.name -like $name }
+            $fld = $CheckFolder.Files | where-object { $_.name -like $dianame }
             if ($fld) {
                 Write-Verbose "File $($fld.Name) ($name) exists as $($fld.id) in $($fld.parentfolderid) ($inFoldID) "
                 return $fld.id
@@ -1265,7 +1444,7 @@ Function PushCloudFile($name, $inFolderID, $filepath)
             $fileEnc,
             "--$boundary",
             "Content-Disposition: form-data; name=`"FileName`"$LF",
-	        $name,
+	        $dianame,
             "--$boundary",
             "Content-Disposition: form-data; name=`"FolderId`"$LF",
              $inFolderID,
@@ -1532,11 +1711,12 @@ Function LoadSewfiles  {
             [PSCustomObject]@{                          # C:\Dir\File.txt
             NameIndexed = $n                               
             N = $_.Name                                         # File.txt
-            Ext = $_.Extension                                  # txt
+            # Ext = $_.Extension                                  # txt
             Base = $_.BaseName                                  # File
             DirectoryName = $_.DirectoryName                    # C:\Dir\
             Hash = [string]$null                                # hash value of the file calculated when we need it
             FullName = $_.FullName                              # C:\Dir\File.txt
+            FileInfo = $_
             LastWriteTime = $_.LastWriteTime
             Priority = $preferredSewType.Indexof($_.Extension.substring(1,$_.Extension.Length-1).tolower())
             RelPath = $_.DirectoryName.Substring($EmbroidDir.Length)
@@ -1546,21 +1726,22 @@ Function LoadSewfiles  {
             } 
         }
     if ($null -eq $thelist) {
-        $datenow = get-date
+        $FileInfo =  New-Object System.IO.FileInfo("C:\placeholder.directoryname\zzzmysewingfiles.placeholder")
         $thelist =    
             [PSCustomObject]@{ 
-                NameIndexed ="zzzmysewingfiles.placeholder"
-                N = "zzzmysewingfiles.placeholder"
-                Ext  = "placeholder"
-                Base  = "zzzmysewingfiles"
-                DirectoryName = "zzzDirectoryName"
-                Hash = "A100000A"
-                FullName = "FullName"
-                LastWriteTime = $datenow
+                NameIndexed = $fileInfo.Name                               
+                N = $fileInfo.Name                                         # File.txt
+                # Ext = $fileInfo.Extension                                  # txt
+                Base = $fileInfo.BaseName                                  # File
+                DirectoryName = $fileInfo.DirectoryName                    # C:\Dir\
+                Hash = "A100000A"                                          # hash value of the file calculated when we need it
+                FullName = $fileInfo.FullName                              # C:\Dir\File.txt
+                FileInfo = $fileInfo
+                LastWriteTime = $fileInfo.LastWriteTime
                 Priority = 100
                 RelPath = '?????'
                 CloudRef = $null  
-                Push = $null
+                Push = ""
                 TmpPath = $null
                 } 
                 
@@ -1695,22 +1876,6 @@ function AddToSewList {
         write-Error "** BLANK NAME - '$NameIndex', '$Name', '$directory', '$lastWriteTime' "
         start-sleep -Milliseconds 100
     }
-    if ($PSVersionTable.PSVersion.Major -ge 6) {
-        $Extension = split-path $Name -Extension
-    } Else {
-        $Extension = (Split-Path -Path $Name -Leaf) -replace '\\.[^.]*$'
-    }
-    $Directory = FoldupDirPath -directoryPath $Directory
-    $fullName = join-path -Path $Directory -ChildPath $Name
-    if (!($RelativePath)) {
-        $RelativePath = (Split-path -Path $fullName -parent)
-        if ($EmbroidDir.Length -lt $RelativePath.Length) {
-            $RelativePath = $RelativePath.substring($EmbroidDir.Length+1)
-        } else {
-            $RelativePath = ""
-            }
-
-        }
     $isnewfile = $true
     if ($quickmysewfiles[$NameIndex]) {
         # BUG duplicate filename but different checksum??? 
@@ -1727,10 +1892,12 @@ function AddToSewList {
         }
     
     $hash = $null
-    if ($KeepAllTypes) {
-        $tmpfilepath = join-path -Path $tmpdir -ChildPath $RelativePath | join-path -ChildPath $Name
-        if (test-path $tmpfilepath) {
-            $hash = (get-filehash -Algorithm md5 $tmpfilepath).Hash
+
+
+   if ($KeepAllTypes) {
+        # $tmpfilepath = join-path -Path $tmpdir -ChildPath $RelativePath | join-path -ChildPath $Name
+        if ($TmpPath.Exists) {
+            $hash = (get-filehash -Algorithm md5 $TmpPath).Hash
             # TODO need to retest the file compare beyond name and date to Hash
             if (!($isnewfile)) {
                 $isnewfile = $true
@@ -1750,28 +1917,38 @@ function AddToSewList {
     if (!$isnewfile) {
         return ""
     }
-    if ($PSVersionTable.PSVersion.Major -ge 6) {
-        $Base = split-path -path $name -LeafBase
-    } else {
-        $Base = (Split-Path -Path $name  -Leaf) -replace '\.[^.]*$'
-    }
+    $Directory = FoldupDirPath -directoryPath $Directory
+    $fullName = join-path -Path $Directory -ChildPath $Name
+    $fileinfo = New-Object System.IO.FileInfo($fullname) 
+    <# if (!($RelativePath)) {
+        
+        $RelativePath = (Split-path -Path $fullName -parent)
+        if ($EmbroidDir.Length -lt $RelativePath.Length) {
+            $RelativePath = $RelativePath.substring($EmbroidDir.Length+1)
+        } else {
+            $RelativePath = ""
+            }
+
+        }
+        #>
     $script:mysewingfiles +=  
-    [PSCustomObject]@{ 
-        NameIndexed = $NameIndex
-        N = $Name
-        Ext = "." + $Extension
-        Base = $Base
-        DirectoryName = $Directory
-        Hash = $hash
-        FullName = $fullName 
-        LastWriteTime = $LastWriteTime
-        Priority = $preferredSewType.Indexof($Extension.tolower())
-        RelPath = $relativepath
-        CloudRef = $null
-        Push = '\'+ $RelativePath
-        TmpPath = $TmpPath
-        KeepPath = $keepPath
-    }
+        [PSCustomObject]@{ 
+            NameIndexed = $NameIndex
+            N = $Name
+            # Ext = $fileinfo.Extension
+            Base = $fileinfo.BaseName
+            DirectoryName = $Directory
+            Hash = $hash
+            FullName = $fullName
+            FileInfo =  $FileInfo
+            LastWriteTime = $LastWriteTime
+            Priority = $preferredSewType.Indexof($fileinfo.Extension.tolower())
+            RelPath = $relativepath
+            CloudRef = $null
+            Push = '\'+ $RelativePath
+            TmpPath = $TmpPath
+            KeepPath = $keepPath
+        }
     $currentSewingFile = $mysewingfiles.count
     if ($script:quickmysewfiles[$NameIndex.tolower()]) {
         $script:quickmysewfiles[$NameIndex.tolower()] += $currentSewingFile
@@ -1844,7 +2021,8 @@ function ProcessZipContents {
         $ts = "*."+ $thistype
         if ($zipfilelist.Entries.Name -ilike $ts) {
             $isnew = $false
-            $SpecificExtensionFiles = $zipfilelist.Entries | where-object {$_.Name -like $ts} 
+            # like our extension, but does not start with . 
+            $SpecificExtensionFiles = $zipfilelist.Entries | where-object {$_.Name -like $ts -AND $_.Name.substring(0,1) -ne "."} 
             ShowProgress  "Checking Zips - Looking at $($_.Name) - looking at '$($ts.substring(2).ToUpper())' type"  -stat "Added $Script:savecnt files"
             foreach ($fileInZip in $SpecificExtensionFiles) {
                 $isnewfile = ""
@@ -1913,22 +2091,7 @@ function ProcessZipContents {
             
                 # we found a new file in the Zip.  If we have not expanded this Zip, then do it now
                 if ($isnew) { 
-                    
-                
                     $numnew += $(MoveFromDir -fromPath $tmpdir -isEmbrodery $true -files $filesInThisList -whichfiles $ts)
-                    # Fix look for missing files
-                    <# 
-                    for ($index = 0; $index -lt $MySewingfiles.count; $index++) {
-                        if ($MySewingfiles[$index].Hash -eq "") {
-                            if (test-path $MySewingfiles[$index].FullName) {
-#                                    $MySewingfiles[$index].Hash = $(get-filehash -Algorithm md5 -path $MySewingfiles[$index].FullName).Hash
-                            } Else {
-                                $script:lostfiles += $MySewingfiles[$index].FullName
-                            }
-                            
-                        }
-                    }
-                    #>
                 }               
             }
         }
@@ -2040,14 +2203,27 @@ if ($null -eq $LastCheckedGithub -or (${get-date} -gt $(get-date $LastCheckedGit
 if ($setup) {
     write-host "   ".padright(70) -BackgroundColor Yellow -ForegroundColor Black
     $Desktop = [Environment]::GetFolderPath("Desktop")
-    if (!(test-path ($Desktop + "\Embroidery Organizer.lnk"))) {
+    $DesktopLink = $Desktop + "\Embroidery Organizer.lnk"
+    $WshShell = New-Object -comObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($DesktopLink)
+    if (test-path ($Desktop + "\Embroidery Organizer.lnk")) {
+        if ($Shortcut.TargetPath.contains("powershell.exe")) {
+            if (Test-ExistsOnPath "pwsh.exe") {
+                Write-Host "    Upgraded to using PWSH" -BackgroundColor Yellow -ForegroundColor Black
+                $Shortcut.TargetPath = "pwsh.exe"
+                $Shortcut.Save()
+                LogAction -File $Desktop -Action "Updated-Desktop-Shortcut PWSH"
+            }
+        } 
+    }
+    else {
         write-host "  Creating shortcut on the Desktop".padright(70) -BackgroundColor Yellow -ForegroundColor Black
-        $WshShell = New-Object -comObject WScript.Shell
-        $Desktop = $Desktop + "\Embroidery Organizer.lnk"
-        write-Debug "Link: $Desktop"
-        $Shortcut = $WshShell.CreateShortcut($Desktop)
-
-        $Shortcut.TargetPath = "$pshome\Powershell.exe"
+        
+        if (Test-ExistsOnPath "pwsh.exe") {
+            $Shortcut.TargetPath = "pwsh.exe"
+        } else {
+            $Shortcut.TargetPath = "$pshome\Powershell.exe"
+            }
         $icon = join-path -Path $PSScriptRoot -childpath "embroiderymanager.ico"
         if (!(test-path -path $icon )) {
             try {
@@ -2302,9 +2478,7 @@ Get-ChildItem -Path ($EmbroidDir)  -Recurse -file  | ForEach-Object {
 write-host "Starting with All files: $(niceSize $librarySizeBefore) - Embroidery files:  $(niceSize $libraryEmbSizeBefore)"
 
 ShowProgress  "Loading file list"
-$mysewingfiles = $null
 # Get a list of all the existing files in mySewnet
-
 $mysewingfiles = LoadSewfiles
 $quickmysewfiles = BuildHashofMySewingFiles
 
@@ -2320,20 +2494,9 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" | Where-Object { (($_.Cr
   
     ForEach-Object {
         ShowProgress  "Checking Zips - Looking at $($_.Name)"  -stat "Added $Script:savecnt files"
-        
-
         Write-Verbose "Checking ZIP '$($_.FullName)'" 
-        
         ProcessZipContents -zips $_.FullName -Base $_.BaseName
-
-
-        
-                    
-        
-        
     }
-    
-    
 
 # Look for Files which are not part of a ZIP file, just the selected file types that we are looking for that is in the download directory
 $DownloadDaysOld = 365*10  # 10 years of downloads (when you download files, it keeps the old data)
@@ -2383,7 +2546,7 @@ foreach ($thistype in $preferredSewType) {
                             $l = (split-path -Path $fullname -Parent).Substring($downloaddir.Length).trim('\')
                     }
                     $d = (join-path -path $EmbroidDir -childpath $l).Trim('\')
-                    AddToSewList -NameIndex $findfile -Name $f -Directory $d -LastWriteTime $thisfile.LastWriteTime -keepPath $thisfile
+                    AddToSewList -NameIndex $findfile -Name $f -Directory $d -LastWriteTime $thisfile.LastWriteTime -keepPath $thisfile -RelativePath $l
                     
                 }    
             }
@@ -2485,8 +2648,6 @@ if (-not $KeepEmptyDirectory) {
 $script:lostfiles | Out-GridView -Title "Lost Files" 
 
 if ($CloudAPI -and $CloudAuthAvailable) {
-    # Re-read the Sewing files
-    ##### $mysewingfiles = LoadSewfiles
     $webcollection = ReadCloudMeta
     if ($null -eq $webcollection) {
         write-host "Cloud is not working *** STOPPING (Try logging onto MySewnet before retrying)" -ForegroundColor Red
@@ -2678,8 +2839,8 @@ if ($CloudAPI -and $CloudAuthAvailable) {
         write-Host "Cloud unavailable or errored during processing - try again"
     }
 }
-# $mysewingfiles | out-GridView
-# $byExt | Out-GridView
+ # $mysewingfiles | out-GridView
+ # $byExt | Out-GridView
 # Capture the end time
 $endTimer = Get-Date
 

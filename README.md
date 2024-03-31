@@ -44,7 +44,7 @@ A PowerShell script to deal with the many different types of embroidery files, p
 
 Once it is set up with a shortcut you can simply download your patterns from online stores and then double-click the shortcut to copy the **right patterns** into your collection location and leave the instructions on your computer for reference later.
 
-
+![Img](docs/images/WindowsTerminal_2024-03-29.png)
 ## Getting started
 This is a self-contained single PowerShell script (See note below).  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow PowerShell to run.  You may also have to `unblock` the downloaded file (`Right-click` properties of the file and at the bottom check the `unblock`.  Once you have copy the script into a location (suggested `c:\ProgramData\EmbroideryOrganize`)  (and unblocked), then you can run the script with -setup
 
@@ -117,6 +117,10 @@ This are the directories (plus the if the directory name equals the format type)
  - **[How to install](docs/How-to-Install.md)**
  - **[Other docs](docs/)**
 
+#### Seperating the files
+When it is comparing patterns it uses the file name to determine if they are the same name.  It is case-sensitive and the files must be created on the same day.
+`CleanCollection` will clean up files regardless of filename case if you run it, (it will prompt before deleting them)
+
 ### Updated to remove Cloud Sync functionality
 The myCloud interface is painful to use, as it has bugs such as sorting directories, and only allows you to upload or delete 5 folders/files at a time.  Crazy.  And now they are pushing customers to use the Vault function instead of the myCloud. Vault will only accept pattern files that it understands, so you cannot keep the instructions with the patterns.  I suspect it is in response to the possible misuse of the cloud space they have created.
 
@@ -138,6 +142,10 @@ It appears that v1.5 is the current version (as of Mar 2024): https://www.mysewn
 - Need to work on Duplicate files of the same name by different file types
 
 # Releases
+### 0.6.7
+- changed the iteration and tracking of temporary files to speed up the process
+- support unicode file name by removing Diacritics
+- Shortcut will now using PWSH if it is present (`-setup` will trigger an upgrade)
 ### 0.6.6
 - fixed issues with starting with no files
 - working on performance
