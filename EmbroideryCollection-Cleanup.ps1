@@ -2174,7 +2174,7 @@ if (!(test-path $LogFile)) {
 }
 
 
-if ($null -eq $LastCheckedGithub -or (${get-date} -gt $(get-date $LastCheckedGithub).adddays(7)))  {
+if ($null -eq $LastCheckedGithub -or ($(get-date) -gt $(get-date $LastCheckedGithub).adddays(7)))  {
     $latestTag = Get-LatestGitHubTag -RepositoryOwner "D-Jeffrey" -RepositoryName "Embroidery-File-Organize"
     $script:LastCheckedGithub = get-date -format "g"
     if ($latestTag) {
@@ -2460,7 +2460,7 @@ if ($failed) {
     }
 
 
-$cont = (MyPause 'Press Start to continue, any other key to stop (Auto starting in 3 seconds)'  $true 'Click Yes to start' 3) 
+$cont = (MyPause 'Press Start to continue, any other key to stop (Auto starting in 3 seconds)'  $true 'Click Yes to start' 10) 
 
 if (!$cont) { 
     Break
