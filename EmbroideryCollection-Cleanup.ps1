@@ -36,7 +36,7 @@ param
   [Switch]$CloudAPI                                  # use MySewNet cloud API
   )
 
-$ECCVERSION = "v0.6.7"
+$ECCVERSION = "v0.6.8"
 
 # $VerbosePreference =  "Continue"
 # $InformationPreference =  "Continue"
