@@ -115,6 +115,7 @@ $script:CloudStatusGood = $true
 
 $shell = New-Object -ComObject 'Shell.Application'
 $downloaddir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
+$downloaddir = "C:\Users\darre\source\repos\Embroidery-File-Organize"
 if (!(test-path $downloaddir)) {
     Write-Error "The Download Directory does not work, please correct the script"
     return
@@ -2043,7 +2044,7 @@ function ProcessZipContents {
                     if (test-path -Path $buildpath) {
                         $tempPath = get-item -path $buildpath 
                     } else {
-                        write-warning "Could not access: $(buildpath.substring($tmpdir.Length))"
+                        write-warning "Could not access: $($buildpath.substring($tmpdir.Length))"
                         $tempPath = $null
                     }
                     
