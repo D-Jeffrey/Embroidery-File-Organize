@@ -115,7 +115,6 @@ $script:CloudStatusGood = $true
 
 $shell = New-Object -ComObject 'Shell.Application'
 $downloaddir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
-$downloaddir = "C:\Users\darre\source\repos\Embroidery-File-Organize"
 if (!(test-path $downloaddir)) {
     Write-Error "The Download Directory does not work, please correct the script"
     return
