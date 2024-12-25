@@ -1082,8 +1082,8 @@ function DoStart() {
     
     $lbl_usbeject= New-Object System.Windows.Forms.Label -Property @{ 
         Location = New-Object System.Drawing.Point(24, 264)
-        Size=  New-Object System.Drawing.Size(90,21)
-        Text="Eject USB"
+        Size=  New-Object System.Drawing.Size(100,31)
+        Text="Safely eject USB when done"
         
     
     }
@@ -3714,7 +3714,7 @@ if ($Script:dircnt -gt 0 -or $filesToRemove.length -gt 0) {
     Write-Host "Cleaned up - Directories removed: '$Script:dircnt    Files removed : '$filecnt' ($sizecntB)." -ForegroundColor Green
     }
 if ($Script:savecnt -gt 0) {
-    if ($Sync) {$what = "Synced" } else { what = "Added"}
+    if ($Sync) {$what = "Synced" } else { $what = "Added"}
     write-host "+++ $what files to Embriodery Collection: '$($Script:savecnt)' files $(niceSize $Script:addsizecnt) " -ForegroundColor Green
     write-host "File size before   Total: $(niceSize $librarySizeBefore) - Embroidery files: $(niceSize $libraryEmbSizeBefore)"
     write-host "          after    Total: $(niceSize $librarySizeAfter) - Embroidery files: $(niceSize $libraryEmbSizeAfter)"
