@@ -8,14 +8,14 @@ Format|Machine Type|Preferred|Preview|Comment|
 |art| Bernina embroidery, NMeF | 3 |Y| ART files are native to Bernina embroidery software and contain information about colors, stitches, and objects. |
 |blf| Designer's Gallery Embroidery | |N| BLF files are used by Designer's Gallery software to store embroidery designs |
 |cop| Husqvarna embroidery | |N| COP files are used by Husqvarna embroidery machines to store design information |
-|csd| Singer Embroidery | |N| CSD files are used by Singer embroidery machines and software to store design information |
+|csd| Singer Embroidery | |N| CSD files are used by Singer embroidery machines and software to store design information - Poem, Huskygram, Singer|
 |dem| | |N|  |
 |dhv| Husqvarna embroidery | |N| DHV files are used by Husqvarna embroidery machines to store design information |
 |dsb| Tajima/Barudan embroidery | 1 |N| DSB files are an newer file format. 
 |dst| Tajima/Barudan embroidery | 5 |Y| DST files are an old file format that most embroidery machines can read. They are even less complex than machine files and don’t contain thread color information |
 |dsz| ZSK USA Embroidery | |N| DSZ files are used by ZSK embroidery machines to store design information. |
 |dxf| | NMeF|N|  |
-|edr| Embird | |N| low |
+|edr| Embird | |N| low | Support Palette Files containing TrueColor 
 |emb| Wilcom embroidery, NMeF | |N| EMB files are native to Wilcom embroidery software and contain information about colors, stitches, and objects |
 |emd| Elna Embroidery | |N| EMD files are used by Elna embroidery machines and software to store design information |
 |exp| Melco Expanded embroidery | 5|N| EXP files are used by Melco embroidery machines and software to store design information |
@@ -25,7 +25,7 @@ Format|Machine Type|Preferred|Preview|Comment|
 |hus| Husqvarna, Viking embroidery |4|Y| HUS files are used by Husqvarna and Viking embroidery machines and software to store design information |
 |iqp| IntelliQuilter | |N| IQP files are used by IntelliQuilter machines and software to store quilting patterns |
 |jan| Janome embroidery, NMeF|
-|jef| Janome embroidery | 1 |Y| JEF files are used by Janome embroidery machines and software to store design information. Includes Hoop Information |
+|jef| Janome embroidery | 1 |Y| JEF files are used by Janome embroidery machines and software to store design information. Includes Hoop Information.  Used by Janome, Elna, Kenmore |
 |jef+| Janome embroidery | 1 |N| JEF+ files are used by Janome embroidery machines and software to store design information.  |
 |jpx| Janome embroidery | 1 |N| JPX files are used by Janome embroidery machines and software to store design information.  |
 |ksm| Pfaff Embroidery | |N| KSM files are used by Pfaff embroidery machines and software to store design information |
@@ -35,19 +35,23 @@ Format|Machine Type|Preferred|Preview|Comment|
 |pcm| | |N|  |
 |pcs| Pfaff embroidery | 1 |Y| PCS files are used by Pfaff embroidery machines and software to store design information. Includes Hoop Information |
 |pec| | |N|  |
-|pec| Brother, Babylock, Bernina embroidery | 3 |Y| PEC files are used by Brother, Babylock, and Bernina embroidery machines and software to store design information |
-|pes| Brother, Babylock, Bernina embroidery | 1 |Y| PES files are used by Brother, Babylock, and Bernina embroidery machines and software to store design information. Includes Hoop Information |
+|pec| Brother, Babylock, Bernina, Deco embroidery | 3 |Y| PEC files are used by Brother, Babylock, and Bernina embroidery machines and software to store design information |
+|pes| Brother, Babylock, Bernina, Deco embroidery | 1 |Y| PES files are used by Brother, Babylock, and Bernina embroidery machines and software to store design information. Includes Hoop Information |
 |phc| | |N|  |
 |phc| Brother | 3 |N| PEC files are used by Brother embroidery machines and software to store design information |
+|pum| | | | Proel |
 |pxf| | |N|  |
 |pxf| | |N|  |
 |qcc| QuiltCAD | |N| QCC files are used by QuiltCAD software to store quilting patterns |
-|sew| Janome embroidery |1| Y| SEW files are used by Janome embroidery machines and software to store design information |
+|sew| Janome embroidery |1| Y| SEW files are used by Janome embroidery machines and software to store design information used by Janome, Elna, Kenmore|
 |shv| Husqvarna embroidery | |N| SHV files are used by Husqvarna embroidery machines and software to store design information |
-|ssd| Sunstar Embroidery | |N| SSD files are used by Sunstar embroidery machines and software to store design information |
+|spx| |  ||  |
+|ssd| Sunstar Embroidery | |N| SSD files are used by Smarteer embroidery machines and software to store design information |
+|sss| Sunstar Embroidery | |N| SSS files are used by Sunstar embroidery machines and software to store design information |
 |sst| Sunstar Embroidery | |N| SST files are used by Sunstar embroidery machines and software to store design information |
 |stx| Data Stitch Embroidery | |N| STX files are used by Data Stitch embroidery software to store design information |
 |svg| | NMeF |N|  |
+|tap| |  | |Used by Happy  |
 |vip| Husqvarna, Viking, Pfaff embroidery |4|n| VIP files are used by Husqvarna, Viking, and Pfaff embroidery machines and software to store design information. Newer version of HUS |
 |vp3| Pfaff Embroidery |2|Y| VP3 files are used by Pfaff embroidery machines and software to store design information. Includes Hoop Information and thread colors, thread vendors |
 |vp4| Pfaff Embroidery |1|Y| VP4 files are used by Pfaff embroidery machines and software to store design information |
@@ -57,11 +61,11 @@ Format|Machine Type|Preferred|Preview|Comment|
 
 - 'Preview' with MySewnet Explorer Plug-in
 - 'Preferred' lower preferred number is a better format
-- 'NMeF' - Non-Machine embroidery Format - include much more detail and the orginal picture - See https://romneyridgefarm.com/embroidery-machine-file-formats/
+- 'NMeF' - Non-Machine embroidery Format - this could be a digital image type of file and includes much more detail and the orginal picture - See https://romneyridgefarm.com/embroidery-machine-file-formats/
 
 
 # Machines
-|Make | Model	| Format/Transfer Systems/Software	|Limitations & Sewing Areas|
+|Make | Model| | Format/Transfer Systems/Software| |Limitations & Sewing Areas|
 | --- | --- | --- | --- |
 Babylock| Accent / BL60E|    .PES on a Babylock/Bernina/Brother compatible design card, Ultimate Box Plus or Ultimate Box 2, card 1| 4.33" high x 4.33" wide (110mm x 110mm), maximum size. Requires designs with more than 50,000 stitches to split into two files.
 Babylock| Ellageo 3| .PES, .DST, .PEC on a Babylock/Bernina/Brother compatible design card, Palette Software, floppy disk drive, Ultimate Box Plus or Ultimate Box 2, card 1| 6.25" high x 10.25" wide (159mm x 260mm), maximum size.
@@ -138,7 +142,7 @@ Pfaff| Creative 2140 / 2144| .PCS, .VIP, (.PCM if using Macintosh software) file
 Pfaff| Creative 2170|    .VIP, .VP3, Mac format file Assistant| 6" high x 9" wide (140mm x 225mm), maximum size
 Pfaff| Creative 7560|    .PCS, (.PCM if using Macintosh software) file on Pfaff Compatible design card, Ultimate Box 2, card 3| 4.53" high x 4.72" wide, maximum size. Requires designs with more than 14 color stops or 14,000 stitches to split into two files.
 Pfaff| Creative 7570|    .PCS, (.PCM if using Macintosh software) file on Pfaff Compatible design card (PC Designer), Ultimate Box 2, card 3| 3.94" high x 4.72" wide, maximum size. Requires designs with more than 14 color stops or 14,000 stitches to split into two files.
-Pfaff| Creative Icon|	.VP3, .PES, .HUS, .DST, VIP | 310mm (12.20") x 140mm (5.51")
+Pfaff| Creative Icon|| .VP3, .PES, .HUS, .DST, VIP | 310mm (12.20") x 140mm (5.51")
 Pfaff| Performance Icon | .VP3, .PES, .HUS, .DST, VIP | 310mm (12.20") x 140mm (5.51")
 Ricoma|| .DST by ethernet or USB  
 Simplicity| SE1| .PES Memory card, Ultimate Box Plus or Ultimate Box 2, card 1| 4" high x 4" wide, maximum size. Requires designs with more than 120,000 stitches to split into two files.
@@ -156,20 +160,43 @@ Toyota|| .DST on regular computer floppy disk    | Earlier models may require 
 ZSK||    .DST on regular computer floppy disk    | Earlier models may require paper tape or cassette format.
 
 
+
+
+
+Manufacturer| Model| Embroidery File Types| Max Hoop Size| Year of First Manufacture| Computer Media Source| Thread Count| Pattern Creation| Font Patterns| Other Notable Features
+|---|---|---|---|---|---|---|---|---|---|
+Pfaff| creative™ 3.0| JEF, DST, EXP, VP3, PES, PCS, XXX, VIP, HUS, SHV, PCM, CSD, SEW| 10" x 7.8"| Not specified| USB, mySewnet™ Cloud| 254 stitches| Stitch Creator™| Yes| IDT™ System, large sewing space, LED lights
+Brother| Innov-ìs NQ1700E| PES, DST, PHC, JEF, JEF+, VP3, U01, EMD, HUS, VIP, PCS, SEW, EXP, XXX| 6" x 10"| Not specified| USB, wireless| Not specified| On-screen editing| Yes| mySewnet™ connectivity, included accessories
+Singer| SE700| PES, DST, PHC, JEF, JEF+, VP3, U01, EMD, HUS, VIP, PCS, SEW, EXP, XXX| 4" x 4"| Not specified| Wireless LAN connectivity| Not specified| Artspira app| Not specified| 2-in-1 machine for sewing and embroidery, large LCD touchscreen
+Singer | PR1055X Entrepreneur® Pro X| Not specified| 14" x 8"| Not specified| Wireless enabled| Not specified| Not specified| Not specified| 1000spm maximum embroidery speed
+Singer | Luminaire 3 Innov-ís XP3| Not specified| 10 5/8" x 16"| Not specified| Wireless LAN connectivity| Not specified| Included Accessory Feet| Not specified| Large 10.1" capacitive touch screen, Enhanced StitchVision Technology
+SINGER| EM200 Embroidery Machine:| Not specified| 5" x 7"| | USB| | | Multiple Fonts| Built-in Designs: Over 200 embroidery designs,  LCD Touch Screen: Easily select and edit designs. Automatic Needle Threader: Simplifies threading. Multiple Fonts: Personalize your projects with monograms and lettering.
+Singer| SE9180| PES, DST, EXP, JEF, JEF+, XXX, VP3, HUS, PCS, SEW, SHV| 7.9" x 14.2"| Not specified| USB, mySewnet™ Cloud| Not specified| On-screen editing| Yes| mySewnet™ enabled, powerful work lights
+Janome| Memory Craft 550E| JEF, JEF+, JPX| 7.9" x 14.2"| Not specified| USB| 180 built-in designs| On-screen editing| Yes| Large thread spool capability, ergonomic design
+Janome| Memory Craft 500E| PES, DST, PHC, JEF, JEF+, VP3, U01, EMD, HUS, VIP, PCS, SEW, EXP, XXX| 7.9" x 11"| Not specified| Wireless LAN connectivity| Not specified| Artspira app| Not specified| 2-in-1 machine for sewing and embroidery, large LCD touchscreen
+Janome| Memory Craft 400E| JEF, JEF+, JPX| 7.9" x 7.9"| Not specified| USB| 160 built-in designs| On-screen editing| Yes| Anti-kink thread guide, adjustable hoop positioning, auto return post thread break
+Husqvarna| Designer Ruby™ 90| JEF, JEF+, JPX| 7.9" x 14.2"| Not specified| mySewnet™ enabled| Not specified| Not specified| Not specified| mySewnet™ apps, innovative capabilities
+Elna| Not specified| Not specified| Not specified| Not specified| Not specified| Not specified| Not specified| Not specified| Not specified
+Pfaff| creative 4.5| Not specified| 13.8" x 14.2"| Not specified| USB, mySewnet™ Cloud| 480 stitches| Customizable stitches| Not specified| Artificial Intelligence Detection, Voice Control, Projector, IDT™ System, ActivStitch™ Technology
+Pfaff| creative icon™ 2| JEF, DST, EXP, VP3, PES, PCS, XXX, VIP, HUS, SHV, PCM, CSD, SEW| 13.8" x 14.2"| Not specified| USB, mySewnet™ Cloud| 254 stitches| Stitch Creator™| Yes| AI Detection, Voice Control, Projector, IDT™ System, ActivStitch™ Technology
+
+
 ## Software
 
-Free Tools for converting formats:
+#### Free Tools for converting formats:
 - **[Ink/Stitch](https://inkstitch.org/)**  A wonderful plug in for Inkscape
 - **[Embroidermodder](https://www.libembroidery.org/)** Tool kit for working with embroidery file types
 - **[Embroidery Tool Shed](https://www.shop.dzgns.com/products/embroidery-tool-shed)** (Very slow download)
 
-See Wikipedia:
+#### See Wikipedia:
 - [Comparison of embroidery software](https://en.wikipedia.org/wiki/Comparison_of_embroidery_software)
 - [Machine embroidery - Wikipedia](https://en.wikipedia.org/wiki/Machine_embroidery#Loading_the_design)
 
-GitHub:
+#### GitHub:
 - [Embroidermodder - Table of Formats](https://github.com/Embroidermodder/libembroidery/tree/49e48dd0d9739440faf0875deb6e9eaf71ac1d2f#table-of-format-support-levels) 
-https://www.embroidery.com/machine-embroidery-formats
 
+### Other References:
+https://www.embroidery.com/machine-embroidery-formats
+https://www.embird.net/manual/0475color_palette.htm for infroation on EDR files types
 
 
