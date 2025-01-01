@@ -223,3 +223,12 @@ MigrationBackup/
 .history/
 /EmbroideryCollection.cfg
 /.vscode
+/.vs
+/docs/images/old
+/gui
+/i
+*.cmd
+*.xaml
+*.txt
+findduplicate.ps1
+*.zip
