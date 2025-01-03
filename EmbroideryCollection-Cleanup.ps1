@@ -2007,8 +2007,8 @@ function DoCleanCollection {
         while ($maxtries -gt 0) {
             $Movelist = @()
             # 
-            $cleanList =  Get-ChildItem -Path $EmbroidDir -Recurse -Directory 
-                | Where-Object { ($_.GetFiles().count -eq 0 -and $_.GetDirectories().count -eq 1) -or ($_.GetFiles().count -eq 1 -and $_.GetDirectories().count -eq 0)}  
+            $cleanList =  Get-ChildItem -Path $EmbroidDir -Recurse -Directory |
+                 Where-Object { ($_.GetFiles().count -eq 0 -and $_.GetDirectories().count -eq 1) -or ($_.GetFiles().count -eq 1 -and $_.GetDirectories().count -eq 0)}  
 
             $cleanList =  $cleanList | ForEach-Object -Begin { $stack = [System.Collections.Stack]::new() } -Process { $stack.Push($_) } -End 	{ while ($stack.Count -gt 0) { $stack.Pop() } } 
             if ($cleanList -and -not $proceed)  {
