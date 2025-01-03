@@ -1,3 +1,7 @@
+param (
+    [Parameter(Mandatory = $false)]
+    [String]$OldVersion
+)
 $scriptDir = join-path -Path ${env:ProgramData} -childpath 'EmbroideryOrganize' 
 $sourceurl = "https://raw.githubusercontent.com/D-Jeffrey/Embroidery-File-Organize/main/" 
 
@@ -39,4 +43,4 @@ FetchImageFile -file 'EmbroideryManager.ico'
 # for next upgrade
 Get-FileTo -file 'install.ps1'
 
-Powershell -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup
+Powershell -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup -OldVersion $OldVersion

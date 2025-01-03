@@ -11,18 +11,22 @@ Anyone who has an Embroidery machine (`Pfaff`, `Viking`, `Husqvarna`, `Janome`, 
 - Pull the files out of the zip file
 - Figure out which type works on your machine
 - Find the instructions and put them somewhere
-- look through the sub-directories or zip file inside of a zip file
-- can copy them to the place you need them to work
+- Looking through the sub-directories or zip file inside of a zip file
+- Copy them to the place you need them to work
 
 It will work with 3 different options:
 - USB stick or
 - Send to MySewnet Cloud or
-- Put the files into a directory to be dealt with (such as Send to Machine software - [Brother](https://help.brother-usa.com/app/answers/detail/a_id/158016/~/wirelessly-transfer-a-design-to-the-machine) or [MySewnet](https://softwarehelp.mysewnet.com/MSW/100/StitchEditor/index.html?#t=Topics%2FSending_to_a_Machine_via_Direct_USB_Connection.htm)).
+- Put the files into a folder to be dealt with (such as Send to Machine software - [Brother](https://help.brother-usa.com/app/answers/detail/a_id/158016/~/wirelessly-transfer-a-design-to-the-machine) or [MySewnet](https://softwarehelp.mysewnet.com/MSW/100/StitchEditor/index.html?#t=Topics%2FSending_to_a_Machine_via_Direct_USB_Connection.htm)).
 
-All while keeping the a copy of patterns on your computer for reference along with the instructions.
+All while keeping a copy of patterns on your computer for reference along with the instructions.  It uses the zip files names for the folder names it creates.
 
 ## Make it work
-Once you have downloaded  your embroidery files click on the `icon for EmbroideryCollection-Cleanup`<img src="EmbroideryManager.ico" width="24"> and it will begin the setup process and then look through the download folder and place any downloaded sewing files into the Embroidery folder on your computer.  Depending on if you are using a USB to transfer the files or using MySewnet Cloud, the script will look at the recently downloaded files and find the ones that work for your Embroidery machine and put them onto the USB stick or push them up the cloud (without wasting space).  And it will separate out the instructions and leave the instructions on your computer with the embroidery files but not duplicate them to the USB or cloud.  In the process, it will limit the number of folders in folders, while still bringing some organization to the files.
+Once you have downloaded your embroidery files, click on the `icon for EmbroideryCollection-Cleanup` <img src="EmbroideryManager.ico" width="24">. This will start the process of scanning your download folder and moving any sewing files to the Embroidery folder on your computer, using the zip file names to create folder names.
+
+Whether you're using a USB stick or MySewnet Cloud to transfer the files, the script will identify the compatible files for your embroidery machine and either copy them to the USB stick or upload them to the cloud (without wasting space). It will also separate the instructions, keeping them on your computer with the embroidery files, but not duplicating them on the USB stick or cloud.
+
+By doing this, it minimizes nested folders while maintaining some organization in your files. This makes it much easier to find and use your patterns.
 
 ## How to Install Simple (Automatic)
 
@@ -36,11 +40,13 @@ $ScriptFromGitHub = Invoke-WebRequest https://raw.githubusercontent.com/D-Jeffre
 Invoke-Expression $($ScriptFromGitHub.Content)
 
 ```
+### Important Note
+It's generally *not advisable to run random code from the Internet*. However, this script is hosted publicly on GitHub, so it can be inspected for security issues. If you have an IT security expert, have them review it before you proceed.
 
-I will say, this is *generally a bad idea to run random code* from the Internet, but in this case, it is hosted in public on Github and can be checked for security issues.
-If you know a IT security person, have them take a look.  Then paste in the two lines and have this *package of care* installed.  See below for the manual installation steps.
+#### Installation
+To install the script, simply paste the two lines of code provided above and answer the setup installation questions.
 
-After running the installation, you should have a desktop icon <img src="EmbroideryManager.ico" width="24"> for the script.  It will run a setup and ask you how you want to configure it, then it will use the selected folder to keep your 'Embroidery Collection' on your computer are kept and will be organized.  By default, the script (and associated files) is installed in `c:\programdata\EmbroideryOrganize\`
+After running the installation, you will find a desktop icon <img src="EmbroideryManager.ico" width="24"> for the script. During the initial setup, you'll be prompted to configure your preferences. The script will then use the selected folder to organize your 'Embroidery Collection' on your computer.  Use a new folder and it will copy all the files into that folder. The script and any related files will be installed in `c:\programdata\EmbroideryOrganize\`.
 
 [See Help](help.md) for more instructions on using the program.
 
@@ -52,15 +58,17 @@ After running the installation, you should have a desktop icon <img src="Embroid
 ![Img](docs/images/WindowsTerminal_2024-12-31-C.png)
 
 ## Why?
-Why would I build a massive, long PowerShell to move a file a few files around?  So, this was created to help my wife manage the many embroidery files that she downloads from online stores and move them on to her Pfaff Creative Icon Embroidery machine and I like to optimize and write some code adnd the machine includes the capability to synchronize those files that you download from the cloud my MySewnet.  When you buy embroidery files it usually comes with many different types plus the PDF of instructions all as part of a zip file. 
+Why would I build a massive, long PowerShell to move a file a few files around?  So, this was created to help my wife manage the many embroidery files that she downloads from online stores and move them on to her Pfaff Creative Icon Embroidery machine.  My wife loves making crafts, but working on the computer isn't her thing. I got fed up with having to extract files whenever she bought patterns. Sometimes, she would even lose purchased or free patterns she downloaded because she didn't remember where she saved them or to extract them. I like to optimize and write some code adnd the machine includes the capability to synchronize those files that you download from the cloud my MySewnet.  When you buy embroidery files it usually comes with many different types plus the PDF of instructions all as part of a zip file. 
 Now the challenge is that that zip file has a lot of junk in it that you don't need to be sent to MySewnet and it is limited to 100 megabytes unless you want to pay for the subscription service. 
 So unzip the files, find the ones that you really need to keep, separate the instruction files out from the embroidery files, transfer the right ones on to the cloud and therefore the sewing machine, easy peasy.  I chose to use PowerShell so that people did not have to deal with downloading Python.  It is in one file to minimize complications for downloading and installed it. Simplifying so that people can get up and running is in a minimal number of clicks .. *easy peasy* .. **NOT** so much for me.. *but hopefully for other users*.
 
-That is was where this started.  Originally, she could only keep about 40 downloads on her 'cloud storage space' on MySewnet.  Add to that the bugs in the web interface and limit of uploading 5 files at a time.  Compare that to this script which is easy for this script to have over a thousand files in the 100 MB space.  (Since most of the space would be for the diagram and instructions, and extra duplicate files of different types.)
+That is was where this started.  Originally, she could only keep about 40 downloads on her 'cloud storage space' on MySewnet.  Add to that the bugs in the web interface and limit of uploading/deleting 5 files at a time.  Compare that to this script which is easy for this script to have over a thousand files in the 100 MB space.  (Since most of the space would be for the diagram and instructions, and extra duplicate files of different types.)
 
 A PowerShell script to deal with the many different types of embroidery files, put the right format types in [mySewnet™](https://mysewnet.com/) or onto your USB stick.  If you take look at the zip files you purchased full Embroidery patterns, it will come with many different types of files, along with PDF and JPG instructions.  That's all well and nice but only give you 100 megabytes to put all your files into, so why would you want to waste it with instructions. This script strips it down to the that are appropriate to sync onto my sewing net and get rid of the spread of the folder structures that comes along with it.  It is great that the creator of file images produces so many variations, but you only need one type of make your machine work.
 
 Once it is set up with a shortcut you can simply download your patterns from online stores and then double-click the shortcut to copy the **right patterns** into your collection location and leave the instructions, along with the right file on your computer for reference later.
+
+If you have stopped using your embroidery machine because the file extraction process was so frustrating it mades you cry, then this is for you. You just inserts your USB stick, click on the program, select Go, and can easily transfer the patterns to her machine.
 
 ## Getting started Manually (if you did not use the Automatic setup above)
 This is a self-contained single PowerShell script (See note below).  It can be run by right clicking after downloading and select Run with PowerShell.  Windows may prompt if you want to allow PowerShell to run.  You may also have to `unblock` the downloaded file (`Right-click` properties of the file and at the bottom check the `unblock`.  Once you have copy the script into a location (suggested `c:\ProgramData\EmbroideryOrganize`)  (and unblocked), then you can run the script with -setup
@@ -71,27 +79,23 @@ This is a self-contained single PowerShell script (See note below).  It can be r
     powershell .\EmbroideryCollection-Cleanup.ps1
     
 ```
-Once you have run it once, it will create a EmbroideryCollection.CFG file in the same directory as the script, which you can edit to adjust the settings (and/or you can use command line parameters to change the settings).  It will also a file `EmbroideryCollection.Log` for any of its actions.
+Once you have run it once, it will create a EmbroideryCollection.CFG file in the same folder as the script, which you can edit to adjust the settings (and/or you can use command line parameters to change the settings).  It will also a file `EmbroideryCollection.Log` for any of its actions.
 
 
 ## Functions
 
-Checks the download directory for the Embroidery files types of any age and all the zip files which have been downloaded in *DownloadDaysOld*.  Any Embroidery files found are copied in to the Mysewing cloud folder under *EmbrodRootDirtop* directory (set below). Any zip files found are scanned to see if they have Embroidery file types that we are interested in.  If they are files which do not yet exist in the mysewingnet cloud, then extract that zip to a temporary location, pull out all the relevant files (formats we want) with the directory hierachy (adjusted).  Also pull out any related documentation and put it with pattern files on the computer (not onto the USB or Cloud).
+Checks the download folder for the Embroidery files types of any age and all the zip files which have been downloaded in *DownloadDaysOld*.  Any Embroidery files found are copied in to the Mysewing cloud folder under *EmbrodRootDirtop* folder (set below). Any zip files found are scanned to see if they have Embroidery file types that we are interested in.  If they are files which do not yet exist in the mysewingnet cloud, then extract that zip to a temporary location, pull out all the relevant files (formats we want) with the folder hierachy (adjusted).  Also pull out any related documentation and put it with pattern files on the computer (not onto the USB or Cloud).
 
-### Directory Hierarchy (Adjusted)
-When vendors build zip files and put them in all the different formats, it means digging for files.  The adjusted version of this will get rid of sub folders if they exist above and there are only folders in folders.  Example, if you have files in L3 inside of L2, inside of L1, then it will remove L1, L2, L3 and leave you the files.  If you have folders along with instructions with different folders to hold instructions, then it will not flatten the directories.  It used the parameter from the config file to remove unnessary files.  For example if the creator has a folder for HUS, and a folder for DST, then it will remove that folder and move all the files from it up one directory level.
+### folder Hierarchy (Adjusted)
+When vendors build zip files and put them in all the different formats, it means digging for files.  The adjusted version of this will get rid of sub folders if they exist above and there are only folders in folders.  Example, if you have files in L3 inside of L2, inside of L1, then it will remove L1, L2, L3 and leave you the files.  If you have folders along with instructions with different folders to hold instructions, then it will not flatten the directories.  It used the parameter from the config file to remove unnessary files.  For example if the creator has a folder for HUS, and a folder for DST, then it will remove that folder and move all the files from it up one folder level.
 
 ## Requirements
 
 It was orginally designed to work with [mySewnet™ Cloud](https://cloud.mysewnet.com/) which is a type of file share service for sewing machines.  It can also be used with USB Drives or Send file to functions.  If Mysewnet is used you will see a login page (if it does not fully load, please login to mysewnet from a reguler web browser page first and then run the script again)
 
-Depending on the types Embroidery file extensions your machine uses, then you may what to change the sewing file types of for your machine.  Order matters, if will find the first one in your list of types and try and keep files of that type over the other types.
-`$preferredSewType = ('vp3', 'vp4')`
+Depending on the types Embroidery file extensions your machine uses, then you may what to change the sewing file types of for your machine.  Order matters, if will find the first one in your list of types and try and keep files of that type over the other types.  Use the GUI interface to reorder and add/remove files which work with your specific machine. 
 
-
-
- - **[How to install](docs/How-to-Install.md)**
- - **[Other docs](docs/)**
+  - **[Other docs](docs/)**
 
 #### Seperating the files
 When it is comparing patterns it uses the file name to determine if they are the same name.  It is case-sensitive and the files must be created on the same day.
@@ -103,7 +107,7 @@ They also make the Explorer Plug-in which appears as a right click in File Explo
 
 # Issues/Future
 - If is processed as a group of separate zip files which have the same file in different patterns, it will choose a different preferred type than desired
-- does not support onedirectory deep switch yet
+- does not support onefolder deep switch yet
 - does not warn if cloud will exceed limits with the latest push
 - needs more refactoring
 - Cloud push is dependant on unique files names. MAJOR BUG 
@@ -111,6 +115,10 @@ They also make the Explorer Plug-in which appears as a right click in File Explo
 - refactoring to use class to address some issues above
 
 # Releases
+### 0.8.2
+- Fixed warning on USB, close on click on X, Progress bars, delete empty folders on USB
+- Optimized and fixed Clean Collection, fixed move lone directory and lone files.  It now works reliablity 
+- Update now shows differences since the running release
 ### 0.8.1
 - GUI Refinements, USB state detection
 - Fixed Clean Collection and Sync
@@ -129,7 +137,7 @@ They also make the Explorer Plug-in which appears as a right click in File Explo
 ### 0.6.8
 - Added USB `-Sync`
 - Improved README
-- fixed issue with lone files in download directory
+- fixed issue with lone files in download folder
 ### 0.6.7
 - changed the iteration and tracking of temporary files to speed up the process
 - support unicode file name by removing Diacritics

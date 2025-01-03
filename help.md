@@ -11,7 +11,7 @@
 
 `Help` - this help page.
 
-`Clean up` - This is three steps: 1) clean out non-preferred embroidery files and duplicates from the the local cache.  2) look for duplicates regardless of if there they are in different directory structure if they have the same name and are created on the same day.  It will show a list and promopt before deleting.  The files are deleted to the **recycle bin** so they can be restored. 3) it looks for empty or lone file directories and moves them up.  (This is experiemental feature, it has side-effects next time you run, it may re-copy in files)
+`Clean up` - This is three steps: 1) clean out non-preferred embroidery files and duplicates from the the local cache, if you uncheck `Keep all types`,  2) look for duplicates regardless of if there they are in different directory structure if they have the same name and are created on the same day.  It will show a list and promopt before deleting.  The files are deleted to the **recycle bin** so they can be restored. 3) it looks for empty or lone file/directories and moves them up.
 
 `Config` - open the configuration file.  If you need to add some additional files type to the 'Other sew files' list, this is a  good way to access that list.
 
@@ -24,6 +24,12 @@
 `Download days old` - Determine many days old of zip files to look for when choosing which files to check to see if new embroidary files have appeared in your download folder.  The Download folder is usually something like c:\users\username\Downloads.  It does not look in subdirectories of that folder or other locations.  Normally, you would use 1 for this value, since you will run the program right after downloading your purchases from stores.
 
 `Keep all types` - It is recommended that you do not have this checked and it will only keep the most preferred embroidery file type.  If it is check, it will keep all of the preferred types of pattern files (rather than only the one preferred).  See `preferred Sew Type` below. 
+
+`Safely Eject USB when done` - When you are done load files onto a USB drive, if you remove it too quickly, it may corrupt the drive.  This option will automtically make sure the drive is safe to remove.
+
+`Open MySewnet Cloud when done` - Open the MySewnet Cloud web page when done.  (https://www.mysewnet.com/en-us/my-account/#/cloud/)
+
+`Last New Files Folder` - button will reopen the previously matched files when using MySewnet or 'None' as the Output location.  It open appears if you have used that mode.
 
 ## Command-line parameters
 
@@ -74,6 +80,10 @@ Some how the default download directory is not set on your computer.  This shoul
 - `The Embroidery files directory c:\users\username\onedrive\Embroirdery  is within OneDrive ---- Warning`
 There is a bug in the preview function for the Explorer Add-in which previews it from properly render preview images when it is used within OneDrive.
 
+ - `WARNING: Error Pushing the folder:`  ... `<error-message>Folder can not be found</error-message>` ...<br /> 
+`WARNING: Problem creating folders \Angels\Angels\Angels ` - Currently the script cannot deal with nested folders with the same name.
+
+- `WARNING: File Not found for upload : D:\Users\kjeff\MyEmbroidery\Angels\Angels\ang5a.DST` - Currently the script cannot deal with nested folders with the same name.
 # Clean Up button
 Use this function CAREFULLY.  It removes files and reorganizes the folders.
 The `Clean Up` button does a few steps to clean up your collection (it will confirm each step before taking any action):
