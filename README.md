@@ -16,7 +16,7 @@ Anyone who has an Embroidery machine (`Pfaff`, `Viking`, `Husqvarna`, `Janome`, 
 
 It will work with 3 different options:
 - USB stick or
-- Send to MySewnet Cloud or
+- Send to [mySewnet™ Cloud](https://mysewnet.com/) or
 - Put the files into a folder to be dealt with (such as Send to Machine software - [Brother](https://help.brother-usa.com/app/answers/detail/a_id/158016/~/wirelessly-transfer-a-design-to-the-machine) or [MySewnet](https://softwarehelp.mysewnet.com/MSW/100/StitchEditor/index.html?#t=Topics%2FSending_to_a_Machine_via_Direct_USB_Connection.htm)).
 
 All while keeping a copy of patterns on your computer for reference along with the instructions.  It uses the zip files names for the folder names it creates.
@@ -51,7 +51,7 @@ After running the installation, you will find a desktop icon <img src="Embroider
 [See Help](help.md) for more instructions on using the program.
 
 ### Control Panel
-![Img](docs/images/pwsh_0.8.1_gui.png)
+![Img](docs/images/pwsh_2025-01.png)
 ### Output of processing - USB
 ![Img](docs/images/WindowsTerminal_2024-12-31.png)
 ### Output of processing - Cloud
@@ -115,6 +115,8 @@ They also make the Explorer Plug-in which appears as a right click in File Explo
 - refactoring to use class to address some issues above
 
 # Releases
+### 0.8.3
+- Improved progress bars, improved eject, improve GUI layout, fixed folder rollup
 ### 0.8.2
 - Fixed warning on USB, close on click on X, Progress bars, delete empty folders on USB
 - Optimized and fixed Clean Collection, fixed move lone directory and lone files.  It now works reliablity 

@@ -1,9 +1,9 @@
 # EmbroideryCollection-Cleanup Help
 ---
-[Read Me Introduction](readme.md)
+[Read Me Introduction](README.md)
 
 
-![img](docs/images/pwsh_0.8.1_gui.png)
+![img](docs/images/pwsh_2025-01.png)
 
 `Go` - start the process of checking the download folder and copying files into the Embroidery base directory.
 

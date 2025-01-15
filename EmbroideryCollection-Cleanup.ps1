@@ -38,9 +38,10 @@ param
   [String]$OldVersion                               # Used during upgrade only
   )
 
-$ECCVERSION = "v0.8.2"
+$ECCVERSION = "v0.8.3"
 $GitOwner = "D-Jeffrey" 
 $GitName = "Embroidery-File-Organize"
+$ECCNAME = "Embroidery Collection Cleanup"
 # $VerbosePreference =  "Continue"
 # $InformationPreference =  "Continue"
 
@@ -60,6 +61,7 @@ $paramstring =  [ordered]@{
  'EmbroidDir' = 'Embriodary Files directory';
  'USBDrive'='USB drive letter (example E: or H:)';
  'LastCheckedGithub'=''; 
+ 'LatestTag'='';
  'DownloadDaysOld' = 'Age of files in Download directory';
  'SetSize' = 'Keep collections of files together if there are at least this many'
 }
@@ -102,7 +104,7 @@ $paramswitch =[ordered]@{
 # What directories should be flattened to bring the Embroidery files higher up so they are not nested instead of sub-folders.  
 # The names are for Directories you want to remove the sub-folder and moved the contents up
 # ----------------------------------------------------------------------
-write-progress "Starting Embroidery Collection Cleanup version: $ECCVERSION on PS $($PSVersionTable.PSVersion.major).$($PSVersionTable.PSVersion.minor) ... Please wait" 
+write-progress "Starting Embroidery Collection Cleanup : $ECCVERSION on PS $($PSVersionTable.PSVersion.major).$($PSVersionTable.PSVersion.minor) ... Please wait" 
 
 $RemovePrefix = ($PSVersionTable.PSVersion.Major -lt 7 ) 
 if ($RemovePrefix) {
@@ -264,7 +266,7 @@ function Show-Progress {
         }
 }
 function Complete-Progress {
-    $script:protime = (get-date).AddMinutes(-1)
+    $script:protime = (get-date).AddMinutes(-2)
     Show-Progress -Completed $true
 }
 
@@ -286,17 +288,17 @@ function LogAction($File, $Action, [Boolean]$isInstructions = $false) {
 Function AdvanceProgress {
     param ( 
         [Parameter(Mandatory = $false)]
-        [string]$Area, [string]$stat = $null, [switch]$BigStep)
+        [string]$Activity, [string]$status = $null, [switch]$BigStep)
 
     $Script:p++
     if ($BigStep) {
         $Script:p = $Script:p + 9 ; 
         $script:protime = (get-date).AddMinutes(-1)
     }
-    if ($stat) {
-        Show-Progress -PercentComplete ($Script:p % 100 ) $Area -Status $stat
+    if ($status) {
+        Show-Progress -PercentComplete ($Script:p % 100 ) -Activity $Activity -Status $status
     } else {
-        Show-Progress -PercentComplete ($Script:p % 100 ) $Area 
+        Show-Progress -PercentComplete ($Script:p % 100 ) -Activity $Activity 
     }
 }
 # Delete or recycle a file (full path required)
@@ -433,15 +435,19 @@ function doWinForm() {
     $ico = "C:\ProgramData\EmbroideryOrganize\EmbroideryManager.ico"
     
     # Create the form
-    $form = New-Object System.Windows.Forms.Form -Property @{
-        Text = "Embroidery Collection Cleanup"
+    $script:form = New-Object System.Windows.Forms.Form -Property @{
+        Text = $ECCNAME
         Size = New-Object System.Drawing.Size(800, 500)
         StartPosition = "CenterScreen"
         BackColor = "Window"
         Font = "Calibri, 9pt"  
+        AutoScaleMode = 'Dpi'
+        AutoSizeMode = 'GrowAndShrink'
     }
     if (test-path -path $ico) {
         $form.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($ico)
+    } else {
+        $form.ShowIcon = $False
     }
     
     $lbl_title = New-Object System.Windows.Forms.Label -Property @{
@@ -450,66 +456,78 @@ function doWinForm() {
         ForeColor="White"
         Size= New-Object System.Drawing.Size(800, 32)
         #TextAlign="TopCenter" 
-        Text = "Embroidery Collection Cleanup version: $ECCVERSION (on PS $($PSVersionTable.PSVersion.major).$($PSVersionTable.PSVersion.minor))"
+        Text = "       Embroidery Collection Cleanup $ECCVERSION"
     }
+    $lbl_subtitle = New-Object System.Windows.Forms.Label -Property @{
+        BackColor="Blue"
+        Font="8pt"
+        ForeColor="White"
+        Size= New-Object System.Drawing.Size(800, 14)
+        Location = New-Object System.Drawing.Point(0, 32)
+        Text = "(on PowerShell $($PSVersionTable.PSVersion.major).$($PSVersionTable.PSVersion.minor))"
+        Padding="670, 0, 0, 0"
+    }
+     
     $form.Controls.Add($lbl_title)
-    
+    $form.Controls.Add($lbl_subtitle)
+
     # Create a panel to hold the parameters
     $panel = New-Object System.Windows.Forms.Panel -Property @{
-        Location = New-Object System.Drawing.Point(125, 34)
+        Location = New-Object System.Drawing.Point(125, 48)
         Size=  New-Object System.Drawing.Size(668, 450)
         Font="Tahoma,9pt"
     }
     $lbl_EmbrodRootDirtop = New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(4, 42)
+        Location = New-Object System.Drawing.Point(4, 12)
         Size=  New-Object System.Drawing.Size(120, 21)
         Text="Embroidery base dir" 
     }
     $lbl_DownloadDaysOld = New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(4, 66)
+        Location = New-Object System.Drawing.Point(4, 36)
         Size=  New-Object System.Drawing.Size(120, 21)
         Text="Download days old"
     }
     $lbl_KeepAlltypes= New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(4, 90)
+        Location = New-Object System.Drawing.Point(4, 60)
         Size=  New-Object System.Drawing.Size(120, 21)
         Text="Keep all types"
     }
-    $lbl_preferredSewType= New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(4, 114)
-        Size=  New-Object System.Drawing.Size(120, 42)
-        Text="Preferred sew file`nsort by preference"
-    }
-    $lbl_otherSewType= New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(260, 98)
-        Size=  New-Object System.Drawing.Size(120, 21)
-        Text="Other sew file types"
-    }
     $lbl_location= New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(4, 234)
+        Location = New-Object System.Drawing.Point(4, 204)
         Size=  New-Object System.Drawing.Size(120,21)
         Text="Output to"     
     }
-    $lbl_Info= New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(4, 344)
-        Size=  New-Object System.Drawing.Size(600,61)
+    $script:lbl_Info= New-Object System.Windows.Forms.Label -Property @{ 
+        Location = New-Object System.Drawing.Point(4, 294)
+        Size=  New-Object System.Drawing.Size(600,91)
         Text=""
         Padding="5, 5, 5, 5"
         ForeColor="InfoText"
         BackColor="Info"
+        BorderStyle = "FixedSingle"
     }
     $script:Info_Extra = "`n"
+    if  ($script:LastestTag -gt $ECCVERSION) {
+        $centerpnt = ($lbl_Info.size.Width - $lbl_Info.Location.X - 150 ) / 2
+        $lbl_newver = New-Object System.Windows.Forms.Label -Property @{ 
+            Location = New-Object System.Drawing.Point($centerpnt, 387)
+            Size=  New-Object System.Drawing.Size(150,18)
+            Text="New version avaiable: " + $script:LatestTag
+            Font="8pt"
+            ForeColor="ActiveCaptionText"
+            BackColor="ActiveCaption"
+        }
+        $panel.Controls.Add($lbl_newver)
+    }
 
     $panel.Controls.Add($lbl_EmbrodRootDirtop)
     $panel.Controls.Add($lbl_DownloadDaysOld)
     $panel.Controls.Add($lbl_KeepAlltypes)
-    $panel.Controls.Add($lbl_preferredSewType)
-    $panel.Controls.Add($lbl_otherSewType)
     $panel.Controls.Add($lbl_location)
     $panel.Controls.Add($lbl_Info)
-
+    
     $tbx_EmbrodRootDirtop = New-Object System.Windows.Forms.TextBox -Property @{ 
-        Location = New-Object System.Drawing.Point(130, 42)
+        Location = New-Object System.Drawing.Point(130, 12)
         Size = New-Object System.Drawing.Size(380, 20)
         Text = $script:EmbroidDir
         }
@@ -526,7 +544,7 @@ function doWinForm() {
         Text = "Select Directory"
         BackColor="LightSkyBlue"
         UseVisualStyleBackColor=$False
-        Location = New-Object System.Drawing.Point(511, 39)
+        Location = New-Object System.Drawing.Point(511, 9)
         Size = New-Object System.Drawing.Size(99, 23)
         }
     $btn_selectDir.Add_Click({
@@ -540,7 +558,7 @@ function doWinForm() {
     $panel.Controls.Add($btn_selectDir)
     $btn_open = New-Object System.Windows.Forms.Button -Property @{ 
         Text = "Open"
-        Location = New-Object System.Drawing.Point(613,39)
+        Location = New-Object System.Drawing.Point(613,9)
         Size=  New-Object System.Drawing.Size(43, 23)
         BackColor="LightSkyBlue"   
         }
@@ -552,7 +570,7 @@ function doWinForm() {
     $panel.Controls.Add($btn_open)    
     if ($script:DownloadDaysOld -lt 1) { $script:DownloadDaysOld = 7 }
     $nud_DownloadDaysOld = New-Object System.Windows.Forms.NumericUpDown -Property @{ 
-        Location = New-Object System.Drawing.Point(130, 66)
+        Location = New-Object System.Drawing.Point(130, 36)
         Size = New-Object System.Drawing.Size(67, 20)
         Value = $script:DownloadDaysOld
         Minimum = 1
@@ -561,25 +579,46 @@ function doWinForm() {
     $panel.Controls.Add($nud_DownloadDaysOld)
         
     $cbx_KeepAllTypes = New-Object System.Windows.Forms.CheckBox -Property @{ 
-        Location = New-Object System.Drawing.Point(130, 90)
+        Location = New-Object System.Drawing.Point(130, 58)
         Checked = ($true -eq $script:KeepAllTypes)
         }
     $panel.Controls.Add($cbx_KeepAllTypes)
-    
+
+    $panelPref = New-Object System.Windows.Forms.Panel -Property @{
+        Location = New-Object System.Drawing.Point(2, 82)
+        Size=  New-Object System.Drawing.Size(450, 114) # 204-82 
+        BorderStyle = "FixedSingle"
+    }
+     $panel.Controls.Add($panelPref)
+     $lbl_preferredSewType= New-Object System.Windows.Forms.Label -Property @{ 
+        Location = New-Object System.Drawing.Point(2, 2)
+        # Location = New-Object System.Drawing.Point(4, 84)
+        Size=  New-Object System.Drawing.Size(120, 42)
+        Text="Preferred sew file`nsort by preference"
+    }
+    $lbl_otherSewType= New-Object System.Windows.Forms.Label -Property @{ 
+        # Location = New-Object System.Drawing.Point(260, 68)
+        Location = New-Object System.Drawing.Point(362, 2)
+        Size=  New-Object System.Drawing.Size(120, 42)
+        Text="Other sew`nfile types"
+    }
+    $panelPref.Controls.Add($lbl_preferredSewType)
+    $panelPref.Controls.Add($lbl_otherSewType)
+
     $lbx_preferredSewType = New-Object System.Windows.Forms.ListBox -Property @{ 
-        Location = New-Object System.Drawing.Point(130, 120)
-        Size = New-Object System.Drawing.Size(68, 108) 
+        Location = New-Object System.Drawing.Point(128, 4)
+        Size = New-Object System.Drawing.Size(68, 110) 
         SelectionMode = [System.Windows.Forms.SelectionMode]::One
         }     
-    $panel.Controls.Add($lbx_preferredSewType)
+    $panelPref.Controls.Add($lbx_preferredSewType)
         
     $lbx_otherTypes = New-Object System.Windows.Forms.ListBox -Property @{ 
-        Location = New-Object System.Drawing.Point(280, 120)
-        Size = New-Object System.Drawing.Size(68, 108) 
+        Location = New-Object System.Drawing.Point(285, 4)
+        Size = New-Object System.Drawing.Size(68, 110) 
         SelectionMode = [System.Windows.Forms.SelectionMode]::One
         
         }     
-    $panel.Controls.Add($lbx_otherTypes)
+    $panelPref.Controls.Add($lbx_otherTypes)
     
     # Populate the ListBox with sample items
     
@@ -589,7 +628,7 @@ function doWinForm() {
     # Create the Move Up button
     $lbbx_moveUpButton = New-Object System.Windows.Forms.Button -Property @{ 
         Text = "↑"
-        Location = New-Object System.Drawing.Point(200, 115)
+        Location = New-Object System.Drawing.Point(198, 8)
         Size = New-Object System.Drawing.Size(20, 20)
     }
     $lbbx_moveUpButton.Add_Click({
@@ -601,10 +640,10 @@ function doWinForm() {
             $lbx_preferredSewType.SelectedIndex = $selectedIndex - 1
         }
     })
-    $panel.Controls.Add($lbbx_moveUpButton)
+    $panelPref.Controls.Add($lbbx_moveUpButton)
     $lbbx_moveAddButton = New-Object System.Windows.Forms.Button -Property @{ 
         Text = "←"
-        Location = New-Object System.Drawing.Point(220, 140)
+        Location = New-Object System.Drawing.Point(238, 26)
         Size = New-Object System.Drawing.Size(30, 20)
     }
     $lbbx_moveAddButton.Add_Click({
@@ -614,10 +653,10 @@ function doWinForm() {
             $lbx_otherTypes.Items.RemoveAt($selectedIndex)
         }
     })
-    $panel.Controls.Add($lbbx_moveAddButton)
+    $panelPref.Controls.Add($lbbx_moveAddButton)
     $lbbx_moveRmButton = New-Object System.Windows.Forms.Button -Property @{ 
         Text = "→"
-        Location = New-Object System.Drawing.Point(220, 165)
+        Location = New-Object System.Drawing.Point(238, 51)
         Size = New-Object System.Drawing.Size(30, 20)
     }
     $lbbx_moveRmButton.Add_Click({
@@ -627,12 +666,12 @@ function doWinForm() {
             $lbx_preferredSewType.Items.RemoveAt($selectedIndex)
         }
     })
-    $panel.Controls.Add($lbbx_moveRmButton)
+    $panelPref.Controls.Add($lbbx_moveRmButton)
     
     # Create the Move Down button
     $lbbx_moveDnButton = New-Object System.Windows.Forms.Button -Property @{ 
         Text = "↓"
-        Location = New-Object System.Drawing.Point(200, 190)
+        Location = New-Object System.Drawing.Point(198, 76)
         Size = New-Object System.Drawing.Size(20, 20)
     }
     $lbbx_moveDnButton.Add_Click({
@@ -644,7 +683,7 @@ function doWinForm() {
             $lbx_preferredSewType.SelectedIndex = $selectedIndex + 1
         }
     })
-    $panel.Controls.Add($lbbx_moveDnButton)
+    $panelPref.Controls.Add($lbbx_moveDnButton)
         
         
     if ($script:CloudAPI) {
@@ -694,7 +733,7 @@ function doWinForm() {
         }
     } 
     $cmb_location = New-Object System.Windows.Forms.ComboBox -Property @{ 
-        Location = New-Object System.Drawing.Point(130, 234)
+        Location = New-Object System.Drawing.Point(130, 204)
         DropDownStyle  = "DropDownList"
         }
     function driveComboChange () 
@@ -747,7 +786,7 @@ function doWinForm() {
         Text = "Refresh"
         BackColor="LightSkyBlue"
         UseVisualStyleBackColor=$False
-        Location = New-Object System.Drawing.Point(260, 234)
+        Location = New-Object System.Drawing.Point(260, 204)
         Size = New-Object System.Drawing.Size(59, 23)
         }
     $btn_refreshDir.Add_Click({
@@ -767,7 +806,7 @@ function doWinForm() {
     $panel.Controls.Add($cmb_location)
     $btn_open2 = New-Object System.Windows.Forms.Button -Property @{ 
         Text = "Open"
-        Location = New-Object System.Drawing.Point(329,234)
+        Location = New-Object System.Drawing.Point(329,204)
         Size=  New-Object System.Drawing.Size(43, 23)
         BackColor="LightSkyBlue"   
         Enabled = $false
@@ -778,38 +817,50 @@ function doWinForm() {
             
         })
     $panel.Controls.Add($btn_open2)    
-    
+    # Create a panel to hold control buttons
+    $panelEject = New-Object System.Windows.Forms.Panel -Property @{
+        Location = New-Object System.Drawing.Point(24, 234)
+        Size=  New-Object System.Drawing.Size(135, 38)
+        BorderStyle ="FixedSingle"
+    }
     $lbl_usbeject= New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(24, 264)
+        Location = New-Object System.Drawing.Point(2, 2)
         Size=  New-Object System.Drawing.Size(100,31)
         Text="Safely Eject USB when done"
+        
     }
-    $panel.Controls.Add($lbl_usbeject)
+    $panelEject.Controls.Add($lbl_usbeject)
     $cbx_usbeject = New-Object System.Windows.Forms.CheckBox -Property @{ 
-        Location = New-Object System.Drawing.Point(130, 264)
+        Location = New-Object System.Drawing.Point(106, 2)
         Size=  New-Object System.Drawing.Size(15,15)
         Checked = $USBEject
         Enabled = $script:USBEject
         }
-    $panel.Controls.Add($cbx_usbeject)
+    $panelEject.Controls.Add($cbx_usbeject)
+    $panel.Controls.Add($panelEject)
+    $panelMysew = New-Object System.Windows.Forms.Panel -Property @{
+        Location = New-Object System.Drawing.Point(214, 234)
+        Size=  New-Object System.Drawing.Size(213, 38)
+        BorderStyle ="FixedSingle"
+    }
     $lbl_openmySewnet = New-Object System.Windows.Forms.Label -Property @{ 
-        Location = New-Object System.Drawing.Point(184, 264)
+        # Location = New-Object System.Drawing.Point(184, 234)
+        Location = New-Object System.Drawing.Point(2, 2)
         Size=  New-Object System.Drawing.Size(100,31)
         Text="Open MySewnet Cloud when done"
     }
-    $panel.Controls.Add($lbl_openmySewnet)
+    $panelMysew.Controls.Add($lbl_openmySewnet)
     $cbx_openmySewnet = New-Object System.Windows.Forms.CheckBox -Property @{ 
-        Location = New-Object System.Drawing.Point(290, 264)
+        Location = New-Object System.Drawing.Point(110, 2)
         Size=  New-Object System.Drawing.Size(15,15)
         Checked = $script:DragUpload
         }
-    $panel.Controls.Add($cbx_openmySewnet)
-
+    $panelMysew.Controls.Add($cbx_openmySewnet)
     if (test-path -path $(${env:temp} + "\cleansew.new")) {
     
         $btn_open3 = New-Object System.Windows.Forms.Button -Property @{ 
             Text = "Last New`nFiles Folder"
-            Location = New-Object System.Drawing.Point(340, 264)
+            Location = New-Object System.Drawing.Point(136, 2)
             Size = New-Object System.Drawing.Size(73, 33)
             BackColor="LightSkyBlue"   
             Font = "8pt"
@@ -818,8 +869,9 @@ function doWinForm() {
             
             Invoke-expression $("explorer """ + ${env:temp} + "\cleansew.new""")
         })
-        $panel.Controls.Add($btn_open3)
+        $panelMysew.Controls.Add($btn_open3)
     }
+    $panel.Controls.Add($panelMysew)
     
     # Add the panel to the form
     $form.Controls.Add($panel)
@@ -927,6 +979,8 @@ function doWinForm() {
             })
     $panelB.Controls.Add($btn_log)
 
+
+
     # Create the Exit button
     $btn_exit = New-Object System.Windows.Forms.Button -Property @{ 
         Text = "Exit"
@@ -958,11 +1012,28 @@ function doWinForm() {
 '@
     }
 
-# Now you can use the added type without errors
     $winstate = [Console.Window]::ShowWindow([Console.Window]::GetConsoleWindow(), 0)
     $script:exitmode = "Exit"
+    
+    $script:InitJob = $true
+    $form.Cursor = "AppStarting"
+
+    # All the Sync Processing
+    $form.Add_Activated( { 
+            if ($script:InitJob) { 
+                $script:InitJob = $false
+                $btn_go.Enabled = $false
+                CleanUpTmpSpace
+                $btn_go.Enabled = $true
+                ($script:librarySizeBefore, $script:libraryEmbSizeBefore) = CalculateSize -sync $false
+                $script:lbl_Info.Text = "File size before   Total: $(niceSize $librarySizeBefore) - Embroidery files: $(niceSize $libraryEmbSizeBefore)"
+                $form.Cursor = "Default"
+            }
+        })
+    
     # Show the form
     $form.ShowDialog()
+    # restore Console to previous state
     [Console.Window]::ShowWindow([Console.Window]::GetConsoleWindow(), $winstate)
     $script:EmbroidDir = $tbx_EmbrodRootDirtop.Text
     
@@ -993,7 +1064,7 @@ function doWinForm() {
     BuildTypeLists
     return $SetExiting
 }
-function EjectAndCheckUSB {
+function EjectUSBandFailed {
 
     # Eject the USB drive
     $ejectResult = (New-Object -ComObject Shell.Application).Namespace(17).ParseName($usbDrive).InvokeVerb("Eject")
@@ -1002,13 +1073,13 @@ function EjectAndCheckUSB {
         # Verify that all files are flushed
         $fileSystem = Get-WmiObject -Query "SELECT * FROM Win32_LogicalDisk WHERE DeviceID='$usbDrive'"
         if ($null -eq $fileSystem.FreeSpace) {
-            Write-host "All files have been written and the USB drive is ready to be safely removed."  -ForegroundColor Green
-            return $true
+            Write-host "  ** Ejected ** All files have been written and the USB drive is ready to be safely removed."  -ForegroundColor Green
+            return $false
         }
     } else {
         Write-host "Failed to eject USB drive $usbDrive." -ForegroundColor Red
     }
-    return $false
+    return $true
 }
 function Test-ExistsOnPath {
     param (
@@ -1023,6 +1094,59 @@ function Test-ExistsOnPath {
     }
 
     return $false
+}
+
+function CleanUpTmpSpace {
+    
+    # Clean out the old tmp working space
+    if ($script:lbl_Info) { 
+        $savetext = $script:lbl_Info.Text 
+        $script:lbl_Info.Text = "Cleaning up temporary work space... Please Wait"
+        if ($script:form) { 
+            [System.Windows.Forms.Application]::DoEvents() } 
+    }
+    # AdvanceProgress  "Cleaning up temporary work space" -BigStep
+    if ($script:form) {
+        [System.Windows.Forms.Application]::DoEvents()
+    }
+    Get-ChildItem -Path  ($tmpdir ) -Recurse | foreach-object { 
+        if ($script:form) { 
+            [System.Windows.Forms.Application]::DoEvents() } 
+        Remove-Item -Path $_ -force -Recurse 
+    }
+    if (-not (Test-Path -Path $tmpdir )) { New-Item -ItemType Directory -Path ($tmpdir )}
+    # Complete-Progress
+    if ($script:lbl_Info) { $script:lbl_Info.Text = $savetext }
+}
+
+Function CalculateSize
+{
+    param (
+    [Boolean]$Sync = $true
+    )
+
+    $byExt = @{}
+    if ($script:form) { 
+        [System.Windows.Forms.Application]::DoEvents() } 
+    if ($sync) {
+        AdvanceProgress  "Calculating size" -BigStep
+    }
+    $script:validsize = $false
+    $eSize = 0
+    $EmbSize = 0
+    $script:CalcedDir = $EmbroidDir
+    Get-ChildItem -Path $EmbroidDir  -Recurse -file  | ForEach-Object { 
+        $eSize +=  $_.Length
+        $byExt[$_.Extension.replace(".","")] +=  $_.Length
+        if ($script:form) { 
+            [System.Windows.Forms.Application]::DoEvents() }     
+    }
+    $EmbSize = $(foreach ($_ in $preferredSewType) { if ($_ -in $byExt.Keys) { $byExt[$_]} })  |  Measure-Object -Sum | Select-Object -ExpandProperty Sum
+    if ($script:form) { 
+        [System.Windows.Forms.Application]::DoEvents() } 
+
+    $script:validsize = $true
+    return ($esize, $EmbSize)
 }
 
 # return the relative path of existing folders and files relative to a root path with the prefix of  .\
@@ -2018,7 +2142,7 @@ function DoCleanCollection {
                 $cleanList | ForEach-Object {
                 $thisdir = $_
                 if ($thisdir -and $thisdir.GetDirectories().count -eq 1) {
-                    AdvanceProgress -Area $_ -stat "Moving Lone Directories"
+                    AdvanceProgress -Activity $_ -status "Moving Lone Directories"
                     $subdir = $thisdir.GetDirectories()
                     if ($subdir.GetFileSystemInfos().count -eq 0) {
                         if (-not $KeepEmptyDirectory) {
@@ -2040,7 +2164,7 @@ function DoCleanCollection {
                     }
                 } else {
                     #lone file
-                    AdvanceProgress -Area $_ -stat "Moving Lone File"
+                    AdvanceProgress -Activity $_ -status "Moving Lone File"
                         
                     $movethese = Get-ChildItem -LiteralPath $thisdir.FullName -Recurse  -Filter "*"
                     foreach ($movethis in $movethese ) {
@@ -2081,35 +2205,18 @@ function DoCleanCollection {
     }
 }  
 function FoldupDirPath {
-    param (
-        [string]$directoryPath,
-        $minimumlen = 2
-    )
-
-    $directoryPathLower = $directoryPath.ToLower()
-
-    do {
-        $folding = $false
-        foreach ($r in $foldupDirs) {
-            if ($directoryPathLower.EndsWith("\$r")) {
-                if ($(Split-Path $directoryPath -IsAbsolute) -and ($directoryPath.Length -lt $script:EmbroidDir.Length)) {
-                    # Emergency panic exit
-                    $directoryPath = $script:EmbroidDir
-                    Write-Warning "Folding Directories has a problem, please change the 'foldupDir' List"
-                    return $directoryPath
-                }
-                # Strip off the directory name and preserve the case of the directory and files
-                if (($directoryPath.Length - $r.Length - 1) -gt $minimumlen) {
-                    $directoryPath = $directoryPath.Substring(0, $directoryPath.Length - $r.Length - 1)
-                    $directoryPathLower = $directoryPath.ToLower()
-                    $folding = $true
-                }
+    param ([string]$filePath)
+    
+        $pathParts = $filePath -split '\\'
+        $newPath = @()
+    
+        foreach ($part in $pathParts) {
+            if ($foldupDirs -notcontains $part.ToLower()) {
+                $newPath += $part
             }
         }
-    } while ($folding)
-    # TODO Check for nested duplicate names
-
-    return $directoryPath
+    
+        return $($newPath -join '\')
 }
 
 #-----------------------------------------------------------------------
@@ -2152,7 +2259,7 @@ function MoveFromDir (
         }
 	$oc = $objs.count
     if ($oc) {
-        AdvanceProgress -Area "Copying $dtype" -Stat "Added ${Script:savecnt} files"
+        AdvanceProgress -Activity "Copying $dtype" -Status "Added ${Script:savecnt} files"
         }
     $objs | ForEach-Object {
         # If all files or the name matching a file we should be moving..
@@ -2165,7 +2272,7 @@ function MoveFromDir (
                 $newdir = join-path $isFromNestedRelative -ChildPath $newdir
             }
             # take off the directory name if it is one of the rollup names
-            $newdir = FoldupDirPath -directoryPath $newdir
+            $newdir = FoldupDirPath -filePath $newdir
             
             $newpath = join-path -path $targetdir -childpath $newdir
             if (Test-Path -LiteralPath $newpath -PathType Leaf) {
@@ -2208,17 +2315,27 @@ function MoveFromDir (
                 else {
                     ChecktoClearNewFilesDirectory
                     if (!($UsingUSBDrive) -or $isEmbrodery) { 
+                        
                         if ($NoDirectory) {
-                            Copy-Item -Path $_ -Destination $(Join-Path -Path $NewFilesDir  -ChildPath $newfile)
+                            $newpath = Join-Path -Path $NewFilesDir -ChildPath $newfile
+                            
                         } else {
                             $newpath = join-path -path $NewFilesDir -childpath $newdir
                             if (!(test-path ($newpath))) {
-                                New-Item -Path ($newpath) -ItemType Directory  | Out-Null
+                                # This may create an error if there is not enough space or if the drive/directory is protected, but it will be reflected in the error below
+                                New-Item -Path ($newpath) -ItemType Directory  -ErrorAction SilentlyContinue | Out-Null
                                 }
-                            Copy-Item -Path $_ -Destination $(Join-Path -Path $newpath -ChildPath $newfile)
-                            }
+                            $newpath =$(Join-Path -Path $newpath -ChildPath $newfile) 
                         }
-                    LogAction $newfile -Action "++Added-MoveFrom"
+                        $badcopy = $null
+                        Copy-Item -Path $_ -Destination $newpath -ErrorVariable badcopy -ErrorAction SilentlyContinue
+                    }
+                    if ($badcopy) {
+                        LogAction $newfile -Action "++Error-MoveFrom '$badcopy'"
+                        write-host "Error copying $newfile - $badcopy" -ForegroundColor Yellow
+                    } else {
+                        LogAction $newfile -Action "++Added-MoveFrom"
+                    }
                     # BUG THIS IS THE LINE THAT ERRORS out wiht Directory Not Found
                     $movedirto = split-path -path $npath -parent
                     if (!(test-path -LiteralPath $movedirto -PathType Container)) {
@@ -2462,8 +2579,7 @@ function AddToSewList {
         write-Error "** BLANK NAME - '$NameIndex', '$Name', '$directory', '$lastWriteTime' "
         start-sleep -Milliseconds 100
     }
-    $isFoundnewfile = $true
-    $Directory = FoldupDirPath -directoryPath $Directory
+    $Directory = FoldupDirPath -filePath $Directory
     if ($quickmysewfiles[$NameIndex]) {
         # BUG duplicate filename but different checksum??? 
         # TODO use  LastWriteTime to overcome
@@ -2610,14 +2726,14 @@ function ExpandAZip {
     )
     $resultTmpDir = (Join-Path $tmpdir -childpath $RelativePath).trim("\")
     # Check for long path names inside the zip file
-    
-    Show-progress -Activity "Expanding Zip Archive.. Please wait " -Status (split-path -path $zippath -leaf)
+    AdvanceProgress -Activity "Expanding Zip Archive.. Please wait " -Status $(split-path -path $zippath -leaf) -BigStep
     $bigzip = (get-item $zippath).Length -gt $use7zipsize
     if (($bigzip -or $havewarning) -and (Test-Path "C:\Program Files\7-Zip\7z.exe")) {
+        write-host  "Expanding BIG Zip Archive.. Please wait : $(split-path -path $zippath -leaf)" -ForegroundColor Yellow 
         Set-Alias sevenz "C:\Program Files\7-Zip\7z.exe"
         sevenz x $zippath -o"$resultTmpDir" -y
     } else {
-        Expand-Archive -Path $zippath -DestinationPath $resultTmpDir -Force
+        Expand-Archive -Path $zippath -DestinationPath $resultTmpDir -Force  
     }
     Complete-Progress
     return $resultTmpDir
@@ -2682,15 +2798,15 @@ function ProcessZipContents {
             $isnew = $false
             # like our extension, but does not start with . 
             $SpecificExtensionFiles = $zipfilelist.Entries | where-object {$_.Name -like $ts -AND $_.Name.substring(0,1) -ne "."} 
-            AdvanceProgress  "Checking Zips - Looking at $($_.Name) - looking at '$($ts.substring(2).ToUpper())' type"  -stat "Added $Script:savecnt files"
+            AdvanceProgress  -Activity "Checking Zips - Looking at $($_.Name) - looking at '$($ts.substring(2).ToUpper())' type"  -status "Added $Script:savecnt files"
             foreach ($fileInZip in $SpecificExtensionFiles) {
                 $isnewfile = ""
                 $filenameInZip = $fileInZip.Name
                 # grab the base file name only (works with or without extension)
-                if ($PSVersionTable.PSVersion.Major -ge 6) {
-                    $fs = split-path -Path $filenameInZip -LeafBase
-                } else {
+                if ($RemovePrefix) {
                     $fs = (Split-Path -Path $filenameInZip  -Leaf) -replace '\.[^.]*$'
+                } else {
+                    $fs = split-path -Path $filenameInZip -LeafBase
                     }
                 if ($keepAllTypes) {
                     $n = $fileInZip.Name 
@@ -2780,6 +2896,7 @@ function ProcessZipContents {
         # we extracted the Zip already and now let's check for instructions but only do this at the very end of nested files
         if ($isZipExtracted -and (!($isNested))) { 
             $numnew += $(MoveFromDir -fromPath $tmpdir -isEmbrodery $false)
+            AdvanceProgress  "Releasing Zip $zf"  
             Get-ChildItem -Path $tmpdir -Recurse | Remove-Item -force -Recurse
             }
    
@@ -2905,7 +3022,7 @@ Function DoSetup() {
         write-host $script:EmbroidDir
         write-host "How do you want to transfer your files to your machine (USB, Mysewnet or neither)"
         if (myPause -Message "Are you using a USB Drive?" -Choice $true -ChoiceDefault ($script:USBDrive -ne "")) {
-            
+            # TODO might Hand during setup
             do {
                 if ($USBBrowser.ShowDialog() -eq "OK") {
                     $script:USBDrive = $USBBrowser.SelectedPath
@@ -3081,7 +3198,6 @@ if (-not $doit){
 }
 }
 
-
 if (-not $EmbroidDir.contains("\")) {
     $EmbroidDir = join-path -path $docsdir -childpath $EmbroidDir 
 }
@@ -3096,8 +3212,9 @@ if (!(test-path $LogFile)) {
 
 
 if ($null -eq $LastCheckedGithub -or ($(get-date) -gt $(get-date $LastCheckedGithub).adddays(7)))  {
-    ($latestTag, $newdescription) = Get-LatestGitHubTag -RepositoryOwner $GitOwner -RepositoryName $GitName
+    ($script:latestTag, $newdescription) = Get-LatestGitHubTag -RepositoryOwner $GitOwner -RepositoryName $GitName
     $script:LastCheckedGithub = get-date -format "g"
+    SaveAllParams
     if ($latestTag) {
         Write-Verbose "Latest tag in D-Jeffrey/Embroidery-File-Organize $latestTag"
         if ($latestTag -gt $ECCVERSION) {
@@ -3132,22 +3249,17 @@ if ($FirstRun) {
     Write-Host " ".padright(15) $("** Checking ALL Zip files **".padright(70)) -ForegroundColor white -BackgroundColor blue
 }
 
-# Clean out the old tmp working space
-AdvanceProgress  "Cleaning up temporary work space" -BigStep
-Get-ChildItem -Path  ($tmpdir ) -Recurse | Remove-Item -force -Recurse
-if (-not (Test-Path -Path $tmpdir )) { New-Item -ItemType Directory -Path ($tmpdir )}
-Complete-Progress
-
 $failed = $false
 
 # TODO change for USBDrive
 # We will put all the new files in here for now
- $UsingUSBDrive = $False
-
+$UsingUSBDrive = $False
+$librarySizeBefore = 0
 $flatdir = -not $noDirectory
 
+Write-Progress -Completed $true
 doWinForm | out-null
-Complete-Progress  
+
 if ($script:SetExiting) {
         write-host "Stopping" -ForegroundColor green
         break
@@ -3170,7 +3282,7 @@ Write-Verbose ("Rollup match pattern".padright($padder-8) + ": $foldupDirs")
 Write-Verbose ("Ignore Terms Conditions files".padright($padder-8) + ": $TandCs")
 # Write-Verbose ("Excludetypes".padright($padder-8) + ": $excludetypes")
 
-AdvanceProgress  "Starting" 
+AdvanceProgress  "Starting" -BigStep
 
 if ($CloudAPI -and $CloudAuthAvailable) {
     if (-not (LoginSewnetCloud)) {
@@ -3215,24 +3327,11 @@ if ($sync) {
 $beginTimer = Get-Date
 
 Add-Type -assembly "system.io.compression.filesystem"
-Function CalculateSize()
-{
-    $byExt = @{}
-    AdvanceProgress  "Calculating size" -BigStep
-    $script:validsize = $false
-    $eSize = 0
-    $EmbSize = 0
-    Get-ChildItem -Path $EmbroidDir  -Recurse -file  | ForEach-Object { 
-        $eSize +=  $_.Length
-        $byExt[$_.Extension.replace(".","")] +=  $_.Length
-    }
-    $EmbSize = $(foreach ($_ in $preferredSewType) { if ($_ -in $byExt.Keys) { $byExt[$_]} })  |  Measure-Object -Sum | Select-Object -ExpandProperty Sum
 
-    $script:validsize = $true
-    return ($esize, $EmbSize)
+
+if (($librarySizeBefore -eq 0) -or ($script:CalcedDir -ne $EmbroidDir)) {
+    ($librarySizeBefore, $libraryEmbSizeBefore) = CalculateSize 
 }
-
-($librarySizeBefore, $libraryEmbSizeBefore) = CalculateSize
 # "Starting with All files: $(niceSize $librarySizeBefore) - Embroidery files:  $(niceSize $libraryEmbSizeBefore)"
 
 AdvanceProgress  "Loading file list" -BigStep
@@ -3254,7 +3353,7 @@ $afterdate = (Get-Date).AddDays(- $DownloadDaysOld )
 Get-ChildItem -Path $downloaddir  -file -filter "*.zip" -depth $zipdepth | Where-Object { (($_.CreationTime -gt $afterdate) -OR ($_.LastWriteTime -gt $afterdate)) -and ($_.gettype().Name -eq 'FileInfo')} |
   
     ForEach-Object {
-        AdvanceProgress  "Checking Zips - Looking at $($_.Name)"  -stat "Added $Script:savecnt files"
+        AdvanceProgress  "Checking Zips - Looking at $($_.Name)"  -status "Added $Script:savecnt files"
         Write-Verbose "Checking ZIP '$($_.FullName)'" 
         ProcessZipContents -zips $_.FullName -Base $_.BaseName
     }
@@ -3629,9 +3728,10 @@ Complete-Progress
 if ($UsingUSBDrive -and $USBEject) {
     Show-Progress -Activity "Ejecting USB Drive" -PercentComplete 50
     # Eject the USB drive
-    if (-not $(EjectAndCheckUSB)) {
+    start-sleep 1
+    if (EjectUSBandFailed) {
         start-sleep 2
-        if (-not $(EjectAndCheckUSB)) {
+        if (EjectUSBandFailed) {
             Write-host "Warning: Some files may not be completely written. Please try ejecting the USB again." -ForegroundColor Red
         }
     }
