@@ -1064,9 +1064,66 @@ function doWinForm() {
     BuildTypeLists
     return $SetExiting
 }
-function EjectUSBandFailed {
+
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+
+public class myFlushFileBuffers
+{
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool FlushFileBuffers(IntPtr hFile);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr CreateFile(
+        string lpFileName,
+        uint dwDesiredAccess,
+        uint dwShareMode,
+        IntPtr lpSecurityAttributes,
+        uint dwCreationDisposition,
+        uint dwFlagsAndAttributes,
+        IntPtr hTemplateFile);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool CloseHandle(IntPtr hObject);
+
+    public const uint GENERIC_WRITE = 0x40000000;
+    public const uint OPEN_EXISTING = 3;
+    public const uint FILE_FLAG_NO_BUFFERING = 0x20000000;
+
+    public static bool FlushDrive(string driveLetter)
+    {
+        string path = $"\\\\.\\{driveLetter}:";
+        IntPtr handle = CreateFile(path, GENERIC_WRITE, 0, IntPtr.Zero, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING, IntPtr.Zero);
+
+        if (handle == IntPtr.Zero)
+        {
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+        }
+
+        bool result = FlushFileBuffers(handle);
+        CloseHandle(handle);
+
+        return result;
+    }
+}
+"@
+
+function EjectUSB {
 
     # Eject the USB drive
+    $drv = $USBDrive.Substring(0,1)
+    for ($wait=0; $wait -lt 20; $wait++) {
+        try {
+            if ([MyFlushFileBuffers]::FlushDrive($drv)) {
+                break
+            }
+        } catch {
+            Write-Error "Error: $_" 
+            break
+        }
+        start-sleep -Milliseconds 250
+    }
     $ejectResult = (New-Object -ComObject Shell.Application).Namespace(17).ParseName($usbDrive).InvokeVerb("Eject")
     # Check if the USB drive has been ejected successfully
     if ($null -eq $ejectResult) {
@@ -1074,12 +1131,10 @@ function EjectUSBandFailed {
         $fileSystem = Get-WmiObject -Query "SELECT * FROM Win32_LogicalDisk WHERE DeviceID='$usbDrive'"
         if ($null -eq $fileSystem.FreeSpace) {
             Write-host "  ** Ejected ** All files have been written and the USB drive is ready to be safely removed."  -ForegroundColor Green
-            return $false
         }
     } else {
         Write-host "Failed to eject USB drive $usbDrive." -ForegroundColor Red
     }
-    return $true
 }
 function Test-ExistsOnPath {
     param (
@@ -3224,7 +3279,7 @@ if ($null -eq $LastCheckedGithub -or ($(get-date) -gt $(get-date $LastCheckedGit
             if ($upgrademe) {
                 $upgradescript = Join-Path -Path $PSScriptRoot -ChildPath "install.ps1"
                 if (test-path $upgradescript) {
-                    powershell -ExecutionPolicy bypass -file $upgradescript -"$ECCVERSION"
+                    powershell -ExecutionPolicy bypass -file $upgradescript -OldVersion "$ECCVERSION"
                     return
                 } else {
                     Write-Warning "Automatic upgrade script '$upgradescript' can not be found to run, continuing without upgrade"
@@ -3728,13 +3783,7 @@ Complete-Progress
 if ($UsingUSBDrive -and $USBEject) {
     Show-Progress -Activity "Ejecting USB Drive" -PercentComplete 50
     # Eject the USB drive
-    start-sleep 1
-    if (EjectUSBandFailed) {
-        start-sleep 2
-        if (EjectUSBandFailed) {
-            Write-host "Warning: Some files may not be completely written. Please try ejecting the USB again." -ForegroundColor Red
-        }
-    }
+    EjectUSB
     Complete-Progress
     }
 Write-Host "End" -ForegroundColor Green
