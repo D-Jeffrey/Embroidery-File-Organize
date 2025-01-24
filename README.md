@@ -14,7 +14,7 @@ Anyone who has an Embroidery machine (`Pfaff`, `Viking`, `Husqvarna`, `Janome`, 
 - Looking through the sub-directories or zip file inside of a zip file
 - Copy them to the place you need them to work
 
-It will work with 3 different options:
+It will work with at least 3 different options:
 - USB stick or
 - Send to [mySewnet™ Cloud](https://mysewnet.com/) or
 - Put the files into a folder to be dealt with (such as Send to Machine software - [Brother](https://help.brother-usa.com/app/answers/detail/a_id/158016/~/wirelessly-transfer-a-design-to-the-machine) or [MySewnet](https://softwarehelp.mysewnet.com/MSW/100/StitchEditor/index.html?#t=Topics%2FSending_to_a_Machine_via_Direct_USB_Connection.htm)).
@@ -58,7 +58,7 @@ After running the installation, you will find a desktop icon <img src="Embroider
 ### Control Panel
 ![Img](docs/images/pwsh_2025-01.png)
 ### Output of processing - USB
-![Img](docs/images/WindowsTerminal_2024-12-31.png)
+![Img](docs/images/WindowsTerminal_2025-01-21.png)
 ### Output of processing - Cloud
 ![Img](docs/images/WindowsTerminal_2024-12-31-C.png)
 
@@ -113,13 +113,17 @@ They also make the Explorer Plug-in which appears as a right click in File Explo
 # Issues/Future
 - If is processed as a group of separate zip files which have the same file in different patterns, it will choose a different preferred type than desired
 - does not support onefolder deep switch yet
-- does not warn if cloud will exceed limits with the latest push
 - needs more refactoring
-- Cloud push is dependant on unique files names. MAJOR BUG 
-- Should set the File Explorer Folder View when a new folder is created if the add-in in place to Large or Huge Icon view
+- Cloud push is dependant on unique files names. **MAJOR BUG** I have not been using this, so have not spent time fixing the issue
+- Should set the File Explorer 'Folder View', when a new folder is created, if the add-in in place to `Large` or `Huge` Icon view
 - refactoring to use class to address some issues above
 
 # Releases
+### 0.8.4
+- Improved `Add From Folder` button added
+- Faster GUI start
+- Upgrade is accessed by GUI (Features are shown each week or more as text)
+- Improved presentation of Cleanup Files 
 ### 0.8.3
 - Improved progress bars, Improve GUI layout, Fixed folder rollup, Improved/fixed USB eject
 - Bug in calling the upgrade function
