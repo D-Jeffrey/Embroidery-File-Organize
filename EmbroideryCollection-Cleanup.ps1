@@ -1122,7 +1122,7 @@ function doWinForm() {
             if ($script:InitJob) { 
                 $script:InitJob = $false
                 $btn_go.Enabled = $false
-                # Slow operations
+                #Slow operations
                 updateDriveList
                 driveComboChange
                 $script:InfoText.Size = ""
@@ -1169,6 +1169,13 @@ function doWinForm() {
     return $SetExiting
 }
 
+# bit of a Hack to get around the PS 5.1 issue with type compiling
+if ($PSVersionTable.PSVersion.Major -lt 7 ) {
+    function FlushDrive(){
+        return $true
+    }
+    } else {
+
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -1213,6 +1220,7 @@ public class myFlushFileBuffers
 }
 "@
 
+    }
 function EjectUSB {
 
     # Eject the USB drive
