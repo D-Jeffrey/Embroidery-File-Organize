@@ -19,13 +19,14 @@ The performance is better with Powershell 7
 --or-- 
 [https://aka.ms/PSWindows](https://aka.ms/PSWindows)
 
+
 ### Nice to know
 
-- If you have `7zip` installed on your computer, (the native version, not MS store version), then it will be used when working with large zip files as it is much faster.
+- If you have `7zip` installed on your computer, (the native version, not MS store version), then it will be used when working with large zip files (over 100 MB) as it is much faster.
 
-- It will create folders when there is a number of files `-SetSize` that are in a given zip file using the name of the zip file.  You most likely will want to rename it and give it a new name which reflects the folder.
+- It will create folders when there is a number of files `-SetSize` or edit the config value for `SetSize` that are in a given zip file using the name of the zip file.  You most likely will want to rename it and give it a new name which reflects the folder.
 
 - Ignore files which are terms and conditions (it does not mean you can ignore the laws, just don't save so many copies of the files.
-`$TandCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*')`  Edit your config (`EmbroideryCollection.cfg`) file to adjust these values. 
+`$TandCs = @('TERMS-OF-USAGE.*', 'planetappliquetermsandconditions.*')`  Edit your config (`EmbroideryCollection.cfg`) file using the `config` button to adjust these values. 
 This are the directories (plus the if the directory name equals the format type)  
 `$foldupDir = @('images','sewing helps','Designs', 'Design Files')` Edit your config file.

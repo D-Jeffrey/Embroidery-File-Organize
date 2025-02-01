@@ -3,7 +3,7 @@
 [Read Me Introduction](README.md)
 
 
-![img](docs/images/pwsh_2025-01.png)
+![img](docs/images/pwsh_2025-02.png)
 
 `Go` - start the process of checking the download folder and copying files into the Embroidery base directory.
 
@@ -49,9 +49,9 @@
 |`-KeepEmptyDirectory` |↘ ◊ |Toggle option to keep/remove extra empty directories from Collection folders'
 | `-USBDrive` I: |↘ |  Copy the new files to a specified USB drive (in the form of I: or H: or E:).  To Disable USB use 'OFF' for the drive letter
 | `-CloudAPI` |↘ ◊ |Use MySewNet Cloud to save file after they have been added to the local computer cache  (Either USBDrive or CloudAPI but not both at the same time).  Only preferred embroidery types will be uploaded to the cloud.
-|`-DragUpload` |◊ | Toggle option Use the web page instead of the plug in to drag and drop
-|`-ShowExample` |◊ |  Toggle option Show the example GIF on how to send files to the cloud (different image for Windows 10 vs Windows 11)
-| `-ConfigDefault` |↘ |Reset the default settings and options to original default any of the ◊ or ▫ marked options
+|`-DragUpload` |◊ | Toggle option use the web page instead of the plug-in to drag and drop from the folder which gets opened to the web page upload area.
+|`-ShowExample` |↘ ◊ |  Toggle option Show the example GIF on how to send files to the cloud (different image for Windows 10 vs Windows 11)  See the example below for demostrations
+| `-ConfigDefault` |  |Reset the default settings and options to original default any of the ◊ or ▫ marked options
 | `-SwitchDefault` |↘ | Use to turn off the Switches you might have turned on - Any of the ◊ marked options (this is the only command-line way to reset the options because of the config file saving the settings state)
 | `-ConfigFile` |↘  | EmbroideryCollection.cfg` The name of the configuration file which is in the same directory as the script itself.  The options selected are saved into the configuration file so the next time the script is run the same settings stay in effect.
 |`-Testing`  | | Run it without it doing actual copying of files or cleaning up.
@@ -80,6 +80,7 @@ When you get this message, it is usually related to long files name.  This occur
 - Any error/access messages when working with Diacritics such as á, é, í, ó, ú :
 I try and fix this character so they will work with the cloud, by it is still a bit buggy.
 
+
 - `The Download Directory does not work, please correct the script` :
 Somehow the default download directory is not set on your computer.  This should not happen.  Not sure under what conditions you would see this error message, please create an issue on the github and provide the type of operating system you are running on.
 - `The Embroidery files directory c:\users\username\onedrive\Embroirdery  is within OneDrive ---- Warning`
@@ -89,6 +90,12 @@ There is a bug in the preview function for the Explorer Add-in which previews it
 `WARNING: Problem creating folders \Angels\Angels\Angels ` - Currently the script cannot deal with nested folders with the same name.
 
 - `WARNING: File Not found for upload : D:\Users\kjeff\MyEmbroidery\Angels\Angels\ang5a.DST` - Currently the script cannot deal with nested folders with the same name.
+
+## UPGRADE BUG in v0.8.2
+- To overcome a bug to run the upgrade script   If your upgrade from 0.8.2 fails.  You will need to manually do 
+  - Start -> Run (and paste this line)
+  - `powershell -ExecutionPolicy bypass -file C:\ProgramData\EmbroideryOrganize\install.ps1`
+
 # Clean Up button
 Use this function CAREFULLY.  It removes files and reorganizes the folders.
 The `Clean Up` button takes a few steps to clean up your collection (it will confirm each step before taking any action):

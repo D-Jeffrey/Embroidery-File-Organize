@@ -7,7 +7,7 @@
 
 # EmbroideryCollection-Cleanup.ps1
 ## Who is this for?
-Anyone who has an Embroidery machine (`Pfaff`, `Viking`, `Husqvarna`, `Janome`, `Brother`, `Baby Lock`, `Bernette`, `Singer`, `Jana`, `Brother` and many others) and all downloading files you purchased but are frustrated by the effort.
+Anyone who has an Embroidery machine (`Pfaff`, `Viking`, `Husqvarna`, `Janome`, `Brother`, `Baby Lock`, `Bernette`, `Singer`, `Jana`, `Brother` and many others) and are downloading files you purchased but are frustrated by the effort.
 - Pull the files out of the zip file
 - Figure out which type works on your machine
 - Find the instructions and put them somewhere
@@ -56,7 +56,7 @@ After running the installation, you will find a desktop icon <img src="Embroider
 [See Help](help.md) for more instructions on using the program.
 
 ### Control Panel
-![Img](docs/images/pwsh_2025-01.png)
+![Img](docs/images/pwsh_2025-02.png)
 ### Output of processing - USB
 ![Img](docs/images/WindowsTerminal_2025-01-21.png)
 ### Output of processing - Cloud
@@ -114,11 +114,14 @@ They also make the Explorer Plug-in which appears as a right click in File Explo
 - If is processed as a group of separate zip files which have the same file in different patterns, it will choose a different preferred type than desired
 - does not support onefolder deep switch yet
 - needs more refactoring
-- Cloud push is dependant on unique files names. **MAJOR BUG** I have not been using this, so have not spent time fixing the issue
+- Cloud push is dependent on unique files names. **MAJOR limitation** I have not been using this, so have not spent time fixing the issue.  If you are looking to use this feature, please log an issue and I will prioritize it
 - Should set the File Explorer 'Folder View', when a new folder is created, if the add-in in place to `Large` or `Huge` Icon view
 - refactoring to use class to address some issues above
 
 # Releases
+### 0.8.5
+- Improved: Added Precount to indicate how may items will be processed, Async startup Optimization & speed up of processing
+- Fix: Powershell 5.1 does not support  USBEject function & zipfile issue, cleanup of new space, open new files
 ### 0.8.4
 - Improved `Add From Folder` button added
 - Faster GUI start
