@@ -21,11 +21,6 @@ It will work with at least 3 different options:
 
 All while keeping a copy of patterns on your computer for reference along with the instructions.  It uses the zip files names for the folder names it creates.
 
-# UPGRADE BUG in v0.8.2
-- To overcome a bug to run the upgrade script   If your upgrade from 0.8.2 fails.  You will need to manually do 
-  - Start -> Run (and paste this line)
-  - `powershell -ExecutionPolicy bypass -file C:\ProgramData\EmbroideryOrganize\install.ps1`
-
 ## Make it work
 Once you have downloaded your embroidery files, click on the `icon for EmbroideryCollection-Cleanup` <img src="EmbroideryManager.ico" width="24">. This will start the process of scanning your download folder and moving any sewing files to the Embroidery folder on your computer, using the zip file names to create folder names.
 
@@ -119,6 +114,9 @@ They also make the Explorer Plug-in which appears as a right click in File Explo
 - refactoring to use class to address some issues above
 
 # Releases
+### 0.8.6
+- Detect Zip in zip even if no embroidery files are in parent zip
+- hide Remove-Item progress
 ### 0.8.5
 - Improved: Added Precount to indicate how may items will be processed, Async startup Optimization & speed up of processing
 - Fix: Powershell 5.1 does not support  USBEject function & zipfile issue, cleanup of new space, open new files

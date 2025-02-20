@@ -6,7 +6,7 @@
  Deal with the many different types of embroidery files, put the right format types in mySewingnet Cloud or onto a USB drive
  We are looking to keep the ??? files types only from the zip files.
 
- Orginal Author: Darren Jeffrey, Dec 2021 - Oct 2024
+ Orginal Author: Darren Jeffrey, Dec 2021 - Feb 2025
 #>
 
 param
@@ -38,7 +38,7 @@ param
   [String]$OldVersion                               # Used during upgrade only
   )
 
-$ECCVERSION = "v0.8.5"
+$ECCVERSION = "v0.8.6"
 $GitOwner = "D-Jeffrey" 
 $GitName = "Embroidery-File-Organize"
 $ECCNAME = "Embroidery Collection Cleanup"
@@ -151,7 +151,7 @@ if (!$ConfigFile.Contains('\')) {
 
 # If ConfigDefault and ConfigFile exists, remove the ConfigFile
 if ($ConfigDefault -and (Test-Path -Path $ConfigFile)) {
-    Remove-Item -Path $ConfigFile
+    Remove-Item -Path $ConfigFile | out-null 
 }
 # If ConfigFile exists, read its content and convert from JSON
 if (Test-Path -Path $ConfigFile) {
@@ -349,7 +349,7 @@ Function RecycleFile {
         try {
             if ($purge) {
                 $path = if ($RemovePrefix) { "\\?\$($thisfile.FullName)" } else { $thisfile.FullName }
-                Remove-Item -Path $path -Force -ErrorAction Stop # Handled by WhatIf
+                Remove-Item -Path $path -Force -ErrorAction Stop  | out-null # Handled by WhatIf 
             } elseif ($doit) {
                 if ($RemovePrefix) {
                     $shell.NameSpace(17).ParseName($thisfile).InvokeVerb('delete')
@@ -1195,7 +1195,11 @@ function doWinForm() {
                 $script:InfoText.filelist = $summary
                 $script:jobZipsPlus= $null
             }
-            $script:lbl_Info.Text = $script:InfoText.Values -Join ""
+            $script:lbl_Info.Text = $($script:InfoText.Values | Where-Object {$_ -match "Wait"}) -Join ""
+            if ($script:lbl_Info.Text -ne "") {
+                $script:lbl_Info.Text = "--- Please Wait --- Working ---`n" + $script:lbl_Info.Text + "`n"
+            }
+            $script:lbl_Info.Text += $($script:InfoText.Values | Where-Object {$_ -notmatch "Wait"}) -Join ""
             [System.Windows.Forms.Application]::DoEvents() 
         }
         if ($script:InitJob) { 
@@ -1221,7 +1225,7 @@ function doWinForm() {
                     return
                 }
                 Get-ChildItem -Path  ($removefrom ) | foreach-object { 
-                    Remove-Item -Path $_ -force -Recurse
+                    Remove-Item -Path $_ -force -Recurse | out-null 
                 }
                 if (-not (Test-Path -Path $removefrom )) { 
                     New-Item -ItemType Directory -Path ($removefrom )
@@ -1649,7 +1653,7 @@ function ChecktoClearNewFilesDirectory {
         if ((get-volume -filePath  $NewFilesDir).DriveType -eq "Fixed") {
             AdvanceProgress "Preparing working directory" -BigStep
             $allFileItems = Get-ChildItem -Path $( $(if ($RemovePrefix) {"\\?\" } else {"" } ) + $NewFilesDir) 
-            $allFileItems | Remove-Item -Force -Recurse
+            $allFileItems | Remove-Item -Force -Recurse | out-null 
             write-verbose "CLEARED working copy filespace"
             Complete-Progress
         }
@@ -2436,7 +2440,7 @@ function DoCleanCollection {
                     $subdir = $thisdir.GetDirectories()
                     if ($subdir.GetFileSystemInfos().count -eq 0) {
                         if (-not $KeepEmptyDirectory) {
-                            remove-item $subdir
+                            remove-item $subdir | out-null 
                             $script:RemoveDirCnt++
                         }
                     } else {
@@ -2450,7 +2454,7 @@ function DoCleanCollection {
                             Move-Item -LiteralPath $movethis.FullName -Destination $DestPath
                         }
                         if (-not $KeepEmptyDirectory -and $subdir.GetFileSystemInfos().count -eq 0) {
-                                remove-item $subdir -force
+                                remove-item $subdir -force | out-null 
                                 $script:RemoveDirCnt++
                         }
                     }
@@ -2587,9 +2591,9 @@ function MoveFromDir (
                     $attrcheck.Attributes -= 'Readonly'
                 }
                 if ($RemovePrefix) {
-                    Remove-Item -Path "\\?\$($_.FullName)" -ErrorAction SilentlyContinue
+                    Remove-Item -Path "\\?\$($_.FullName)" -ErrorAction SilentlyContinue | out-null 
                 } else {
-                    Remove-Item -Path $_.FullName -ErrorAction SilentlyContinue
+                    Remove-Item -Path $_.FullName -ErrorAction SilentlyContinue | out-null 
                 }
                 Write-Verbose "Removed Duplicate ${dtype} file :'$_'" 
                 $script:RemoveFilecnt++
@@ -2946,7 +2950,7 @@ function AddToSewList {
 
 <#
 .SYNOPSIS
-    Searches for .PES files within a zip file, including nested zip files.
+    Searches for files within a zip file, including nested zip files.
 
 .DESCRIPTION
     This script recursively searches for files with specific extensions within a zip file. If the zip file contains nested zip files,
@@ -2956,55 +2960,66 @@ function AddToSewList {
 .PARAMETER zipFilePath
     The path to the zip file to search.
 
-.PARAMETER fileExtensionToSearch
-    An array of file extensions to search for (e.g., @("PES", "VP3", "DST")).
-
 .EXAMPLE
-    Search-ZipFile -zipFilePath "C:\path\to\your\zipfile.zip" -fileExtensionToSearch @("PES", "VP3", "DST")
+    Get-ZipContents -zipPath "C:\path\to\your\zipfile.zip" 
 
+.OUTPUTS
+    list of files within the zip file
 #>
-function Search-ZipFile {
+
+
+
+# Define function to extract and list contents of a zip file
+function Get-ZipContents {
     param (
-        [string]$zipFilePath,
-        [string[]]$fileExtensionsToSearch
+        [string]$zipPath
     )
-    Write-Output "Check: $zipFilePath"
-    # Create a temporary directory to extract files
-    $tempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.Guid]::NewGuid().ToString())
-    [System.IO.Directory]::CreateDirectory($tempDir) | Out-Null
+    
+    [System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null
 
-    try {
-        # Open the zip file
-        $zipArchive = [System.IO.Compression.ZipFile]::OpenRead($zipFilePath)
+    $zipFile = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+    foreach ($entry in $zipFile.Entries) {
+        if ($entry.FullName -match '\.zip$') {
+            Write-Output "Nested zip file: $($entry.FullName)"
+            # Extract nested zip to a temporary directory
+            $tempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
+            [System.IO.Directory]::CreateDirectory($tempDir) | Out-Null
+            $nestedZipPath = [System.IO.Path]::Combine($tempDir, $entry.Name)
+            try {
 
-        foreach ($entry in $zipArchive.Entries) {
-            if ($entry.FullName -match "\.zip$") {
-                # If the entry is a zip file, extract it to a temporary location and search it recursively
-                $nestedZipPath = [System.IO.Path]::Combine($tempDir, $entry.FullName)
-                $nestedzipParentPath = split-path -path $nestedZipPath -parent
-                [System.IO.Directory]::CreateDirectory( $nestedzipParentPath) | Out-Null
-                
-                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $nestedZipPath)
-                if (test-path -path $nestedZipPath) {
-                    Search-ZipFile -zipFilePath $nestedZipPath -fileExtensionsToSearch $fileExtensionsToSearch
-                    }
-            } else {
-                foreach ($extension in $fileExtensionsToSearch) {
-                    if ($entry.FullName -match "\.$extension$") {
-                        # If the entry matches one of the file extensions, output the file path
-                        Write-output "File found: $($entry.FullName)"
-                    }
-                }
+                $entry.ExtractToFile($nestedZipPath)
+                # List contents of nested zip
+                Get-ZipContents -zipPath $nestedZipPath
+                # Clean up temporary files
+                Remove-Item -Path $tempDir -Recurse -Force | out-null 
+            } catch {
+                write-output "File: Failed to unzip"
             }
+
+        } else {
+            Write-Output "File: $($entry.FullName)"
         }
-    } finally {
-        $zipArchive = $null
-        # Clean up the temporary directory
-        Remove-Item -Path $tempDir -Recurse -Force
     }
+
+    $zipFile.Dispose()
 }
 
 
+function CountSewFiles{ 
+    param (
+            [string[]]$zipfilelist
+        )
+        $matchCount = 0
+        # Iterate through the contents and count matches
+        $extmatch = "\.(" + $($preferredSewType -join(")|(")) +")$"
+        foreach ($line in $zipfilelist) {
+                if ($line -match  $extmatch) {
+                    $matchCount++
+
+            }
+        }
+    return $matchCount
+}
 
 function ExpandAZip {
     param (
@@ -3025,6 +3040,7 @@ function ExpandAZip {
     Complete-Progress
     return $resultTmpDir
 }
+
 
 function ProcessZipContents {
     param (
@@ -3151,7 +3167,13 @@ function ProcessZipContents {
                 }               
             }
         }
+        # NEST ZIP IN ZIP - Check them all
+        if (-not $isZipExtracted -and $zipfilelist.Entries | where-object Name -imatch "\.zip$") {
+            $isZipExtracted = $true
+            ExpandAZip -zippath $zips -RelativePath $madeDir |out-null
+        }
         if ($isZipExtracted) {
+        
             $zipfilelist.Entries | where-object Name -imatch "\.zip$" | ForEach-Object { 
                 Write-Host "- - Found: nested zip file $($_.FullName) checking" 
                 if ($madeDir) {
@@ -3184,7 +3206,7 @@ function ProcessZipContents {
         if ($isZipExtracted -and (!($isNested))) { 
             $numnew += $(MoveFromDir -fromPath $tmpdir -isEmbrodery $false)
             AdvanceProgress  "Releasing Zip $zf"  
-            Get-ChildItem -Path $tmpdir -Recurse | Remove-Item -force -Recurse
+            Get-ChildItem -Path $tmpdir -Recurse | Remove-Item -force -Recurse | out-null 
             }
    
         
@@ -3481,13 +3503,18 @@ if ($env:COMPUTERNAME -eq "DESKTOP-R3PSDBU_") { # -and $Testing) {
 
 BuildTypeLists
 
-if (-not $doit){
+if ($doit) {
     $PSDefaultParameterValues = @{
+  'Remove-Item:ProgressAction'='SilentlyContinue'
+    }
+    } else {
+        $PSDefaultParameterValues = @{
   "Copy-Item:WhatIf"=$True
   "Move-Item:WhatIf"=$True
   "Remove-Item:WhatIf"=$True
 }
 }
+
 
 if (-not $EmbroidDir.contains("\")) {
     $EmbroidDir = join-path -path $docsdir -childpath $EmbroidDir 
@@ -3659,7 +3686,12 @@ Get-ChildItem -Path $downloaddir  -file -filter "*.zip" -depth $zipdepth | Where
     ForEach-Object {
         AdvanceProgress  "Checking Zips - Looking at $($_.Name)"  -status "Added $Script:savecnt files"
         Write-Verbose "Checking ZIP '$($_.FullName)'" 
-        ProcessZipContents -zips $_.FullName -Base $_.BaseName
+        $zipfilelist = Get-ZipContents $_.FullName 
+        $matchfiles = CountSewFiles $zipfilelist
+        if ($matchfiles -gt 0) {
+            Write-Host "Found $matchfiles file(s) of any of the preferred sewing file types in $($_.Name)" -ForegroundColor White
+            ProcessZipContents -zips $_.FullName -Base $_.BaseName
+        }
     }
 
 # Look for Files which are not part of a ZIP file, just the selected file types that we are looking for that is in the download directory, no matter how old the file is
@@ -3722,7 +3754,7 @@ foreach ($thistype in $preferredSewType) {
 
     # clean up the zip file mess
     foreach ($tz in $tempziplist) {
-        remove-item -Path $tz 
+        remove-item -Path $tz | out-null 
     }
     Complete-Progress "Copying from Downloads" 
 # Remove the early place holder objects

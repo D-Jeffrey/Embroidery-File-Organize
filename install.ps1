@@ -31,6 +31,21 @@ function FetchImageFile ([string]$file) {
         
     }
 }
+function Test-ExistsOnPath {
+    param (
+        [string]$FileName
+    )
+    
+    $env:Path.Split([System.IO.Path]::PathSeparator) | where-object {$_ -ne ""} | ForEach-Object {
+        $fullPath = Join-Path $_ $FileName
+        if (Test-Path $fullPath -PathType Leaf) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 
 
 New-Item -ItemType Directory -Path $scriptDir -ErrorAction SilentlyContinue| out-null
@@ -42,5 +57,8 @@ $scriptname = Join-Path -Path $scriptDir -ChildPath $pushscript
 FetchImageFile -file 'EmbroideryManager.ico'
 # for next upgrade
 Get-FileTo -file 'install.ps1'
-
-Powershell -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup -OldVersion $OldVersion
+if (Test-ExistsOnPath "pwsh.exe") {
+    pwsh -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup -OldVersion $OldVersion
+} else {
+    Powershell -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup -OldVersion $OldVersion
+    }
