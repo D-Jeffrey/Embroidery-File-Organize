@@ -55,10 +55,14 @@ $pushscript = 'EmbroideryCollection-Cleanup.ps1'
 Get-FileTo -file $pushscript
 $scriptname = Join-Path -Path $scriptDir -ChildPath $pushscript
 FetchImageFile -file 'EmbroideryManager.ico'
+$params = @{}
+if ($OldVersion) {
+    $params.OldVersion = $OldVersion
+}
 # for next upgrade
 Get-FileTo -file 'install.ps1'
 if (Test-ExistsOnPath "pwsh.exe") {
-    pwsh -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup -OldVersion $OldVersion
+    pwsh -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup @params
 } else {
-    Powershell -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup -OldVersion $OldVersion
+    Powershell -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup @params
     }
