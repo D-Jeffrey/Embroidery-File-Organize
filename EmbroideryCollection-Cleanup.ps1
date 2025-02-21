@@ -866,7 +866,7 @@ function doWinForm() {
             if ($btn_sync) {
                 $btn_sync.Enabled = ($cmb_location.SelectedIndex -ne 0 -and $btn_go.Enabled) 
             }
-            $lbl_Info.Text =  $script:InfoText.values -Join ""
+            Invoke-command -ScriptBlock $scriptblock_CalcInfoText
         }
     
     $cmb_location.Add_SelectionChangeCommitted( {driveComboChange})
@@ -1155,7 +1155,14 @@ function doWinForm() {
         $ziplist = $ziplist | Where-Object { (($_.CreationTime -gt $afterdate) -OR ($_.LastWriteTime -gt $afterdate)) -and ($_.gettype().Name -eq 'FileInfo')}  
         $filelist = Get-ChildItem -Path $downloaddir  -file -Depth ($zipdepth + 1) -Recurse 
         $filelist = $filelist | Where-Object { $_.Extension -in $pTypes }
-        return ("`nWill be checking: {0} zip file and {1} regular files from {2}`n" -f $ziplist.count, $filelist.count, $downloaddir)
+        return ("Will be checking: {0} zip file and {1} regular files from {2}`n" -f $ziplist.count, $filelist.count, $downloaddir)
+    }
+    $scriptblock_CalcInfoText = { 
+        $script:lbl_Info.Text = $($script:InfoText.Values | Where-Object {$_ -match "Wait" -and $_ -ne ""}) -Join ""
+        if ($script:lbl_Info.Text -ne "") {
+            $script:lbl_Info.Text = "--- Please Wait --- Working ---`n" + $script:lbl_Info.Text
+        }
+        $script:lbl_Info.Text += $($script:InfoText.Values | Where-Object {$_ -notmatch "Wait" -and $_ -ne ""}) -Join "" 
     }
     $script:InitJob = $true
     $form.Cursor = "AppStarting"
@@ -1163,13 +1170,13 @@ function doWinForm() {
     $scriptblock_ChangeCalcSize = { 
         $script:InfoText.filelist = "Calculating size`n"
         if ($script:lbl_Info) { 
-            $script:lbl_Info.Text = $script:InfoText.Values -Join ""
+            Invoke-command -ScriptBlock $scriptblock_CalcInfoText
             [System.Windows.Forms.Application]::DoEvents()
         }
         $script:jobZipsPlus = start-job -ScriptBlock $scriptblock_Size -ArgumentList $script:downloaddir, @($PrefSewTypeDot), $nud_DownloadDaysOld.value, $zipdepth
         $script:InfoText.filelist = $jobZipsPlus| Receive-Job   -Wait -AutoRemoveJob
         if ($script:lbl_Info) { 
-            $script:lbl_Info.Text = $script:InfoText.Values -Join ""
+            Invoke-command -ScriptBlock $scriptblock_CalcInfoText
             [System.Windows.Forms.Application]::DoEvents()
         }
     }
@@ -1195,11 +1202,9 @@ function doWinForm() {
                 $script:InfoText.filelist = $summary
                 $script:jobZipsPlus= $null
             }
-            $script:lbl_Info.Text = $($script:InfoText.Values | Where-Object {$_ -match "Wait"}) -Join ""
-            if ($script:lbl_Info.Text -ne "") {
-                $script:lbl_Info.Text = "--- Please Wait --- Working ---`n" + $script:lbl_Info.Text + "`n"
-            }
-            $script:lbl_Info.Text += $($script:InfoText.Values | Where-Object {$_ -notmatch "Wait"}) -Join ""
+
+            Invoke-command -ScriptBlock $scriptblock_CalcInfoText
+
             [System.Windows.Forms.Application]::DoEvents() 
         }
         if ($script:InitJob) { 
