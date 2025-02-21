@@ -2976,6 +2976,7 @@ function Get-ZipContents {
     )
     
     [System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null
+    
 
     $zipFile = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
     foreach ($entry in $zipFile.Entries) {
@@ -2987,7 +2988,7 @@ function Get-ZipContents {
             $nestedZipPath = [System.IO.Path]::Combine($tempDir, $entry.Name)
             try {
 
-                $entry.ExtractToFile($nestedZipPath)
+                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $nestedZipPath)
                 # List contents of nested zip
                 Get-ZipContents -zipPath $nestedZipPath
                 # Clean up temporary files
