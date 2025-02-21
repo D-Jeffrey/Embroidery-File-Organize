@@ -3169,7 +3169,8 @@ function ProcessZipContents {
             }
         }
         # NEST ZIP IN ZIP - Check them all
-        if (-not $isZipExtracted -and $zipfilelist.Entries | where-object Name -imatch "\.zip$") {
+        $zipsinthere = $zipfilelist.Entries | where-object Name -imatch "\.zip$"
+        if (-not $isZipExtracted -and $zipsinthere.count -gt 0) {
             $isZipExtracted = $true
             ExpandAZip -zippath $zips -RelativePath $madeDir |out-null
         }
