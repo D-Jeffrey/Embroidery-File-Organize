@@ -64,7 +64,10 @@ if ($OldVersion) {
     $params.OldVersion = $OldVersion
 }
 # for next upgrade
-$execName = "pwsh" if ($IsLinux -or $IsMacOS) else "pwsh.exe"
+$execName = "pwsh.exe" 
+if ($IsLinux -or $IsMacOS) {
+    $execName = "pwsh" 
+} 
 Get-FileTo -file 'install.ps1'
 if (Test-ExistsOnPath $execName) {
     pwsh -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup @params
