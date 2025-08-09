@@ -2,7 +2,11 @@ param (
     [Parameter(Mandatory = $false)]
     [String]$OldVersion
 )
-$scriptDir = join-path -Path ${env:ProgramData} -childpath 'EmbroideryOrganize' 
+if ($isLinux -or $isMacOS) {
+    $scriptDir = join-path -Path ${env:HOME} -childpath 'EmbroideryOrganize' 
+} else {
+    $scriptDir = join-path -Path ${env:ProgramData} -childpath 'EmbroideryOrganize' 
+}
 $sourceurl = "https://raw.githubusercontent.com/D-Jeffrey/Embroidery-File-Organize/main/" 
 
 function Get-FileTo($file) {
@@ -36,7 +40,7 @@ function Test-ExistsOnPath {
         [string]$FileName
     )
     
-    $env:Path.Split([System.IO.Path]::PathSeparator) | where-object {$_ -ne ""} | ForEach-Object {
+    $env:PATH.Split([System.IO.Path]::PathSeparator) | where-object {$_ -ne ""} | ForEach-Object {
         $fullPath = Join-Path $_ $FileName
         if (Test-Path $fullPath -PathType Leaf) {
             return $true
@@ -60,8 +64,9 @@ if ($OldVersion) {
     $params.OldVersion = $OldVersion
 }
 # for next upgrade
+execName = "pwsh" if ($IsLinux -or $IsMacOS) else "pwsh.exe"
 Get-FileTo -file 'install.ps1'
-if (Test-ExistsOnPath "pwsh.exe") {
+if (Test-ExistsOnPath $execName) {
     pwsh -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup @params
 } else {
     Powershell -NoLogo -ExecutionPolicy Bypass -File $scriptname -setup @params
